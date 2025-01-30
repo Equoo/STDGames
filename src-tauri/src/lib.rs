@@ -159,8 +159,10 @@ impl Launcher {
 			bindsstr.push_str(&format!(" --bind {} {}", key, value));
 		}
 
-		println!("Launching game: {}", JUNEST_PATH.to_owned() + S + "-b \"--bind /sgoinfre /sgoinfre" + &bindsstr + "\"" + S + command);
-		let process = Command::new(JUNEST_PATH.to_owned() + S + "-b \"--bind /sgoinfre /sgoinfre" + &bindsstr + "\"" + S + command)
+		println!("Launching game: {}", JUNEST_PATH.to_owned() + "bwrap --bind / / hello");
+		let process = Command::new("sh")
+        	.arg("-c")
+			.arg(JUNEST_PATH.to_owned() + S + "-b \"--bind /sgoinfre /sgoinfre" + &bindsstr + "\"" + S + command)
 			.envs(&env_vars)
 			.spawn()
 			.expect("Failed to launch the game");
