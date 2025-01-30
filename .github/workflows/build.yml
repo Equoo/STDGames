@@ -3,7 +3,12 @@ name: 'publish'
 on:
   push:
     branches:
-      - release
+      - main
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch to build'
+        required: true
 
 # This workflow will trigger on each push to the `release` branch to create or update a GitHub release, build your app, and upload the artifacts to the release.
 
