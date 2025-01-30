@@ -13,55 +13,50 @@ on:
 # This workflow will trigger on each push to the `release` branch to create or update a GitHub release, build your app, and upload the artifacts to the release.
 
 jobs:
-  publish-tauri:
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-#          - platform: 'macos-latest' # for Arm based macs (M1 and above).
-#            args: '--target aarch64-apple-darwin'
-#          - platform: 'macos-latest' # for Intel based macs.
-#            args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: ''
-#          - platform: 'windows-latest'
-#            args: ''
+  build:
+    runs-on: ubuntu-22.04  # Use Ubuntu 22.04 as the build environment
 
-    runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      # Check out the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: setup node
-        uses: actions/setup-node@v4
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version: 18  # Use Node.js 18 (or the version your project requires)
+          cache: 'npm'
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      # Install npm dependencies
+      - name: Install npm dependencies
+        run: npm install
+
+      # Set up Rust
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          toolchain: stable  # Use the stable Rust toolchain
+          override: true
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+      # Install Tauri CLI
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli
+
+      # Install system dependencies for Tauri
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
+          sudo apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
 
-      - name: install frontend dependencies
-        run: yarn install # change this to npm, pnpm or bun depending on which one you use.
+      # Build the Tauri app
+      - name: Build Tauri app
+        run: |
+          tauri build
 
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Upload the built artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.args }}
+          name: tauri-app-ubuntu-22.04
+          path: src-tauri/target/release/bundle
