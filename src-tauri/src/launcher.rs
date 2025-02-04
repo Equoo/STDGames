@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::path::Path;
 use crate::game_library::{GameLibrary, GameInfo, ConfigPath};
 use crate::utils::copy_recursively;
-use crate::{JUNEST_HOME, JUNEST_LAUNCH, LEGENDARY_LAUNCH, GAMES_PATH};
+use crate::{JUNEST_HOME, LEGENDARY_LAUNCH, GAMES_PATH};
 
 pub struct Launcher {
 	running_process: Arc<Mutex<Option<Child>>>,
@@ -75,7 +75,7 @@ impl Launcher {
 					(String::from("WINEPREFIX"), format!("/sgoinfre/{USER}/.stdgames/{}", data.proton))
 				]));
 
-				&format!("{} \"{}\"", UMU_PATH, exec_path)
+				&format!("{UMU_PATH} \"{exec_path}\"")
 			},
 			"epicgame" => {
 				/*let update_command = &format!("{JUNEST_LAUNCH} {} {} update {}", GAME_PATH, LEGENDARY_LAUNCH, data.exec_path);
@@ -95,7 +95,17 @@ impl Launcher {
 			bindsstr.push_str(&format!(" --bind {} {}", key, value));
 		}
 
-		let final_command = &format!("{JUNEST_LAUNCH} {GAME_PATH} {bindsstr} {command}");
+		let final_command = &format!("cd {GAME_PATH} && bwrap	\
+			--bind {JUNEST_HOME} /					\
+			--bind {HOME} {HOME}					\
+			--bind /tmp /tmp						\
+			--bind /sys /sys						\
+			--bind /proc /proc						\
+			--dev-bind-try /dev /dev				\
+			--bind /run/user/{UID} /run/user/{UID}	\
+			--unshare-user-try						\
+			--bind /sgoinfre /sgoinfre				\
+			--bind /run/user/{UID}/pulse/native /run/pulse/native {bindsstr} {command}");
 
 		println!("Launching game: {}", command);
 		let process = Command::new("sh")

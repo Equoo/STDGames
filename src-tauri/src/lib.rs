@@ -8,7 +8,6 @@ use crate::game_library::{GameLibrary, GameInfo};
 use crate::launcher::Launcher;
 
 const JUNEST_HOME: &str = "/sgoinfre/dderny/.junest";
-const JUNEST_LAUNCH: &str = "/sgoinfre/dderny/junest/bin/games";
 const LEGENDARY_LAUNCH: &str = "legendary launch";
 const GAMES_PATH: &str = "/sgoinfre/42GamingNight/.STDGames";
 
