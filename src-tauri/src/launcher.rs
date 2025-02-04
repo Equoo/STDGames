@@ -48,7 +48,6 @@ impl Launcher {
 		let HOME = env::var("HOME").unwrap_or("".to_string());
 		let UMU_PATH = "umu-run";
 		let UID = Uid::current().to_string();
-		let PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
 
 		let	data: &GameInfo = match self.library.get_game(game) {
             Some(data) => data,
@@ -64,7 +63,6 @@ impl Launcher {
 		let binds: HashMap<String, String> = HashMap::new();
 
 		env_vars.insert("JUNEST_HOME".to_string(), JUNEST_HOME.to_string());
-		env_vars.insert("PATH".to_string(), PATH.to_string());
 
 		let GAME_PATH = format!("{GAMES_PATH}/{}", &data.name);
 		let exec_path = format!("{GAME_PATH}/{}", &data.exec_path);
