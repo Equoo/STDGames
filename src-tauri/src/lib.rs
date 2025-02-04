@@ -10,6 +10,7 @@ use crate::launcher::Launcher;
 use crate::desktop_icons::add_launcher_desktop_icon;
 
 const JUNEST_HOME: &str = "/sgoinfre/dderny/.junest";
+const JUNEST_PATH: &str = "/sgoinfre/dderny/junest/bin/junest";
 const LEGENDARY_LAUNCH: &str = "legendary launch";
 const GAMES_PATH: &str = "/sgoinfre/42GamingNight/.STDGames";
 

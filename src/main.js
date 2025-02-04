@@ -1,5 +1,13 @@
 const { invoke } = window.__TAURI__.core;
 
+async function addIcon() {
+	try {
+		const result = await invoke("add_launcher_desktop_icon");
+	} catch (err) {
+		alert("Erreur lors de lajout de l'icon : " + err);
+	}
+}
+
 async function launchGame(game) {
 	try {
 		const result = await invoke("launch_game", { game: game });
@@ -32,4 +40,8 @@ window.addEventListener("DOMContentLoaded", () => {
 			});
 		});
 	});
+	document.getElementById("add_icon").addEventListener("click", addIcon);
 });
+
+
+

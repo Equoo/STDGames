@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::path::Path;
 use crate::game_library::{GameLibrary, GameInfo, ConfigPath};
 use crate::utils::copy_recursively;
-use crate::{JUNEST_HOME, LEGENDARY_LAUNCH, GAMES_PATH};
+use crate::{JUNEST_HOME, LEGENDARY_LAUNCH, JUNEST_PATH, GAMES_PATH};
 
 pub struct Launcher {
 	running_process: Arc<Mutex<Option<Child>>>,
@@ -48,6 +48,7 @@ impl Launcher {
 		let HOME = env::var("HOME").unwrap_or("".to_string());
 		let UMU_PATH = "umu-run";
 		let UID = Uid::current().to_string();
+		let PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
 
 		let	data: &GameInfo = match self.library.get_game(game) {
             Some(data) => data,
@@ -63,6 +64,7 @@ impl Launcher {
 		let binds: HashMap<String, String> = HashMap::new();
 
 		env_vars.insert("JUNEST_HOME".to_string(), JUNEST_HOME.to_string());
+		env_vars.insert("PATH".to_string(), PATH.to_string());
 
 		let GAME_PATH = format!("{GAMES_PATH}/{}", &data.name);
 		let exec_path = format!("{GAME_PATH}/{}", &data.exec_path);
@@ -78,10 +80,6 @@ impl Launcher {
 				&format!("{UMU_PATH} \"{exec_path}\"")
 			},
 			"epicgame" => {
-				/*let update_command = &format!("{JUNEST_LAUNCH} {} {} update {}", GAME_PATH, LEGENDARY_LAUNCH, data.exec_path);
-				let process = Command::new("sh").arg("-c")
-					.arg(update_command).envs(&env_vars).spawn()
-					.expect("Failed to update the game");*/
 				&format!("{} {}", LEGENDARY_LAUNCH, data.exec_path)
 			},
 			&_ => {
@@ -95,17 +93,10 @@ impl Launcher {
 			bindsstr.push_str(&format!(" --bind {} {}", key, value));
 		}
 
-		let final_command = &format!("cd {GAME_PATH} && bwrap	\
-			--bind {JUNEST_HOME} /					\
-			--bind {HOME} {HOME}					\
-			--bind /tmp /tmp						\
-			--bind /sys /sys						\
-			--bind /proc /proc						\
-			--dev-bind-try /dev /dev				\
+		let final_command = &format!("cd {GAME_PATH} && {JUNEST_PATH} -b \"\
 			--bind /run/user/{UID} /run/user/{UID}	\
-			--unshare-user-try						\
 			--bind /sgoinfre /sgoinfre				\
-			--bind /run/user/{UID}/pulse/native /run/pulse/native {bindsstr} {command}");
+			--bind /run/user/{UID}/pulse/native /run/pulse/native {bindsstr}\" exec {command}");
 
 		println!("Launching game: {}", command);
 		let process = Command::new("sh")
