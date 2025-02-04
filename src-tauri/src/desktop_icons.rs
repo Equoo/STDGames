@@ -1,6 +1,7 @@
 
 
-fn add_launcher_desktop_icon()
+#[tauri::command]
+pub fn add_launcher_desktop_icon()
 {
 
     // let mut file = File::create("foo.txt")?;
@@ -20,10 +21,20 @@ fn add_launcher_desktop_icon()
 
     // let mut file File::
 
-    let desktop = Path::new(std::env("HOME").unwrap());
-    desktop.join(".local/share/.application/STDGames.desktop");
 
-    std::fs::soft_link("/sgoinfre/42GamingNight/.STDGames/Ressources/STDGames.desktop", desktop).unwrap();
+    // let home = match std::env::var("HOME") {
+    //     Ok(val) => val,
+    //     Err(e) => String::new("NOT FOUND"),
+    // };
+
+
+    // println!("home is {:#?}\n", home);
+
+
+
+    // let desktop = std::path::Path::new(home).join(".local/share/.application/STDGames.desktop");
+
+    // std::fs::soft_link("/sgoinfre/42GamingNight/.STDGames/Ressources/STDGames.desktop", desktop).unwrap();
 
 
 }

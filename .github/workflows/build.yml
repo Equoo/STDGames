@@ -56,7 +56,7 @@ jobs:
 
       # Upload the built artifacts
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tauri-app-ubuntu-22.04
           path: src-tauri/target/release/bundle

@@ -1,11 +1,13 @@
 pub mod utils;
 pub mod game_library;
 pub mod launcher;
+pub mod desktop_icons;
 
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 use crate::game_library::{GameLibrary, GameInfo};
 use crate::launcher::Launcher;
+use crate::desktop_icons::add_launcher_desktop_icon;
 
 const JUNEST_HOME: &str = "/sgoinfre/dderny/.junest";
 const LEGENDARY_LAUNCH: &str = "legendary launch";
@@ -38,7 +40,7 @@ fn get_game_library() -> Vec<GameInfo> {
 pub fn run() {
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
-		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game])
+		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon])
 		.run(tauri::generate_context!())
 		.expect("Erreur lors du lancement de Tauri");
 }
