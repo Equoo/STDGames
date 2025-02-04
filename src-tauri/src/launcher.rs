@@ -95,7 +95,7 @@ impl Launcher {
 			bindsstr.push_str(&format!(" --bind {} {}", key, value));
 		}
 
-		let final_command = &format!("{JUNEST_LAUNCH} {} \"{} {}\"", GAME_PATH, bindsstr, command);
+		let final_command = &format!("{JUNEST_LAUNCH} {GAME_PATH} {bindsstr} {command}");
 
 		println!("Launching game: {}", command);
 		let process = Command::new("sh")
