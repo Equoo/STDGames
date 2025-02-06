@@ -60,7 +60,7 @@ impl Launcher {
 		copy_config_files(&data.config, &data.name)?;
 
 		let mut env_vars: HashMap<String, String> = data.env.clone();
-		let binds: HashMap<String, String> = HashMap::new();
+		let mut binds: HashMap<String, String> = HashMap::new();
 
 		env_vars.insert("JUNEST_HOME".to_string(), JUNEST_HOME.to_string());
 
@@ -69,6 +69,8 @@ impl Launcher {
 		let command = match data.launch_type.as_str() {
 			"native" => &exec_path,
 			"umu" => {
+				binds.insert("{HOME}/.local/share/emu".to_string(), "/run/pulse/native".to_string());
+
 				env_vars.extend(HashMap::from([
 					(String::from("PYTHONPATH"), PYTHONPATH + ":/usr/lib/python3/dist-packages"),
 					(String::from("PROTONPATH"), format!("/sgoinfre/dderny/wines/{}", data.proton)),
