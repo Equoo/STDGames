@@ -90,7 +90,7 @@ impl Launcher {
 
 		let mut bindsstr = String::new();
 		for (key, value) in binds {
-			let path = Path::new(&value);
+			let path = Path::new(&key);
 			if !path.exists() {
 				fs::create_dir_all(path)?;
 			}
