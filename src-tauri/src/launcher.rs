@@ -69,7 +69,7 @@ impl Launcher {
 		let command = match data.launch_type.as_str() {
 			"native" => &exec_path,
 			"umu" => {
-				binds.insert("{HOME}/.local/share/emu".to_string(), "/run/pulse/native".to_string());
+				binds.insert("/goinfre/{USER}/umu".to_string(), "{HOME}/.local/share/umu".to_string());
 
 				env_vars.extend(HashMap::from([
 					(String::from("PYTHONPATH"), PYTHONPATH + ":/usr/lib/python3/dist-packages"),
@@ -96,6 +96,7 @@ impl Launcher {
 		let final_command = &format!("cd {GAME_PATH} && {JUNEST_PATH} -b \"\
 			--bind /run/user/{UID} /run/user/{UID}	\
 			--bind /sgoinfre /sgoinfre				\
+			--bind /goinfre /goinfre				\
 			--bind /run/user/{UID}/pulse/native /run/pulse/native {bindsstr}\" exec {command}");
 
 		println!("Launching game: {}", command);
