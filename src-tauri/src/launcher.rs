@@ -69,7 +69,7 @@ impl Launcher {
 		let command = match data.launch_type.as_str() {
 			"native" => &exec_path,
 			"umu" => {
-				binds.insert("/goinfre/{USER}/umu".to_string(), "{HOME}/.local/share/umu".to_string());
+				binds.insert(format!("/goinfre/{USER}/umu"), format!("{HOME}/.local/share/umu"));
 
 				env_vars.extend(HashMap::from([
 					(String::from("PYTHONPATH"), PYTHONPATH + ":/usr/lib/python3/dist-packages"),
