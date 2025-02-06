@@ -90,6 +90,10 @@ impl Launcher {
 
 		let mut bindsstr = String::new();
 		for (key, value) in binds {
+			let path = Path::new(&value);
+			if !path.exists() {
+				fs::create_dir_all(path)?;
+			}
 			bindsstr.push_str(&format!(" --bind {} {}", key, value));
 		}
 
@@ -99,7 +103,7 @@ impl Launcher {
 			--bind /goinfre /goinfre				\
 			--bind /run/user/{UID}/pulse/native /run/pulse/native {bindsstr}\" exec {command}");
 
-		println!("Launching game: {}", command);
+		println!("Launching game: {} {bindsstr}", command);
 		let process = Command::new("sh")
         	.arg("-c")
 			.arg(final_command)
