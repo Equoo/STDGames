@@ -74,13 +74,20 @@ impl Launcher {
 				env_vars.extend(HashMap::from([
 					(String::from("PYTHONPATH"), PYTHONPATH + ":/usr/lib/python3/dist-packages"),
 					(String::from("PROTONPATH"), format!("/sgoinfre/dderny/wines/{}", data.proton)),
-					(String::from("WINEPREFIX"), format!("/sgoinfre/{USER}/.stdgames/{}", data.proton))
+					(String::from("WINEPREFIX"), format!("/sgoinfre/{USER}/.stdgames/{}", data.proton)),
+					(String::from("DXVK_ASYNC"), String::from("1"))
 				]));
 
 				&format!("{UMU_PATH} \"{exec_path}\"")
 			},
 			"epicgame" => {
-				&format!("{} {}", LEGENDARY_LAUNCH, data.exec_path)
+				env_vars.extend(HashMap::from([
+					(String::from("WINEPREFIX"), format!("/sgoinfre/{USER}/.stdgames/{}", data.proton)),
+					(String::from("STEAM_COMPAT_DATA_PATH"), format!("/sgoinfre/{USER}/.stdgames/{}", data.proton)),
+					(String::from("DXVK_ASYNC"), String::from("1")),
+				]));
+
+				&format!("{} --wine {} {}", LEGENDARY_LAUNCH, format!("/sgoinfre/dderny/wines/{}", data.proton), data.exec_path)
 			},
 			&_ => {
 				println!("Unknown launch type: {}", data.launch_type);
