@@ -58,7 +58,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-app-ubuntu-22.04
+          name: stdgame_debug
           path: src-tauri/target/debug/bundle
   build:
     runs-on: ubuntu-22.04  # Use Ubuntu 22.04 as the build environment
@@ -105,5 +105,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: tauri-app-ubuntu-22.04
+          name: stdgame_release
           path: src-tauri/target/release/bundle
