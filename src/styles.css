@@ -24,3 +24,24 @@ button {
 button:hover {
 	background-color: #666;
 }
+
+.container {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.game-card {
+	width: 300px;
+	height: 420px;
+	background-color: #333;
+	margin: 10px;
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	color: #fff;
+	text-align: center;
+	background-size: cover;
+}

@@ -31,8 +31,18 @@ async function fetchGameLibrary() {
 
 window.addEventListener("DOMContentLoaded", () => {
 	fetchGameLibrary().then(library => {
-		library.forEach(game => {
-			document.querySelector("#games").insertAdjacentHTML("afterbegin", `<button class="game-card" game="${game.name}">${game.display_name}</button>`);
+		let i = 0;
+		
+		library.games.forEach(game => {
+			let data = library.gamesdata[i];
+
+			document.querySelector("#games").insertAdjacentHTML("afterbegin",
+				`<button class="game-card" game="${game.name}"
+					style="background-image: url('${data.cover}');">
+				</button>`
+			);
+
+			i++;
 		});
 
 		document.querySelectorAll(".game-card").forEach((card) => {
