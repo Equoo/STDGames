@@ -16,7 +16,7 @@ pub fn copy_recursively<'a>(src: &'a Path, dst: &'a Path) -> Pin<Box<dyn Future<
 
         let metadata = fs::symlink_metadata(src).await?;
 
-        if metadata.is_file() {
+        if metadata.is_file() || metadata.is_symlink() {
             if let Some(parent) = dst.parent() {
                 fs::create_dir_all(parent).await?;
             }
