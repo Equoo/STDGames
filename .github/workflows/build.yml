@@ -52,7 +52,7 @@ jobs:
       # Build the Tauri app
       - name: Build Tauri app
         run: |
-          tauri dev
+          tauri build --debug
 
       # Upload the built artifacts
       - name: Upload artifacts
