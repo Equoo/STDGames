@@ -92,7 +92,7 @@ impl GameLibrary {
 				.and_then(|v| v.as_str())
 				.unwrap_or("")
 				.to_string();
-			let cover = cover_rq.replace("t_thumb", "t_cover_big_2x").replace("//", "");
+			let cover = cover_rq.replace("t_thumb", "t_cover_big_2x").replace("//", "https://");
 
 			GameData {
 				cover,
