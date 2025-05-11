@@ -93,7 +93,7 @@ impl Launcher {
 				env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
 				env_vars.insert("XDG_DATA_HOME".to_string(), format!("/goinfre/{user}/.stdgames/"));
 
-				&format!("umu-run \"{exec_path}\"")
+				&format!("umu-run {exec_path}")
 			},
 			"epicgame" => {
 				&format!("legendary launch --wine {} {}", protonpath, data.exec_path)
