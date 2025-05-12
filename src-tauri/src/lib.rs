@@ -3,6 +3,7 @@ pub mod game_library;
 pub mod launcher;
 pub mod desktop_icons;
 
+use tauri::async_runtime::spawn;
 use once_cell::sync::Lazy;
 use utils::copy_recursively;
 use std::env;
@@ -39,41 +40,48 @@ fn get_game_library() -> Arc<GameLibrary> {
     _launcher.library.clone()
 }
 
+async fn setup(app: tauri::AppHandle) {
+	let user = env::var("USER").unwrap_or("".to_string());
+	fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
+		.expect("Erreur lors de la création du répertoire .stdgames_saves");
+
+	let junest_dst = format!("/goinfre/{user}/.stdgames/junest");
+	copy_recursively(Path::new("/sgoinfre/stdgames/.data/junest"), Path::new(&junest_dst)).await
+		.expect("Erreur lors de la copie du répertoire .junest");
+
+	let umu_path = format!("/goinfre/{user}/.stdgames/umu");
+	if !Path::new(&umu_path).exists() {
+		println!("Le répertoire umu n'existe pas, on le crée");
+		let umu_dst_zip = format!("/goinfre/{user}/.stdgames/umu.zip");
+		copy_recursively(Path::new("/sgoinfre/stdgames/.data/umu.zip"), Path::new(&umu_dst_zip)).await
+			.expect("Erreur lors de la copie de umu.zip");
+
+		let umu_zip_path = Path::new(&umu_dst_zip);
+		let umu_dst = format!("/goinfre/{user}/.stdgames/");
+		if umu_zip_path.exists() {
+			std::process::Command::new("tar")
+				.arg("-jxf")
+				.arg(umu_dst_zip)
+				.arg("-C")
+				.arg(umu_dst)
+				.output()
+				.expect("Erreur lors de l'extraction de umu.zip");
+		}
+	}
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {	
-	tauri::async_runtime::block_on(async {
-		let user = env::var("USER").unwrap_or("".to_string());
-
-		fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
-			.expect("Erreur lors de la création du répertoire .stdgames_saves");
-
-		let junest_dst = format!("/goinfre/{user}/.stdgames/junest");
-		copy_recursively(Path::new("/sgoinfre/stdgames/.data/junest"), Path::new(&junest_dst)).await
-			.expect("Erreur lors de la copie du répertoire .junest");
-
-		let umu_path = format!("/goinfre/{user}/.stdgames/umu");
-		if !Path::new(&umu_path).exists() {
-			println!("Le répertoire umu n'existe pas, on le crée");
-			let umu_dst_zip = format!("/goinfre/{user}/.stdgames/umu.zip");
-			copy_recursively(Path::new("/sgoinfre/stdgames/.data/umu.zip"), Path::new(&umu_dst_zip)).await
-				.expect("Erreur lors de la copie de umu.zip");
-
-			let umu_zip_path = Path::new(&umu_dst_zip);
-			let umu_dst = format!("/goinfre/{user}/.stdgames/");
-			if umu_zip_path.exists() {
-				std::process::Command::new("tar")
-					.arg("-jxf")
-					.arg(umu_dst_zip)
-					.arg("-C")
-					.arg(umu_dst)
-					.output()
-					.expect("Erreur lors de l'extraction de umu.zip");
-			}
-		}
-	});
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon])
+		.setup(|app| {
+            // Spawn setup as a non-blocking task so the windows can be
+            // created and ran while it executes
+            spawn(setup(app.handle().clone()));
+            // The hook expects an Ok result
+            Ok(())
+        })
 		.run(tauri::generate_context!())
 		.expect("Erreur lors du lancement de Tauri");
 }

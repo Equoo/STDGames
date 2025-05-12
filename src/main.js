@@ -35,7 +35,7 @@ window.addEventListener("DOMContentLoaded", () => {
 		
 		library.games.forEach(game => {
 			let data = library.gamesdata[i];
-
+			
 			document.querySelector("#games").insertAdjacentHTML("afterbegin",
 				`<button class="game-card" game="${game.name}"
 					style="background-image: url('${data.cover}');">

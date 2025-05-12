@@ -73,7 +73,56 @@ impl GameLibrary {
         };
         let games: Vec<GameInfo> = serde_json::from_str(&file_content)?;
 
-		let gamesdata: Vec<GameData> = games.iter().map(|game| {
+		let mut query_games = String::new();
+		let mut i = 0;
+		for game in &games {
+			let orstr = if i == 0 { "" } else { "," };
+			query_games.push_str(&format!("{}{}", orstr, game.igdb));
+			i += 1;
+		}
+
+		let mut gamesdata: Vec<GameData> = vec![];
+		
+		let query = format!("fields url, game; where game = ({}); limit 50;", query_games);
+		let games_rq = fetch_igdb("covers", &query).unwrap();
+		
+		let games_per_id = games_rq.as_array().unwrap();
+		let mut game_rq: HashMap<usize, serde_json::Value> = HashMap::new();
+		for i in 0..games_per_id.len() {
+			let game = &games_per_id[i];
+			let game_id = game.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
+			game_rq.insert(game_id, game.clone());
+		}
+
+		for i in 0..games.len() {
+			let game = &games[i];
+			let id = game.igdb.as_u64().unwrap_or(0) as usize;
+
+			if game_rq.get(&id).is_none() {
+				gamesdata.push(GameData {
+					cover: "https://example.com/placeholder.jpg".to_string(),
+					name: game.display_name.clone(),
+					genres: vec!["Unknown".to_string()],
+					publisher: "Unknown".to_string(),
+					developer: "Unknown".to_string(),
+					summary: "No summary available".to_string(),
+					rating: 0.0,
+					release_dates: vec![0.into()],
+					screenshots: vec!["https://example.com/screenshot.jpg".to_string()],
+					videos: vec!["https://example.com/video.mp4".to_string()],
+					artworks: vec!["https://example.com/artwork.jpg".to_string()],
+				});
+				println!("Game not found in IGDB: {}", game.name);
+				continue;
+			}
+
+			let cover = game_rq.get(&id).unwrap()
+				.get("url")
+				.and_then(|v| v.as_str())
+				.unwrap_or("")
+				.to_string()
+				.replace("t_thumb", "t_cover_big_2x")
+				.replace("//", "https://");
 			let name = game.display_name.clone();
 			let genres = vec!["Action".to_string(), "Adventure".to_string()]; // Placeholder
 			let publisher = "Unknown".to_string(); // Placeholder
@@ -86,15 +135,7 @@ impl GameLibrary {
 			let videos = vec!["https://example.com/video.mp4".to_string()]; // Placeholder
 			let artworks = vec!["https://example.com/artwork.jpg".to_string()]; // Placeholder
 
-			let cover_rq = fetch_igdb("covers", &format!("fields *; where game = {};", game.igdb)).unwrap()
-				.get(0)
-				.and_then(|v| v.get("url"))
-				.and_then(|v| v.as_str())
-				.unwrap_or("")
-				.to_string();
-			let cover = cover_rq.replace("t_thumb", "t_cover_big_2x").replace("//", "https://");
-
-			GameData {
+			gamesdata.push(GameData {
 				cover,
 				name,
 				genres,
@@ -106,8 +147,8 @@ impl GameLibrary {
 				screenshots,
 				videos,
 				artworks,
-			}
-		}).collect();
+			});
+		}
 
         Ok(GameLibrary { games, gamesdata })
     }

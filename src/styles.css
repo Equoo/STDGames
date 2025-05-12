@@ -25,6 +25,29 @@ button:hover {
 	background-color: #666;
 }
 
+.title {
+	font-size: 24px;
+	margin-bottom: 10px;
+}
+.title:hover {
+	text-decoration: underline;
+}
+.title:active {
+	text-decoration: none;
+}
+.title:focus {
+	outline: none;
+}
+.title:focus-visible {
+	outline: 2px solid #fff;
+}
+.title:focus-visible:hover {
+	text-decoration: underline;
+}
+.title:focus-visible:active {
+	text-decoration: none;
+}
+
 .container {
 	display: flex;
 	flex-wrap: wrap;
@@ -44,4 +67,11 @@ button:hover {
 	color: #fff;
 	text-align: center;
 	background-size: cover;
+	transition: width 0.3s, height 0.3s, margin 0.3s;
+}
+
+.game-card:hover {
+	width: 306px;
+	height: 426px;
+	margin: 7px;
 }
