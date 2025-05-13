@@ -29,6 +29,32 @@ async function fetchGameLibrary() {
     }
 }
 
+async function setup_progressbar() {
+	const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+	const progressBar = document.getElementById("progress-bar");
+	progressBar.style.width = "0%";
+	progressBar.style.transition = "none";
+	progressBar.style.display = "block";
+	progressBar.style.transition = "width 0.5s ease-in-out";
+
+	console.log("Setting up progress bar...");
+	let percent = 0;
+	let fake_percent = 0;
+	while (percent < 100) {
+		await sleep(50);
+        let state = await invoke("get_setup_state", {});
+		fake_percent = Math.min(fake_percent + Math.random() * 0.3, 100 - 5) / (state.progress || 50);
+		percent = state.progress + fake_percent;
+		progressBar.style.width = `${percent}%`;
+	}
+	percent = 100;
+	progressBar.style.width = `${percent}%`;
+	//for (let i = 0; i <= 100; i++) {
+	//	await sleep(50);
+	//	progressBar.style.width = `${i}%`;
+	//}
+}
+
 window.addEventListener("DOMContentLoaded", () => {
 	fetchGameLibrary().then(library => {
 		let i = 0;
@@ -53,7 +79,6 @@ window.addEventListener("DOMContentLoaded", () => {
 		});
 	});
 	document.getElementById("add_icon").addEventListener("click", addIcon);
+	setup_progressbar();
 });
-
-
 
