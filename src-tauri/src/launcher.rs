@@ -205,6 +205,7 @@ impl Launcher {
 			--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
 			--uid 5 \
 			--proc /proc --dev /dev --tmpfs /tmp \
+			--bind /tmp/{user} /tmp \
 			--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 
 		let junest_env = env::var("JUNEST_ENV").unwrap_or("".to_string());
@@ -214,6 +215,7 @@ impl Launcher {
 				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
+				--bind /tmp/{user} /tmp \
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 		}
 
