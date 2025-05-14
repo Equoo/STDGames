@@ -67,6 +67,7 @@ button:hover {
 	color: #fff;
 	text-align: center;
 	background-size: cover;
+	background-position: center;
 	transition: width 0.3s, height 0.3s, margin 0.3s;
 }
 

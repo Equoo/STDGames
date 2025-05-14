@@ -75,7 +75,7 @@ impl Launcher {
 			binds.insert(path, format!("{game_path}/{}", conf.original));
 		}
 
-		let protonpath = format!("/sgoinfre/stdgames/.data/protons/{}", data.proton);
+		let protonpath = format!("/sgoinfre/stdgames/.ressources/protons/{}", data.proton);
 		let prefix = format!("/sgoinfre/{user}/.stdgames_saves/{}", data.proton);
 
 		const PYTHONPATH: &str = "/usr/lib/python3/dist-packages";
@@ -117,6 +117,7 @@ impl Launcher {
 		let mut final_command = format!("cd {game_path}/{} && bwrap \
 			--bind / /	\
 			--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
+			-- uid 5 \
 			--proc /proc --dev /dev --tmpfs /tmp \
 			--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str} {game_command}", data.workdir);
 
@@ -124,6 +125,7 @@ impl Launcher {
 		if junest_env != "1" {
 			final_command = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
 				--bind /run/user/{uid} /run/user/{uid}	\
+				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir);

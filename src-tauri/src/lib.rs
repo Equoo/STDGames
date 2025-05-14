@@ -63,7 +63,7 @@ async fn setup(app: tauri::AppHandle) {
 		.expect("Erreur lors de la création du répertoire .stdgames_saves");
 
 	let junest_dst = format!("/goinfre/{user}/.stdgames/junest");
-	copy_recursively(Path::new("/sgoinfre/stdgames/.data/junest"), Path::new(&junest_dst)).await
+	copy_recursively(Path::new("/sgoinfre/stdgames/.ressources/junest"), Path::new(&junest_dst)).await
 		.expect("Erreur lors de la copie du répertoire .junest");
 	let mut state_lock = state.lock().await;
 	state_lock.progress = 60;
@@ -73,7 +73,7 @@ async fn setup(app: tauri::AppHandle) {
 	if !Path::new(&umu_path).exists() {
 		println!("Le répertoire umu n'existe pas, on le crée");
 		let umu_dst_zip = format!("/goinfre/{user}/.stdgames/umu.zip");
-		copy_recursively(Path::new("/sgoinfre/stdgames/.data/umu.zip"), Path::new(&umu_dst_zip)).await
+		copy_recursively(Path::new("/sgoinfre/stdgames/.ressources/umu.zip"), Path::new(&umu_dst_zip)).await
 			.expect("Erreur lors de la copie de umu.zip");
 		let mut state_lock = state.lock().await;
 		state_lock.progress = 75;
