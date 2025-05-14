@@ -12,16 +12,22 @@ pub struct ConfigPath {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Rconf {
+	pub src: String,
+	pub dest: String
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameInfo {
 	pub name: String,
-	pub display_name: String,
 	pub igdb: Number,
 	pub launch_type: String,
 	pub env: HashMap<String, String>,
 	pub proton:	String,
-	pub workdir:	String,
+	pub workdir:	Option<String>,
 	pub exec_path:	String,
-	pub config: Vec<ConfigPath>,
+	pub config: Option<Vec<ConfigPath>>,
+	pub r_conf: Option<Vec<Rconf>>
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -101,7 +107,7 @@ impl GameLibrary {
 			if game_rq.get(&id).is_none() {
 				gamesdata.push(GameData {
 					cover: "https://example.com/placeholder.jpg".to_string(),
-					name: game.display_name.clone(),
+					name: "Unknown".to_string(),
 					genres: vec!["Unknown".to_string()],
 					publisher: "Unknown".to_string(),
 					developer: "Unknown".to_string(),
@@ -123,7 +129,7 @@ impl GameLibrary {
 				.to_string()
 				.replace("t_thumb", "t_cover_big_2x")
 				.replace("//", "https://");
-			let name = game.display_name.clone();
+			let name = "Unknown".to_string();
 			let genres = vec!["Action".to_string(), "Adventure".to_string()]; // Placeholder
 			let publisher = "Unknown".to_string(); // Placeholder
 			let developer

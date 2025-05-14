@@ -6,7 +6,7 @@ pub mod desktop_icons;
 use serde::Deserialize;
 use serde::Serialize;
 use tauri::async_runtime::spawn;
-use tauri::{AppHandle, Manager, State};
+use tauri::{Manager, State};
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 use utils::copy_recursively;
@@ -99,7 +99,6 @@ async fn setup(app: tauri::AppHandle) {
 #[tauri::command]
 async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupState, ()>	{
 	let state = state.lock().await;
-	println!("get_setup_state: {:?}", state);
 	Ok(SetupState {
 		progress: state.progress,
 		finish: state.finish,
@@ -107,7 +106,9 @@ async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupSta
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {	
+pub fn run() {
+
+
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.manage(Mutex::new(SetupState {
