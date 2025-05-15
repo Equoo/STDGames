@@ -1,5 +1,6 @@
 use std::env;
 use std::fs;
+use std::io::Write;
 use nix::libc::open;
 use nix::unistd::Uid;
 use serde_json::{Number};
@@ -76,6 +77,35 @@ async fn copy_config_files(config: &Option<Vec<ConfigPath>>, game: &str) -> Resu
 	Ok(())
 }
 
+async fn golberg_config(launcher: &Launcher, folder: String)
+{
+	// create account_name.txt and language.txt and user_steam_id.txt at folder given
+	fs::create_dir_all(folder.clone()).expect("Unable to create directory");
+	let path = format!("{}/account_name.txt", folder);
+	let mut file = fs::File::create(path).expect("Unable to create file");
+	file.write_all(launcher.user_data.username.as_bytes()).expect("Unable to write data");
+	let path = format!("{}/language.txt", folder);
+	let mut file = fs::File::create(path).expect("Unable to create file");
+	file.write_all(launcher.user_data.language.as_bytes()).expect("Unable to write data");
+	let path = format!("{}/user_steam_id.txt", folder);
+	let mut file = fs::File::create(path).expect("Unable to create file");
+	file.write_all(launcher.user_data.steamid.to_string().as_bytes()).expect("Unable to write data");
+}
+
+async fn create_golberg_config(launcher: &Launcher, game: &GameInfo) -> Result<(), Box<dyn std::error::Error>> {
+	// if is a native game so in /home/{user}/.local/share/Goldberg\ SteamEmu\ Saves/settings
+	// if is a umu game so in /sgoinfre/{user}/.stdgames_saves/{data.proton}/drive_c/users/{user}/AppData/Roaming/Goldberg SteamEmu Saves/settings
+	let user = env::var("USER").unwrap_or("".to_string());
+	if game.launch_type == "native" {
+		let path = format!("/home/{user}/.local/share/Goldberg SteamEmu Saves/settings");
+		golberg_config(launcher, path).await;
+	} else if game.launch_type == "umu" {
+		let path = format!("/sgoinfre/{user}/.stdgames_saves/{}/drive_c/users/{user}/AppData/Roaming/Goldberg SteamEmu Saves/settings", game.proton);
+		golberg_config(launcher, path).await;
+	}
+	Ok(())
+}
+
 async fn copy_rconfig_files(launcher: &Launcher, config: &Option<Vec<Rconf>>, game: &str) -> Result<(), Box<dyn std::error::Error>> {
 	if config.is_none() {
 		return Ok(());
@@ -126,6 +156,9 @@ impl Launcher {
         };
 
 		println!("Game data: {:?}", data);
+
+		create_golberg_config(self, data).await
+			.expect("Erreur lors de la création du fichier de configuration");
 
 		copy_config_files(&data.config, &data.name)
 			.await
