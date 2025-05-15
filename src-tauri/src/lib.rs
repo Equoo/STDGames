@@ -62,17 +62,17 @@ async fn setup(app: tauri::AppHandle) {
 	fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
 		.expect("Erreur lors de la création du répertoire .stdgames_saves");
 
-	let junest_dst = format!("/goinfre/{user}/.stdgames/junest");
-	copy_recursively(Path::new("/sgoinfre/stdgames/.ressources/junest"), Path::new(&junest_dst)).await
+	let junest_dst = format!("/tmp/{user}/.stdgames/junest");
+	copy_recursively(Path::new("/sgoinfre/stdgames/.ressources/tmp_junest"), Path::new(&junest_dst)).await
 		.expect("Erreur lors de la copie du répertoire .junest");
 	let mut state_lock = state.lock().await;
 	state_lock.progress = 60;
 	drop(state_lock);
 
-	let umu_path = format!("/goinfre/{user}/.stdgames/umu");
+	let umu_path = format!("/tmp/{user}/.stdgames/umu");
 	if !Path::new(&umu_path).exists() {
 		println!("Le répertoire umu n'existe pas, on le crée");
-		let umu_dst_zip = format!("/goinfre/{user}/.stdgames/umu.zip");
+		let umu_dst_zip = format!("/tmp/{user}/.stdgames/umu.zip");
 		copy_recursively(Path::new("/sgoinfre/stdgames/.ressources/umu.zip"), Path::new(&umu_dst_zip)).await
 			.expect("Erreur lors de la copie de umu.zip");
 		let mut state_lock = state.lock().await;
@@ -80,7 +80,7 @@ async fn setup(app: tauri::AppHandle) {
 		drop(state_lock);
 
 		let umu_zip_path = Path::new(&umu_dst_zip);
-		let umu_dst = format!("/goinfre/{user}/.stdgames/");
+		let umu_dst = format!("/tmp/{user}/.stdgames/");
 		if umu_zip_path.exists() {
 			std::process::Command::new("tar")
 				.arg("-jxf")

@@ -136,7 +136,7 @@ impl Launcher {
 			.expect("Erreur lors de la copie des fichiers de configuration");
 
 		let user = env::var("USER").unwrap_or("".to_string());
-		let junest_home = format!("/goinfre/{user}/.stdgames/junest");
+		let junest_home = format!("/tmp/{user}/.stdgames/junest");
 		
 		let mut binds: HashMap<String, String> = HashMap::new();
 		let mut env_vars: HashMap<String, String> = data.env.clone();
@@ -177,7 +177,7 @@ impl Launcher {
 			"native" => &exec_path,
 			"umu" => {
 				env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
-				env_vars.insert("XDG_DATA_HOME".to_string(), format!("/goinfre/{user}/.stdgames/"));
+				env_vars.insert("XDG_DATA_HOME".to_string(), format!("/tmp/{user}/.stdgames/"));
 
 				&format!("umu-run {exec_path}")
 			},
