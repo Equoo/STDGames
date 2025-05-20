@@ -107,8 +107,6 @@ async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupSta
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-
-
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.manage(Mutex::new(SetupState {

@@ -99,6 +99,7 @@ async fn create_golberg_config(launcher: &Launcher, game: &GameInfo) -> Result<(
 	if game.launch_type == "native" {
 		let path = format!("/home/{user}/.local/share/Goldberg SteamEmu Saves/settings");
 		golberg_config(launcher, path).await;
+
 	} else if game.launch_type == "umu" {
 		let path = format!("/sgoinfre/{user}/.stdgames_saves/{}/drive_c/users/{user}/AppData/Roaming/Goldberg SteamEmu Saves/settings", game.proton);
 		golberg_config(launcher, path).await;
@@ -147,6 +148,14 @@ impl Launcher {
 	}
 
 	pub async fn launch_game(&self, game: &str) -> Result<(), Box<dyn std::error::Error>> {
+		let running_process = self.running_process.lock().unwrap();
+		if running_process.is_some() {
+			drop(running_process);
+			println!("A game is already running!");
+			return Ok(());
+		}
+		drop(running_process);
+		
 		let	data: &GameInfo = match self.library.get_game(game) {
             Some(data) => data,
             None => {
@@ -196,7 +205,6 @@ impl Launcher {
 		let protonpath = format!("/sgoinfre/stdgames/.ressources/protons/{}", data.proton);
 		let prefix = format!("/sgoinfre/{user}/.stdgames_saves/{}", data.proton);
 
-		
 		const PYTHONPATH: &str = "/usr/lib/python3/dist-packages";
 		env_vars.extend(HashMap::from([
 			(String::from("PYTHONPATH"), PYTHONPATH.to_string()),

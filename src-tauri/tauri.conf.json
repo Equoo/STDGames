@@ -11,6 +11,8 @@
     "windows": [
       {
         "title": "stdgames",
+        "minWidth": 600,
+        "minHeight": 400,
         "width": 1000,
         "height": 600
       }
