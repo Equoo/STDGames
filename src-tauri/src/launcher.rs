@@ -243,6 +243,13 @@ impl Launcher {
 
 		let mut binds_str = String::new();
 		for (key, value) in binds {
+			// create the directory if it doesn't exist
+			if !Path::new(&key).exists() {
+				fs::create_dir_all(&key).expect("Unable to create directory");
+			}
+			if !Path::new(&value).exists() {
+				fs::create_dir_all(&value).expect("Unable to create directory");
+			}
 			let real_key_path = resolve_symlink(key).unwrap_or(String::from(""));
 			let real_value_path = resolve_symlink(value).unwrap_or(String::from(""));
 			binds_str.push_str(&format!(" --bind {} {}", real_key_path, real_value_path));
