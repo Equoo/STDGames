@@ -103,6 +103,8 @@ async fn create_golberg_config(launcher: &Launcher, game: &GameInfo) -> Result<(
 	} else if game.launch_type == "umu" {
 		let path = format!("/sgoinfre/{user}/.stdgames_saves/{}/drive_c/users/{user}/AppData/Roaming/Goldberg SteamEmu Saves/settings", game.proton);
 		golberg_config(launcher, path).await;
+		let path1 = format!("/sgoinfre/{user}/.stdgames_saves/{}/drive_c/users/st eamuser/AppData/Roaming/Goldberg SteamEmu Saves/settings", game.proton);
+		golberg_config(launcher, path1).await;
 	}
 	Ok(())
 }

@@ -105,6 +105,15 @@ async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupSta
 	})
 }
 
+#[tauri::command]
+async fn get_gameprocess_state() -> Result<bool, ()> {
+	let launcher = &LAUNCHER;
+	tauri::async_runtime::block_on(async {
+		let state = launcher.is_game_running();
+		Ok(state)
+	})
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
 	tauri::Builder::default()
@@ -113,7 +122,7 @@ pub fn run() {
             progress: 0,
             finish: false,
         }))
-		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state])
+		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state])
 		.setup(|app| {
             // Spawn setup as a non-blocking task so the windows can be
             // created and ran while it executes

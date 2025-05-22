@@ -33,6 +33,7 @@ pub struct GameInfo {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameData {
 	pub cover: String,
+	pub icon: String,
 	pub name: String,
 	pub genres: Vec<String>,
 	pub publisher: String,
@@ -87,62 +88,81 @@ impl GameLibrary {
 			i += 1;
 		}
 
-		let mut gamesdata: Vec<GameData> = vec![];
-		
-		let query = format!("fields url, game; where game = ({}); limit 50;", query_games);
-		let games_rq = fetch_igdb("covers", &query).unwrap();
-		
-		let games_per_id = games_rq.as_array().unwrap();
-		let mut game_rq: HashMap<usize, serde_json::Value> = HashMap::new();
-		for i in 0..games_per_id.len() {
-			let game = &games_per_id[i];
-			let game_id = game.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-			game_rq.insert(game_id, game.clone());
-		}
+		// vector len of games
+		let mut gamesdata: Vec<GameData> = Vec::new();
+		gamesdata.reserve(games.len()); 
+
+		let query = format!("
+query covers \"covers\" {{
+	fields url, game;
+	where game = ({});
+	limit 50;
+}};
+query artworks \"artworks\" {{
+	fields url, game;
+	where game = ({});
+	limit 50;
+}};
+query games \"games\" {{
+	fields name, summary;
+	where id = ({});
+	limit 50;
+}};
+		", query_games, query_games, query_games);
+		let games_rq = fetch_igdb("multiquery", &query).unwrap();
+		println!("Multi: {} {:?}", query, games_rq);
+
+		let void = vec![];
+		let covers = games_rq.get(0).and_then(|v| v.get("result").and_then(|v| v.as_array())).unwrap_or(&void);
+		let all_artworks = games_rq.get(1).and_then(|v| v.get("result").and_then(|v| v.as_array())).unwrap_or(&void);
+		let gamesinfos = games_rq.get(2).and_then(|v| v.get("result").and_then(|v| v.as_array())).unwrap_or(&void);
+
+		println!("Covers: {:?}", covers);
+		println!("all_artworks: {:?}", all_artworks);
 
 		for i in 0..games.len() {
 			let game = &games[i];
 			let id = game.igdb.as_u64().unwrap_or(0) as usize;
 
-			if game_rq.get(&id).is_none() {
-				gamesdata.push(GameData {
-					cover: "https://example.com/placeholder.jpg".to_string(),
-					name: "Unknown".to_string(),
-					genres: vec!["Unknown".to_string()],
-					publisher: "Unknown".to_string(),
-					developer: "Unknown".to_string(),
-					summary: "No summary available".to_string(),
-					rating: 0.0,
-					release_dates: vec![0.into()],
-					screenshots: vec!["https://example.com/screenshot.jpg".to_string()],
-					videos: vec!["https://example.com/video.mp4".to_string()],
-					artworks: vec!["https://example.com/artwork.jpg".to_string()],
-				});
-				println!("Game not found in IGDB: {}", game.name);
-				continue;
-			}
+			let mut cover = "https://example.com/placeholder.jpg".to_string();
+			let mut icon = "https://example.com/placeholder.jpg".to_string();
+			covers.iter().for_each(|v| {
+				if v.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize == id {
+					cover = v.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string()
+						.replace("t_thumb", "t_cover_big_2x")
+						.replace("//", "https://");
+					icon = v.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string()
+						.replace("t_thumb", "t_logo_med")
+						.replace("//", "https://");
+				}				
+			});
 
-			let cover = game_rq.get(&id).unwrap()
-				.get("url")
-				.and_then(|v| v.as_str())
-				.unwrap_or("")
-				.to_string()
-				.replace("t_thumb", "t_cover_big_2x")
-				.replace("//", "https://");
-			let name = "Unknown".to_string();
+			let mut artworks: Vec<String> = vec![];
+			all_artworks.iter().for_each(|v| {
+				if v.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize == id {
+					artworks.push(v.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string()
+						.replace("t_thumb", "t_cover_big_2x")
+						.replace("//", "https://"));
+				}
+			});
+
+			let void: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+			let gameinfo = gamesinfos.iter().find(|v| v.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize == id).and_then(|v| v.as_object()).unwrap_or(&void);
+			
+			let name = gameinfo.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
 			let genres = vec!["Action".to_string(), "Adventure".to_string()]; // Placeholder
 			let publisher = "Unknown".to_string(); // Placeholder
 			let developer
 			= "Unknown".to_string(); // Placeholder
-			let summary = "No summary available".to_string(); // Placeholder
+			let summary = gameinfo.get("summary").and_then(|v| v.as_str()).unwrap_or("").to_string();
 			let rating = 0.0; // Placeholder
 			let release_dates = vec![0.into()]; // Placeholder
 			let screenshots = vec!["https://example.com/screenshot.jpg".to_string()]; // Placeholder
 			let videos = vec!["https://example.com/video.mp4".to_string()]; // Placeholder
-			let artworks = vec!["https://example.com/artwork.jpg".to_string()]; // Placeholder
 
 			gamesdata.push(GameData {
 				cover,
+				icon,
 				name,
 				genres,
 				publisher,
@@ -152,7 +172,7 @@ impl GameLibrary {
 				release_dates,
 				screenshots,
 				videos,
-				artworks,
+				artworks
 			});
 		}
 

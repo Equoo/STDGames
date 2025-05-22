@@ -55,6 +55,76 @@ async function setup_progressbar() {
   //}
 }
 
+async function processinfo_think() {
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  
+  while (1) {
+    await sleep(250);
+    let state = await invoke("get_gameprocess_state", {});
+    
+    if (!state)
+    {
+      document.querySelector(".game-card").classList.remove("running");
+      document.querySelector(".game-list-item").classList.remove("running");
+    }
+  }
+}
+
+//Library and gameinfo section
+async function hideGameCards() {
+  const gamesSection = document.querySelector("#library");
+  gamesSection.classList.add("hidden");
+}
+
+async function showGameCards() {
+  const gamesSection = document.querySelector("#games");
+  gamesSection.classList.remove("hidden");
+}
+
+async function hideGameInfo() {
+  const gamesSection = document.querySelector("#game-info");
+  gamesSection.classList.add("hidden");
+}
+
+async function showGameInfo(game, data) {
+  const gamesSection = document.querySelector("#game-in");
+  console.log(game);
+  if (document.querySelector("#game-preview") == null) {
+    document.querySelector("#main-page").insertAdjacentHTML(
+      "beforeend",
+      `<div id="game-preview" class="page">
+        <h1 class="title">Game Preview</h1>
+        <div class="game-preview-artwork">
+  
+        </div>
+      </div>`
+    );
+    gamesSection.classList.remove("hidden");
+  } else {
+    return;
+  }
+}
+
+async function test(data, game) {
+  //cards
+  let elem = document.createElement("button");
+  elem.outerHTML(`<button class="game-card ${running}" id="${game.name}" game="${game.name}">
+      <div style="background-image: url('${data.cover}');"></div>
+      </button>`);
+
+  elem.addEventListener("click", click_on_game);
+  document.querySelector("#games").appendChild(elem);
+
+  //list
+  elem = document.createElement("li");
+  elem.outerHTML(`<li class="game-list-item ${running}" id="${game.name}">
+        <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
+        ${game.name}
+      </li>`);
+  elem.addEventListener("click", click_on_game);
+  document.querySelector("#game-list").appendChild(elem);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   fetchGameLibrary().then((library) => {
     let i = 0;
@@ -73,13 +143,34 @@ window.addEventListener("DOMContentLoaded", () => {
       document.querySelector("#game-list").insertAdjacentHTML(
         "afterbegin",
         `<li class="game-list-item ${running}" id="${game.name}">
+          <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
 					${game.name}
 				</li>`
       );
       i++;
     });
+    //GAMECARD
     document.querySelectorAll(".game-card").forEach((card) => {
       card.addEventListener("click", function () {
+        // TODO: add a preview gameinfo section
+
+        //hideGameCards();
+        const gameName = this.getAttribute("game");
+        //showGameCards();
+        const game = this.getAttribute("game");
+        //showGameInfo(game, data);
+        launchGame(game);
+
+        this.classList.add("running");
+      });
+    });
+    //GAMELIST
+    document.querySelectorAll(".game-list-item").forEach((game_list_elem) => {
+      game_list_elem.addEventListener("click", function () {
+        //hideGameCards();
+        //showGameInfo();
+        const gameName = this.getAttribute("game");
+        //showGameCards();
         const game = this.getAttribute("game");
         launchGame(game);
       });
