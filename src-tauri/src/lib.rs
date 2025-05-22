@@ -108,10 +108,8 @@ async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupSta
 #[tauri::command]
 async fn get_gameprocess_state() -> Result<bool, ()> {
 	let launcher = &LAUNCHER;
-	tauri::async_runtime::block_on(async {
-		let state = launcher.is_game_running();
-		Ok(state)
-	})
+	let state = launcher.is_game_running();
+	Ok(state)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

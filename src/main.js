@@ -62,10 +62,10 @@ async function processinfo_think() {
     await sleep(250);
     let state = await invoke("get_gameprocess_state", {});
     
-    if (!state)
+    if (state == false)
     {
-      document.querySelector(".game-card").classList.remove("running");
-      document.querySelector(".game-list-item").classList.remove("running");
+      document.querySelectorAll(".game-card").forEach(el => el.classList.remove("running"));
+      document.querySelectorAll(".game-list-item").forEach(el => el.classList.remove("running"));
     }
   }
 }
@@ -142,7 +142,7 @@ window.addEventListener("DOMContentLoaded", () => {
       );
       document.querySelector("#game-list").insertAdjacentHTML(
         "afterbegin",
-        `<li class="game-list-item ${running}" id="${game.name}">
+        `<li class="game-list-item ${running}" id="item_${game.name}" game="${game.name}">
           <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
 					${game.name}
 				</li>`
@@ -162,6 +162,7 @@ window.addEventListener("DOMContentLoaded", () => {
         launchGame(game);
 
         this.classList.add("running");
+        document.querySelector("#item_" + game).classList.add("running");
       });
     });
     //GAMELIST
@@ -173,9 +174,12 @@ window.addEventListener("DOMContentLoaded", () => {
         //showGameCards();
         const game = this.getAttribute("game");
         launchGame(game);
+        this.classList.add("running");
+        document.querySelector("#" + game).classList.add("running");
       });
     });
   });
   document.getElementById("add_icon").addEventListener("click", addIcon);
   setup_progressbar();
+  processinfo_think();
 });
