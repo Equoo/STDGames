@@ -220,7 +220,9 @@ impl Launcher {
 			"native" => &exec_path,
 			"umu" => {
 				env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
-				env_vars.insert("XDG_DATA_HOME".to_string(), format!("/tmp/{user}/.stdgames/"));
+				binds.insert(format!("/tmp/{user}/.stdgames/umu"), format!("/home/{user}/.local/share/umu"));
+				fs::create_dir_all(format!("/tmp/{user}/.stdgames/umu_cache")).expect("Unable to create directory");
+				binds.insert(format!("/tmp/{user}/.stdgames/umu_cache"), format!("/home/{user}/.cache/umu"));
 
 				&format!("umu-run {exec_path}")
 			},
