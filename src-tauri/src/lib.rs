@@ -58,6 +58,11 @@ async fn setup(app: tauri::AppHandle) {
 	drop(state_lock);
 	println!("Lancement de la configuration...");
 
+	let tmp_path = format!("/tmp/{}/.stdgames", env::var("USER").unwrap_or("".to_string()));
+	if !Path::new(&tmp_path).exists() {
+		fs::create_dir_all(tmp_path.clone()).expect("Erreur lors de la création du répertoire .stdgames");
+	}
+
 	let user = env::var("USER").unwrap_or("".to_string());
 	fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
 		.expect("Erreur lors de la création du répertoire .stdgames_saves");
