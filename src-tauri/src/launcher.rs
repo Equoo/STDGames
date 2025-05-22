@@ -140,6 +140,12 @@ async fn copy_rconfig_files(launcher: &Launcher, config: &Option<Vec<Rconf>>, ga
 	Ok(())
 }
 
+fn resolve_symlink(path_str: String) -> Result<String, std::io::Error> {
+    let path = Path::new(&path_str);
+    let canonical = fs::canonicalize(path)?;
+    Ok(canonical.to_string_lossy().into_owned())
+}
+
 impl Launcher {
 	pub fn new(library: Arc<GameLibrary>) -> Self {
 		Launcher {
@@ -237,7 +243,9 @@ impl Launcher {
 
 		let mut binds_str = String::new();
 		for (key, value) in binds {
-			binds_str.push_str(&format!(" --bind {} {}", key, value));
+			let real_key_path = resolve_symlink(key).unwrap_or(String::from(""));
+			let real_value_path = resolve_symlink(value).unwrap_or(String::from(""));
+			binds_str.push_str(&format!(" --bind {} {}", real_key_path, real_value_path));
 		}
 
 		if let Err(e) = fs::create_dir_all(format!("/tmp/{user}")) {
@@ -251,6 +259,8 @@ impl Launcher {
 			--uid 5 \
 			--proc /proc --dev /dev --tmpfs /tmp \
 			--bind /tmp/{user} /tmp \
+			--bind /sgoinfre /sgoinfre \
+			--bind /goinfre /goinfre \
 			--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 
 		let junest_env = env::var("JUNEST_ENV").unwrap_or("".to_string());
