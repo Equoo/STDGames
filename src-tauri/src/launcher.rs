@@ -185,8 +185,7 @@ impl Launcher {
 			.expect("Erreur lors de la copie des fichiers de configuration");
 
 		let user = env::var("USER").unwrap_or("".to_string());
-		//let junest_home = format!("/tmp/{user}/.stdgames/junest");
-		let junest_home = format!("/sgoinfre/dderny/.junest");
+		let junest_home = format!("/tmp/{user}/.stdgames/junest");
 		
 		let mut binds: HashMap<String, String> = HashMap::new();
 		let mut env_vars: HashMap<String, String> = data.env.clone();
@@ -225,6 +224,7 @@ impl Launcher {
 		let game_command = match data.launch_type.as_str() {
 			"native" => &exec_path,
 			"umu" => {
+				env_vars.insert("GAMEID".to_string(), "0".to_string());
 				//env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
 				binds.insert(format!("/tmp/{user}/.stdgames/umu"), format!("/home/{user}/.local/share/umu"));
 				fs::create_dir_all(format!("/tmp/{user}/.stdgames/umu_cache")).expect("Unable to create directory");
