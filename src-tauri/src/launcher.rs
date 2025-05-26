@@ -99,7 +99,6 @@ async fn create_golberg_config(launcher: &Launcher, game: &GameInfo) -> Result<(
 	if game.launch_type == "native" {
 		let path = format!("/home/{user}/.local/share/Goldberg SteamEmu Saves/settings");
 		golberg_config(launcher, path).await;
-
 	} else if game.launch_type == "umu" {
 		let path = format!("/sgoinfre/{user}/.stdgames_saves/{}/drive_c/users/{user}/AppData/Roaming/Goldberg SteamEmu Saves/settings", game.proton);
 		golberg_config(launcher, path).await;
@@ -225,7 +224,7 @@ impl Launcher {
 		let game_command = match data.launch_type.as_str() {
 			"native" => &exec_path,
 			"umu" => {
-				env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
+				//env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
 				binds.insert(format!("/tmp/{user}/.stdgames/umu"), format!("/home/{user}/.local/share/umu"));
 				fs::create_dir_all(format!("/tmp/{user}/.stdgames/umu_cache")).expect("Unable to create directory");
 				binds.insert(format!("/tmp/{user}/.stdgames/umu_cache"), format!("/home/{user}/.cache/umu"));
