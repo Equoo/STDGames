@@ -185,7 +185,8 @@ impl Launcher {
 			.expect("Erreur lors de la copie des fichiers de configuration");
 
 		let user = env::var("USER").unwrap_or("".to_string());
-		let junest_home = format!("/tmp/{user}/.stdgames/junest");
+		//let junest_home = format!("/tmp/{user}/.stdgames/junest");
+		let junest_home = format!("/sgoinfre/dderny/.junest");
 		
 		let mut binds: HashMap<String, String> = HashMap::new();
 		let mut env_vars: HashMap<String, String> = data.env.clone();
@@ -260,10 +261,18 @@ impl Launcher {
 
 		let uid = Uid::current().to_string();
 		let mut final_command = format!("cd {game_path}/{} && bwrap \
-			--bind / /	\
-			--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
 			--uid 5 \
-			--proc /proc --dev /dev --tmpfs /tmp \
+			--bind / / \
+			--dev /dev --proc /proc \
+			--bind /usr /usr \
+			--bind /lib /lib \
+			--bind /lib64 /lib64 \
+			--bind /etc /etc \
+			--bind /dev/dri /dev/dri \
+			--bind /dev/shm /dev/shm \
+			--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
+			--bind /tmp/.X11-unix /tmp/.X11-unix \
+			--tmpfs /tmp \
 			--bind /tmp/{user} /tmp \
 			--bind /sgoinfre /sgoinfre \
 			--bind /goinfre /goinfre \
@@ -277,6 +286,7 @@ impl Launcher {
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
 				--bind /tmp/{user} /tmp \
+				--bind /tmp/.X11-unix /tmp/.X11-unix \
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 		}
 
