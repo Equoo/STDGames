@@ -35,6 +35,7 @@ pub struct GameData {
 	pub cover: String,
 	pub icon: String,
 	pub name: String,
+	pub displayname: String,
 	pub genres: Vec<String>,
 	pub publisher: String,
 	pub developer: String,
@@ -147,13 +148,13 @@ query games \"games\" {{
 			});
 
 			let void: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
-			let gameinfo = gamesinfos.iter().find(|v| v.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize == id).and_then(|v| v.as_object()).unwrap_or(&void);
+			let gameinfo = gamesinfos.iter().find(|v| v.get("id").and_then(|v| v.as_u64()).unwrap_or(0) as usize == id).and_then(|v| v.as_object()).unwrap_or(&void);
 			
 			let name = gameinfo.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+			let displayname = gameinfo.get("name").and_then(|v| v.as_str()).expect("Missing game name").to_string();
 			let genres = vec!["Action".to_string(), "Adventure".to_string()]; // Placeholder
 			let publisher = "Unknown".to_string(); // Placeholder
-			let developer
-			= "Unknown".to_string(); // Placeholder
+			let developer = "Unknown".to_string(); // Placeholder
 			let summary = gameinfo.get("summary").and_then(|v| v.as_str()).unwrap_or("").to_string();
 			let rating = 0.0; // Placeholder
 			let release_dates = vec![0.into()]; // Placeholder
@@ -164,6 +165,7 @@ query games \"games\" {{
 				cover,
 				icon,
 				name,
+				displayname,
 				genres,
 				publisher,
 				developer,

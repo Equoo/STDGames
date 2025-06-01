@@ -57,121 +57,212 @@ async function setup_progressbar() {
 
 async function processinfo_think() {
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  
+
   while (1) {
     await sleep(250);
     let state = await invoke("get_gameprocess_state", {});
-    
-    if (state == false)
-    {
-      document.querySelectorAll(".game-card").forEach(el => el.classList.remove("running"));
-      document.querySelectorAll(".game-list-item").forEach(el => el.classList.remove("running"));
+
+    if (state == false) {
+      document
+        .querySelectorAll(".game-card")
+        .forEach((el) => el.classList.remove("running"));
+      document
+        .querySelectorAll(".game-list-item")
+        .forEach((el) => el.classList.remove("running"));
     }
   }
 }
 
-//Library and gameinfo section
+//Library and Game_preview section
 async function hideGameCards() {
   const gamesSection = document.querySelector("#library");
   gamesSection.classList.add("hidden");
 }
 
 async function showGameCards() {
-  const gamesSection = document.querySelector("#games");
+  const gamesSection = document.querySelector("#library");
   gamesSection.classList.remove("hidden");
 }
 
 async function hideGameInfo() {
-  const gamesSection = document.querySelector("#game-info");
+  const gamesSection = document.querySelector("#game-preview-container");
   gamesSection.classList.add("hidden");
 }
 
-async function showGameInfo(game, data) {
-  const gamesSection = document.querySelector("#game-in");
-  console.log(game);
-  if (document.querySelector("#game-preview") == null) {
+async function showGameInfo() {
+  const gamesSection = document.querySelector("#game-preview-container");
+  gamesSection.classList.remove("hidden");
+}
+
+async function displayGamePreview(game, data) {
+  const gamesSection = document.querySelector("#game-preview-container");
+
+  if (gamesSection == null) {
     document.querySelector("#main-page").insertAdjacentHTML(
       "beforeend",
-      `<div id="game-preview" class="page">
-        <h1 class="title">Game Preview</h1>
-        <div class="game-preview-artwork">
-  
-        </div>
-      </div>`
+      `<div id="game-preview-container" class="page">
+          <div class="game-preview" game="asd">
+            <div class="image-crop-container">
+              <img class="game-preview-artwork" />
+              <h1 class="title-overlay">Game Title</h1>
+                <div class="button-overlay">
+                  <button class="play-button">Play</button>
+                  <button class="game-settings-button">Game Settings</button>
+                </div>
+              </div>
+          </div>
+          <h2>Summary</h2>
+          <div class="game-description"></div>
+          <h3>Genres</h3>
+          <div class="game-genres"></div>
+        </div>`
     );
-    gamesSection.classList.remove("hidden");
-  } else {
-    return;
+    document.querySelector("#game-preview-container").classList.add("hidden");
   }
 }
 
-async function test(data, game) {
-  //cards
-  let elem = document.createElement("button");
-  elem.outerHTML(`<button class="game-card ${running}" id="${game.name}" game="${game.name}">
+function extractImageUrls(imageString) {
+  if (!imageString) return [];
+  const urls = imageString.split(",");
+  return urls[0];
+}
+
+async function changeGamePreview(game, data) {
+  const gameSection = document.querySelector("#game-preview-container");
+  if (!gameSection) return;
+
+  // Change title
+  const titleElement = gameSection.querySelector(".title-overlay");
+  titleElement.textContent = data.displayname;
+
+  // Change image source
+  const game_preview = document.querySelector(".game-preview");
+  game_preview.setAttribute("game", data.name);
+  const img = document.querySelector(".game-preview-artwork");
+  const container = document.querySelector(".image-crop-container");
+
+  img.onload = () => {
+    const imgRatio = img.naturalWidth / img.naturalHeight;
+    const containerRatio = container.clientWidth / container.clientHeight;
+
+    if (imgRatio < containerRatio) {
+      // Too tall → crop
+      img.style.height = "auto";
+      img.style.top = "50%";
+      img.style.transform = "translateY(-50%)";
+      img.style.objectFit = "cover";
+    } else {
+      // Normal or wide → fit height naturally
+      img.style.height = "100%";
+      img.style.top = "0";
+      img.style.transform = "none";
+      img.style.objectFit = "fill";
+    }
+  };
+
+  if (data.artworks[0] == null) {
+    img.src = data.cover;
+  } else {
+    img.src = data.artworks[0];
+  }
+
+  //data.genres.forEach((genre) => {
+  //  document.querySelector(".game-genres").innerHTML("afterbegin" ,`<div class="game-genres-item"></div>`);
+  //  document.querySelector(".game-genres-item").textContent = genre;
+  //});
+  // Change description
+  const descriptionElement = gameSection.querySelector(".game-description");
+  if (data.summary) {
+    descriptionElement.textContent = data.summary;
+  }
+  // Reveal the section (if needed)
+  gameSection.classList.remove("hidden");
+}
+
+async function displayLibrary(game, data, running) {
+  document.querySelector("#games").insertAdjacentHTML(
+    "afterbegin",
+    `<button class="game-card ${running}" id="${game.name}" game="${game.name}">
       <div style="background-image: url('${data.cover}');"></div>
-      </button>`);
+    </button>`
+  );
+}
 
-  elem.addEventListener("click", click_on_game);
-  document.querySelector("#games").appendChild(elem);
-
-  //list
-  elem = document.createElement("li");
-  elem.outerHTML(`<li class="game-list-item ${running}" id="${game.name}">
-        <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
-        ${game.name}
-      </li>`);
-  elem.addEventListener("click", click_on_game);
-  document.querySelector("#game-list").appendChild(elem);
+async function displayGameList(game, data, running) {
+  document.querySelector("#game-list").insertAdjacentHTML(
+    "afterbegin",
+    `<li class="game-list-item ${running}" id="item_${game.name}" game="${game.name}">
+      <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
+      ${data.displayname}
+    </li>`
+  );
 }
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchGameLibrary().then((library) => {
     let i = 0;
-
+    let data;
+    let running = "";
+    ////////////////DISPLAY//////////////////////////
+    displayGamePreview(null, null);
     library.games.forEach((game) => {
-      let data = library.gamesdata[i];
-
-      let running = "";
-      if (game.name == "cs2") running = "running";
-      document.querySelector("#games").insertAdjacentHTML(
-        "afterbegin",
-        `<button class="game-card ${running}" id="${game.name}" game="${game.name}">
-					<div style="background-image: url('${data.cover}');"></div>
-				</button>`
-      );
-      document.querySelector("#game-list").insertAdjacentHTML(
-        "afterbegin",
-        `<li class="game-list-item ${running}" id="item_${game.name}" game="${game.name}">
-          <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
-					${game.name}
-				</li>`
-      );
+      data = library.gamesdata[i];
+      data.name = game.name;
+      displayLibrary(game, data, running);
+      displayGameList(game, data, running);
       i++;
     });
-    //GAMECARD
+
+    //////////////////ONCLICK////////////////////////
+
+    ////////////TOPBAR/////////////
+    //addicon
+    let addicon_button = document.getElementById("addicon-button");
+    addicon_button.addEventListener("click", function () {
+      addIcon();
+    });
+    //library
+    let lib_button = document.getElementById("library-button");
+    lib_button.addEventListener("click", function () {
+      hideGameInfo();
+      showGameCards();
+    });
+    //aboutus
+    let aboutus_button = document.getElementById("aboutus-button");
+    aboutus_button.addEventListener("click", function () {
+      openAboutUs();
+    });
+    //settings
+    let settings_button = document.getElementById("settings-button");
+    settings_button.addEventListener("click", function () {
+      openSettings();
+    });
+
+    ////////////GAMECARD//////////////
     document.querySelectorAll(".game-card").forEach((card) => {
       card.addEventListener("click", function () {
-        // TODO: add a preview gameinfo section
-
-        //hideGameCards();
-        const gameName = this.getAttribute("game");
-        //showGameCards();
         const game = this.getAttribute("game");
-        //showGameInfo(game, data);
-        launchGame(game);
-
-        this.classList.add("running");
-        document.querySelector("#item_" + game).classList.add("running");
+        hideGameCards();
+        showGameInfo();
+        let i = 0;
+        data = library.gamesdata[i];
+        while (data.name != game) {
+          data = library.gamesdata[i];
+          i++;
+        }
+        changeGamePreview(game, data);
       });
     });
+
+    let playbutton = document.querySelector(".play-button");
+      playbutton.addEventListener("click", function() {
+        const game = document.querySelector(".game-preview").getAttribute("game");
+        launchGame(game) 
+    });
+
     //GAMELIST
     document.querySelectorAll(".game-list-item").forEach((game_list_elem) => {
       game_list_elem.addEventListener("click", function () {
-        //hideGameCards();
-        //showGameInfo();
-        const gameName = this.getAttribute("game");
-        //showGameCards();
         const game = this.getAttribute("game");
         launchGame(game);
         this.classList.add("running");
@@ -179,7 +270,6 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
-  document.getElementById("add_icon").addEventListener("click", addIcon);
   setup_progressbar();
   processinfo_think();
 });
