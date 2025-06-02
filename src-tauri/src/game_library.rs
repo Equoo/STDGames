@@ -142,7 +142,7 @@ query games \"games\" {{
 			all_artworks.iter().for_each(|v| {
 				if v.get("game").and_then(|v| v.as_u64()).unwrap_or(0) as usize == id {
 					artworks.push(v.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string()
-						.replace("t_thumb", "t_cover_big_2x")
+						.replace("t_thumb", "t_1080p_2x")
 						.replace("//", "https://"));
 				}
 			});

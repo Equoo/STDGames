@@ -142,22 +142,23 @@ async function changeGamePreview(game, data) {
   const container = document.querySelector(".image-crop-container");
 
   img.onload = () => {
-    const imgRatio = img.naturalWidth / img.naturalHeight;
-    const containerRatio = container.clientWidth / container.clientHeight;
+    //const imgRatio = img.naturalWidth / img.naturalHeight;
+    //const containerRatio = container.clientWidth / container.clientHeight;
 
-    if (imgRatio < containerRatio) {
+    //if (imgRatio < containerRatio) {
       // Too tall → crop
       img.style.height = "auto";
       img.style.top = "50%";
       img.style.transform = "translateY(-50%)";
+      img.style.objectPosition = "center";
       img.style.objectFit = "cover";
-    } else {
-      // Normal or wide → fit height naturally
-      img.style.height = "100%";
-      img.style.top = "0";
-      img.style.transform = "none";
-      img.style.objectFit = "fill";
-    }
+    //} else {
+    //  // Normal or wide → fit height naturally
+    //  img.style.height = "100%";
+    //  img.style.top = "0";
+    //  img.style.transform = "none";
+    //  img.style.objectFit = "fill";
+    //}
   };
 
   if (data.artworks[0] == null) {
