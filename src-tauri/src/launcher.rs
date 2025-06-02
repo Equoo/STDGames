@@ -271,9 +271,9 @@ impl Launcher {
 			--bind /dev/dri /dev/dri \
 			--bind /dev/shm /dev/shm \
 			--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
-			--bind /tmp/.X11-unix /tmp/.X11-unix \
 			--tmpfs /tmp \
 			--bind /tmp/{user} /tmp \
+			--bind /tmp/.X11-unix /tmp/.X11-unix \
 			--bind /sgoinfre /sgoinfre \
 			--bind /goinfre /goinfre \
 			--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
@@ -281,14 +281,14 @@ impl Launcher {
 		let junest_env = env::var("JUNEST_ENV").unwrap_or("".to_string());
 		if junest_env != "1" {
 			final_command = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
-				--bind /run/user/{uid} /run/user/{uid}	\
-				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
 				--bind /tmp/{user} /tmp \
-				--bind /tmp/.X11-unix /tmp/.X11-unix \
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 		}
+				//--bind /run/user/{uid} /run/user/{uid}	\
+				//--uid 5 \
+				//--bind /tmp/.X11-unix /tmp/.X11-unix \
 
 		println!("Launching game: {}", final_command);
 		let process = Command::new("sh")

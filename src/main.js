@@ -103,7 +103,7 @@ async function displayGamePreview(game, data) {
       `<div id="game-preview-container" class="page">
           <div class="game-preview" game="asd">
             <div class="image-crop-container">
-              <img class="game-preview-artwork" />
+              <div class="game-preview-artwork"></div>
               <h1 class="title-overlay">Game Title</h1>
                 <div class="button-overlay">
                   <button class="play-button">Play</button>
@@ -141,30 +141,10 @@ async function changeGamePreview(game, data) {
   const img = document.querySelector(".game-preview-artwork");
   const container = document.querySelector(".image-crop-container");
 
-  img.onload = () => {
-    //const imgRatio = img.naturalWidth / img.naturalHeight;
-    //const containerRatio = container.clientWidth / container.clientHeight;
-
-    //if (imgRatio < containerRatio) {
-      // Too tall → crop
-      img.style.height = "auto";
-      img.style.top = "50%";
-      img.style.transform = "translateY(-50%)";
-      img.style.objectPosition = "center";
-      img.style.objectFit = "cover";
-    //} else {
-    //  // Normal or wide → fit height naturally
-    //  img.style.height = "100%";
-    //  img.style.top = "0";
-    //  img.style.transform = "none";
-    //  img.style.objectFit = "fill";
-    //}
-  };
-
   if (data.artworks[0] == null) {
-    img.src = data.cover;
+    img.style.backgroundImage = `url(${data.cover})`;
   } else {
-    img.src = data.artworks[0];
+    img.style.backgroundImage = `url(${data.artworks[0]})`;
   }
 
   //data.genres.forEach((genre) => {
@@ -240,7 +220,8 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     ////////////GAMECARD//////////////
-    document.querySelectorAll(".game-card").forEach((card) => {
+
+    function game_click_handler(card) {
       card.addEventListener("click", function () {
         const game = this.getAttribute("game");
         hideGameCards();
@@ -253,22 +234,15 @@ window.addEventListener("DOMContentLoaded", () => {
         }
         changeGamePreview(game, data);
       });
-    });
+    }
+
+    document.querySelectorAll(".game-card").forEach(game_click_handler);
+    document.querySelectorAll(".game-list-item").forEach(game_click_handler);
 
     let playbutton = document.querySelector(".play-button");
       playbutton.addEventListener("click", function() {
         const game = document.querySelector(".game-preview").getAttribute("game");
         launchGame(game) 
-    });
-
-    //GAMELIST
-    document.querySelectorAll(".game-list-item").forEach((game_list_elem) => {
-      game_list_elem.addEventListener("click", function () {
-        const game = this.getAttribute("game");
-        launchGame(game);
-        this.classList.add("running");
-        document.querySelector("#" + game).classList.add("running");
-      });
     });
   });
   setup_progressbar();

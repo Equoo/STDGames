@@ -70,7 +70,7 @@ h1 {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 10px;
+	padding: 0px 10px;
 }
 
 /* Left and middle groups align side-by-side if needed */
@@ -125,10 +125,16 @@ h1 {
 }
 .sidebar li {
 	padding: 5px;
-	margin: 10px;
+	margin: 10px 0;
 	cursor: pointer;
 	transition: background-color 0.3s;
 	align-content: space-around;
+	font-size: 0.8em;
+	font-weight: normal;
+	align-items: center;
+}
+.sidebar li:hover {
+	background-color: rgb(50, 50, 50);
 }
 .sidebar .running {
 	color: rgb(104, 205, 4);
@@ -140,8 +146,42 @@ h1 {
 	text-align: end;
 	align-content: space-around;
 	flex: 10%;
-	font-size: 1em;
+	font-size: 0.8em;
 }
+
+.sidebar .search {
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+}
+.sidebar .search input {
+	flex: 1;
+	padding: 5px;
+	border: none;
+	border-radius: 5px 0 0 5px;
+	background-color: #444;
+	color: #fff;
+	height: 1.8em;
+}
+.sidebar .search input:focus {
+	outline: none;
+	box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+.sidebar .search button {
+	margin: 0;
+	padding: 5px;
+	background-color: #555;
+	color: #fff;
+	border: none;
+	border-radius: 0 5px 5px 0;
+	cursor: pointer;
+	transition: background-color 0.3s;
+	height: 1.8em;
+}
+.sidebar .search button:hover {
+	background-color: #666;
+}
+
 
 /*gamelist is the leftsidebar section elements*/
 .game-list {
@@ -261,10 +301,15 @@ h1 {
 /* Image centered vertically */
 .game-preview-artwork {
 	width: 100%;
+	height: 100%;
 	position: absolute;
-	left: 0;
 	top: 0;
-	transition: all 0.2s ease;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center;
 }
 .game-description {
 	margin-top: 10px;
