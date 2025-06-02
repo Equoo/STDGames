@@ -191,7 +191,7 @@ impl Launcher {
 		let mut env_vars: HashMap<String, String> = data.env.clone();
 		env_vars.insert("JUNEST_HOME".to_string(), junest_home.to_string());
 
-		const JUNEST_PATH: &str = "/sgoinfre/dderny/junest/bin/junest";
+		const JUNEST_PATH: &str = "/sgoinfre/stdgames/.ressources/tmp_junest";
 		let game_path = format!("{GAMES_PATH}/{}", &data.name);
 		let exec_path = format!("{game_path}/{}", &data.exec_path);
 
