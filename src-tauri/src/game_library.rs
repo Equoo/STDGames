@@ -111,15 +111,15 @@ query games \"games\" {{
 }};
 		", query_games, query_games, query_games);
 		let games_rq = fetch_igdb("multiquery", &query).unwrap();
-		println!("Multi: {} {:?}", query, games_rq);
+		//println!("Multi: {} {:?}", query, games_rq);
 
 		let void = vec![];
 		let covers = games_rq.get(0).and_then(|v| v.get("result").and_then(|v| v.as_array())).unwrap_or(&void);
 		let all_artworks = games_rq.get(1).and_then(|v| v.get("result").and_then(|v| v.as_array())).unwrap_or(&void);
 		let gamesinfos = games_rq.get(2).and_then(|v| v.get("result").and_then(|v| v.as_array())).unwrap_or(&void);
 
-		println!("Covers: {:?}", covers);
-		println!("all_artworks: {:?}", all_artworks);
+		//println!("Covers: {:?}", covers);
+		//println!("all_artworks: {:?}", all_artworks);
 
 		for i in 0..games.len() {
 			let game = &games[i];

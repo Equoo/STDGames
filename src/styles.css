@@ -9,6 +9,14 @@ body {
 	margin-right: 0%;
 	margin-bottom: 0%;
 }
+
+select {
+	color: #444;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
 /* button */
 button {
 	padding: 10px 20px;
@@ -158,6 +166,7 @@ h1 {
 	flex: 1;
 	padding: 5px;
 	border: none;
+	overflow: hidden;
 	border-radius: 5px 0 0 5px;
 	background-color: #444;
 	color: #fff;

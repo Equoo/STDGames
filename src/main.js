@@ -20,7 +20,7 @@ async function launchGame(game) {
 async function fetchGameLibrary() {
   try {
     const library = await invoke("get_game_library", {});
-    console.log("Game Library:", library);
+    //console.log("Game Library:", library);
     return library;
   } catch (error) {
     console.error("Failed to fetch game library:", error);
@@ -179,20 +179,84 @@ async function displayGameList(game, data, running) {
   );
 }
 
+async function sortGames(combined, order) {
+  if (order === "descending") {
+    combined.sort((a, b) =>
+      b.data.displayname.localeCompare(a.data.displayname, undefined, {
+        sensitivity: "base",
+      })
+    );
+  } else if (order === "ascending") {
+    combined.sort((a, b) =>
+      a.data.displayname.localeCompare(b.data.displayname, undefined, {
+        sensitivity: "base",
+      })
+    );
+  }
+}
+
+async function handleSortBy(combined, running, game_click_handler)
+{
+  document.getElementById("sort-select").addEventListener("change", async function () {
+    const selectedOrder = this.value;
+  
+    // Sort the combined list
+    await sortGames(combined, selectedOrder);
+  
+    // Clear the current display
+    document.getElementById("games").innerHTML = "";
+    document.getElementById("game-list").innerHTML = "";
+  
+    // Re-render the sorted list
+    combined.forEach(({ game, data }) => {
+      displayLibrary(game, data, running);
+      displayGameList(game, data, running);
+    });
+  
+    document.querySelectorAll(".game-card").forEach(game_click_handler);
+    document.querySelectorAll(".game-list-item").forEach(game_click_handler);
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   fetchGameLibrary().then((library) => {
-    let i = 0;
-    let data;
     let running = "";
-    ////////////////DISPLAY//////////////////////////
     displayGamePreview(null, null);
-    library.games.forEach((game) => {
-      data = library.gamesdata[i];
+
+    // Zip games and gamesdata together
+    const combined = library.games.map((game, i) => ({
+      game: game,
+      data: library.gamesdata[i],
+    }));
+
+
+    sortGames(combined, "descending");
+    // Display sorted list
+    combined.forEach(({ game, data }) => {
       data.name = game.name;
       displayLibrary(game, data, running);
       displayGameList(game, data, running);
-      i++;
     });
+
+    function game_click_handler(card) {
+      card.addEventListener("click", function () {
+        const game = this.getAttribute("game");
+        
+        hideGameCards();
+        showGameInfo();
+        let i = 0;
+        let data = library.gamesdata[i];
+        console.log("game =" + game);
+        console.log("gamesdata =" + library.gamesdata[i]);
+        while (data.name != game) {
+          data = library.gamesdata[i];
+          i++;
+        }
+        changeGamePreview(game, data);
+      });
+    }
+
+    handleSortBy(combined, running, game_click_handler);
 
     //////////////////ONCLICK////////////////////////
 
@@ -221,28 +285,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
     ////////////GAMECARD//////////////
 
-    function game_click_handler(card) {
-      card.addEventListener("click", function () {
-        const game = this.getAttribute("game");
-        hideGameCards();
-        showGameInfo();
-        let i = 0;
-        data = library.gamesdata[i];
-        while (data.name != game) {
-          data = library.gamesdata[i];
-          i++;
-        }
-        changeGamePreview(game, data);
-      });
-    }
+
 
     document.querySelectorAll(".game-card").forEach(game_click_handler);
     document.querySelectorAll(".game-list-item").forEach(game_click_handler);
 
     let playbutton = document.querySelector(".play-button");
-      playbutton.addEventListener("click", function() {
-        const game = document.querySelector(".game-preview").getAttribute("game");
-        launchGame(game) 
+    playbutton.addEventListener("click", function () {
+      const game = document.querySelector(".game-preview").getAttribute("game");
+      launchGame(game);
     });
   });
   setup_progressbar();

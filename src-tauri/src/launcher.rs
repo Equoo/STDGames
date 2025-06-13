@@ -155,6 +155,12 @@ impl Launcher {
 	}
 
 	pub async fn launch_game(&self, game: &str) -> Result<(), Box<dyn std::error::Error>> {
+		let junest_env = env::var("JUNEST_ENV").unwrap_or("".to_string());
+		if junest_env == "1" {
+			println!("JUNEST_ENV is set to 1, skipping JUNEST launch.");
+			return Ok(());
+		}
+		
 		let running_process = self.running_process.lock().unwrap();
 		if running_process.is_some() {
 			drop(running_process);
@@ -218,7 +224,8 @@ impl Launcher {
 			(String::from("PROTONPATH"), protonpath.clone()),
 			(String::from("STEAM_COMPAT_DATA_PATH"), prefix.clone()),
 			(String::from("WINEPREFIX"), prefix),
-			(String::from("DXVK_ASYNC"), String::from("1"))
+			(String::from("DXVK_ASYNC"), String::from("1")) ,
+			(String::from("LD_LIBRARY_PATH"), String::from("/usr/lib:/usr/lib32"))
 		]));
 
 		let game_command = match data.launch_type.as_str() {
@@ -230,7 +237,7 @@ impl Launcher {
 				fs::create_dir_all(format!("/tmp/{user}/.stdgames/umu_cache")).expect("Unable to create directory");
 				binds.insert(format!("/tmp/{user}/.stdgames/umu_cache"), format!("/home/{user}/.cache/umu"));
 
-				&format!("umu-run {exec_path}")
+				&format!("/sgoinfre/stdgames/.ressources/umu/bin/umu-run {exec_path}")
 			},
 			"epicgame" => {
 				&format!("legendary launch --wine {} {}", protonpath, data.exec_path)
@@ -278,12 +285,13 @@ impl Launcher {
 			--bind /goinfre /goinfre \
 			--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 
-		let junest_env = env::var("JUNEST_ENV").unwrap_or("".to_string());
 		if junest_env != "1" {
 			final_command = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
+				--bind /media /media				\
 				--bind /tmp/{user} /tmp \
+			--bind /tmp/.X11-unix /tmp/.X11-unix \
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 		}
 				//--bind /run/user/{uid} /run/user/{uid}	\

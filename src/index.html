@@ -4,7 +4,8 @@
 <head>
 	<meta charset="UTF-8">
 	<link rel="stylesheet" href="styles.css" />
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=search" />
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=search" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>STDGames</title>
 	<script type="module" src="/main.js" defer></script>
@@ -14,22 +15,22 @@
 <body>
 	<div class="topbar">
 		<div class="topbar-content">
-		  <div class="left-group">
-			<img src="/resources/icons/stdgames.png" alt="Logo" class="logo" />
-			<button id="addicon-button">Add to desktop</button>
-		  </div>
-	  
-		  <div class="middle-group">
-			<button id="library-button">Library</button>
-			<button id="aboutus-button">About Us</button>
-		  </div>
-	  
-		  <div class="right-group">
-			<button id="settings-button">Settings</button>
-		  </div>
+			<div class="left-group">
+				<img src="/resources/icons/stdgames.png" alt="Logo" class="logo" />
+				<button id="addicon-button">Add to desktop</button>
+			</div>
+
+			<div class="middle-group">
+				<button id="library-button">Library</button>
+				<button id="aboutus-button">About Us</button>
+			</div>
+
+			<div class="right-group">
+				<button id="settings-button">Settings</button>
+			</div>
 		</div>
-	  </div>
-	  
+	</div>
+
 	<div id="main-page" class="big-container">
 		<div class="sidebar">
 			<div class="search">
@@ -42,10 +43,15 @@
 				<ul id="game-list"></ul>
 			</div>
 		</div>
-			<div id="library" class="page">
-				<h1 class="title">Library</h1>
-				<div id="games" class="container"></div>
-			</div>
+		<div id="library" class="page">
+			<h1 class="title">Library</h1>
+			<label for="sort-select">Sort by name:</label>
+			<select id="sort-select">
+				<option value="descending">A → Z</option>
+				<option value="ascending">Z → A</option>
+			</select>
+			<div id="games" class="container"></div>
+		</div>
 		<div class="progress">
 			<div class="progress-bar" id="progress-bar"></div>
 			<p id="progress-text"></p>
