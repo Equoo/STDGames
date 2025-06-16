@@ -62,7 +62,7 @@ async function processinfo_think() {
     await sleep(250);
     let state = await invoke("get_gameprocess_state", {});
 
-    if (state && state.game) {
+    if (state) {
       // Game is running, highlight it
       document
         .querySelectorAll(".game-card")
@@ -71,8 +71,8 @@ async function processinfo_think() {
         .querySelectorAll(".game-list-item")
         .forEach((el) => el.classList.remove("running"));
 
-      let card = document.querySelector(`.game-card[game="${state.game}"]`);
-      let listItem = document.querySelector(`.game-list-item[game="${state.game}"]`);
+      let card = document.querySelector(`.game-card[game="${state}"]`);
+      let listItem = document.querySelector(`.game-list-item[game="${state}"]`);
 
       if (card) card.classList.add("running");
       if (listItem) listItem.classList.add("running");

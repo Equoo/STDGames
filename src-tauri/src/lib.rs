@@ -33,7 +33,7 @@ fn launch_game(game: String) {
 }
 
 #[tauri::command]
-fn game_state() -> bool {
+fn game_state() -> Option<String> {
 	let launcher = &LAUNCHER;
     launcher.is_game_running()
 }
@@ -111,7 +111,7 @@ async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupSta
 }
 
 #[tauri::command]
-async fn get_gameprocess_state() -> Result<bool, ()> {
+async fn get_gameprocess_state() -> Result<Option<String>, ()> {
 	let launcher = &LAUNCHER;
 	let state = launcher.is_game_running();
 	Ok(state)

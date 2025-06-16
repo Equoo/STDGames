@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::io::Write;
 use nix::libc::open;
+use nix::libc::NOEXPR;
 use nix::unistd::Uid;
 use serde_json::{Number};
 use serde::Deserialize;
@@ -23,6 +24,7 @@ pub struct UserData {
 
 pub struct Launcher {
 	running_process: Arc<Mutex<Option<Child>>>,
+	running_game: Arc<Mutex<String>>,
 	pub library: Arc<GameLibrary>,
 	pub user_data: UserData
 }
@@ -149,6 +151,7 @@ impl Launcher {
 	pub fn new(library: Arc<GameLibrary>) -> Self {
 		Launcher {
 			running_process: Arc::new(Mutex::new(None)),
+			running_game: Arc::new(Mutex::new(String::new())),
 			library: library,
 			user_data: loadData()
 		}
@@ -310,29 +313,34 @@ impl Launcher {
 		{
 			let mut running_process = self.running_process.lock().unwrap();
 			*running_process = Some(process);
+			let mut running_game = self.running_game.lock().unwrap();
+			*running_game = game.to_string();
 		}
 
 		println!("Game launched!");
 		Ok(())
 	}
 
-	pub fn is_game_running(&self) -> bool {
+	pub fn is_game_running(&self) -> Option<String> {
 		let mut running_process = self.running_process.lock().unwrap(); // Get a mutable lock
 		if let Some(child) = running_process.as_mut() {
 			match child.try_wait() {
 				Ok(Some(status)) => {
 					println!("Game exited with: {:?}", status);
 					*running_process = None; // Clear the process after it exits
-					false
+					None
 				}
-				Ok(None) => true,
+				Ok(None) => {
+					let running_game = self.running_game.lock().unwrap();
+					Some(running_game.clone()) // Return the name of the running game
+				}
 				Err(e) => {
 					eprintln!("Error checking process status: {:?}", e);
-					false
+					None
 				}
 			}
 		} else {
-			false
+			None
 		}
 	}
 }
