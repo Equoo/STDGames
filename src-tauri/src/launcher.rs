@@ -232,12 +232,12 @@ impl Launcher {
 			"native" => &exec_path,
 			"umu" => {
 				env_vars.insert("GAMEID".to_string(), "0".to_string());
-				//env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
+				env_vars.insert("UMU_RUNTIME_UPDATE".to_string(), "0".to_string());
 				binds.insert(format!("/tmp/{user}/.stdgames/umu"), format!("/home/{user}/.local/share/umu"));
 				fs::create_dir_all(format!("/tmp/{user}/.stdgames/umu_cache")).expect("Unable to create directory");
 				binds.insert(format!("/tmp/{user}/.stdgames/umu_cache"), format!("/home/{user}/.cache/umu"));
 
-				&format!("/sgoinfre/stdgames/.ressources/umu/bin/umu-run {exec_path}")
+				&format!("umu-run {exec_path}")
 			},
 			"epicgame" => {
 				&format!("legendary launch --wine {} {}", protonpath, data.exec_path)
@@ -267,33 +267,35 @@ impl Launcher {
 		}
 
 		let uid = Uid::current().to_string();
-		let mut final_command = format!("cd {game_path}/{} && bwrap \
-			--uid 5 \
-			--bind / / \
-			--dev /dev --proc /proc \
-			--bind /usr /usr \
-			--bind /lib /lib \
-			--bind /lib64 /lib64 \
-			--bind /etc /etc \
-			--bind /dev/dri /dev/dri \
-			--bind /dev/shm /dev/shm \
-			--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
-			--tmpfs /tmp \
-			--bind /tmp/{user} /tmp \
-			--bind /tmp/.X11-unix /tmp/.X11-unix \
-			--bind /sgoinfre /sgoinfre \
-			--bind /goinfre /goinfre \
-			--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
+		//let mut final_command = format!("cd {game_path}/{} && bwrap \
+		//	--uid 5 \
+		//	--bind / / \
+		//	--dev /dev --proc /proc \
+		//	--bind /run /run \
+		//	--bind /usr /usr \
+		//	--bind /lib /lib \
+		//	--bind /lib64 /lib64 \
+		//	--bind /etc /etc \
+		//	--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
+		//	--tmpfs /tmp \
+		//	--bind /tmp/{user} /tmp \
+		//	--bind /tmp/.X11-unix /tmp/.X11-unix \
+		//	--bind /dev/dri /dev/dri \
+		//	--bind /dev/shm /dev/shm \
+		//	--bind /sgoinfre /sgoinfre \
+		//	--bind /goinfre /goinfre \
+		//	{binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 
-		if junest_env != "1" {
-			final_command = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
+		//if data.launch_type.as_str() == "native" {
+		let mut	final_command = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
+				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
 				--bind /media /media				\
 				--bind /tmp/{user} /tmp \
-			--bind /tmp/.X11-unix /tmp/.X11-unix \
+				--bind /tmp/.X11-unix /tmp/.X11-unix \
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir.clone().unwrap_or("".to_string()));
-		}
+		//}
 				//--bind /run/user/{uid} /run/user/{uid}	\
 				//--uid 5 \
 				//--bind /tmp/.X11-unix /tmp/.X11-unix \

@@ -44,12 +44,16 @@
 			</div>
 		</div>
 		<div id="library" class="page">
-			<h1 class="title">Library</h1>
-			<label for="sort-select">Sort by name:</label>
-			<select id="sort-select">
-				<option value="descending">A → Z</option>
-				<option value="ascending">Z → A</option>
-			</select>
+			<div class="library-header">
+				<h1 class="title">Library</h1>
+				<div class="custom-dropdown">
+					<button id="dropdown-button">Sort by ▼</button>
+					<ul id="dropdown-menu" class="hidden">
+					  <li data-value="descending">A → Z</li>
+					  <li data-value="ascending">Z → A</li>
+					</ul>
+				  </div>
+			</div>
 			<div id="games" class="container"></div>
 		</div>
 		<div class="progress">

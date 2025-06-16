@@ -17,6 +17,11 @@ select {
 	cursor: pointer;
 }
 
+option {
+	background-color: #76c7c0;
+	color: aqua;
+}
+
 /* button */
 button {
 	padding: 10px 20px;
@@ -28,32 +33,41 @@ button {
 	border-radius: 5px;
 	cursor: pointer;
 }
+
 button:hover {
 	background-color: #666;
 }
+
 /* title section */
 .title {
 	font-size: 24px;
 	margin-bottom: 10px;
 }
+
 .title:hover {
 	/*text-decoration: underline;*/
 }
+
 .title:active {
 	text-decoration: none;
 }
+
 .title:focus {
 	outline: none;
 }
+
 .title:focus-visible {
 	outline: 2px solid #fff;
 }
+
 .title:focus-visible:hover {
 	text-decoration: underline;
 }
+
 .title:focus-visible:active {
 	text-decoration: none;
 }
+
 h1 {
 	margin-bottom: 20px;
 }
@@ -69,11 +83,13 @@ h1 {
 	align-content: center;
 	background-color: rgb(23, 23, 23);
 }
+
 .topbar img {
 	width: 80px;
 	height: 80px;
 	margin-right: 10px;
 }
+
 .topbar-content {
 	display: flex;
 	justify-content: space-between;
@@ -94,9 +110,11 @@ h1 {
 .right-group {
 	margin-left: auto;
 }
+
 .topbar-content .title {
 	margin: 0;
 }
+
 .topbar-content .title:hover {
 	text-decoration: none;
 }
@@ -119,6 +137,7 @@ h1 {
 	/* allows vertical scrolling */
 	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
 }
+
 .sidebar ul {
 	list-style: none;
 	padding: 0px;
@@ -126,11 +145,13 @@ h1 {
 	align-items: left;
 	overflow: hidden;
 }
+
 .sidebar h2 {
 	list-style: none;
 	padding: 0px;
 	margin: 0;
 }
+
 .sidebar li {
 	padding: 5px;
 	margin: 10px 0;
@@ -141,14 +162,17 @@ h1 {
 	font-weight: normal;
 	align-items: center;
 }
+
 .sidebar li:hover {
 	background-color: rgb(50, 50, 50);
 }
+
 .sidebar .running {
 	color: rgb(104, 205, 4);
 	font-weight: bold;
 	background-color: rgb(2, 121, 128);
 }
+
 .sidebar .running::after {
 	content: "is Running";
 	text-align: end;
@@ -162,6 +186,7 @@ h1 {
 	align-items: center;
 	margin-bottom: 10px;
 }
+
 .sidebar .search input {
 	flex: 1;
 	padding: 5px;
@@ -172,10 +197,12 @@ h1 {
 	color: #fff;
 	height: 1.8em;
 }
+
 .sidebar .search input:focus {
 	outline: none;
 	box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
+
 .sidebar .search button {
 	margin: 0;
 	padding: 5px;
@@ -187,6 +214,7 @@ h1 {
 	transition: background-color 0.3s;
 	height: 1.8em;
 }
+
 .sidebar .search button:hover {
 	background-color: #666;
 }
@@ -198,6 +226,7 @@ h1 {
 	padding: 0;
 	margin: 0;
 }
+
 .game-list-icon {
 	padding: 0%;
 	margin-left: 1%;
@@ -206,6 +235,7 @@ h1 {
 	height: 26px;
 	border-radius: 5px;
 }
+
 .game-list-item {
 	display: flex;
 	flex-direction: row;
@@ -235,6 +265,61 @@ h1 {
 	flex-wrap: wrap;
 	justify-content: center;
 }
+
+.library-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+	/* optional spacing */
+}
+
+h1.title {
+	margin-left: 50px;
+}
+
+.sort-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-right: 20px;
+
+	/* space between label and select */
+}
+
+.custom-dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+#dropdown-button {
+	background-color: #333;
+	color: white;
+	padding: 5px 10px;
+	border: 1px solid white;
+	cursor: pointer;
+}
+
+#dropdown-menu {
+	position: absolute;
+	background-color: #444;
+	color: white;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	border: 1px solid white;
+	width: 90%;
+}
+
+#dropdown-menu li {
+	padding: 5px 10px;
+	cursor: pointer;
+}
+
+#dropdown-menu li:hover {
+	background-color: #333;
+}
+
 /* all gamecard preview */
 .game-card {
 	width: 12vw;
@@ -253,6 +338,7 @@ h1 {
 	background-position: center;
 	transition: scale 0.2s;
 }
+
 .game-card div {
 	width: 100%;
 	height: 100%;
@@ -270,12 +356,15 @@ h1 {
 	content: "";
 	margin: 0;
 }
+
 #games:has(.running)> :not(.running) {
 	opacity: 0.4;
 }
+
 .game-card.running div {
 	padding-top: 50%;
 }
+
 .game-card.running div::after {
 	content: "Running";
 	position: static;
@@ -290,6 +379,7 @@ h1 {
 	text-align: center;
 	border-radius: 10px;
 }
+
 .game-card div:hover {
 	transform: scale(1.02);
 	transition: transform 0.2s;
@@ -304,9 +394,11 @@ h1 {
 	overflow: hidden;
 	position: relative;
 }
+
 #game-preview-container {
 	margin-left: 2px;
 }
+
 /* Image centered vertically */
 .game-preview-artwork {
 	width: 100%;
@@ -320,15 +412,17 @@ h1 {
 	background-size: cover;
 	background-position: center;
 }
+
 .game-description {
 	margin-top: 10px;
 }
+
 .game-genres {
 	display: flex;
 }
-.game-genres-item {
 
-}
+.game-genres-item {}
+
 /* Title in top-left */
 .title-overlay {
 	position: absolute;
@@ -341,6 +435,7 @@ h1 {
 	font-size: 1.8em;
 	z-index: 2;
 }
+
 /* Buttons individually positioned */
 .play-button {
 	position: absolute;
@@ -353,6 +448,7 @@ h1 {
 	border: none;
 	cursor: pointer;
 }
+
 .game-settings-button {
 	position: absolute;
 	bottom: 10px;
@@ -364,6 +460,7 @@ h1 {
 	border: none;
 	cursor: pointer;
 }
+
 /* progressbar */
 .progress {
 	position: fixed;
@@ -376,6 +473,7 @@ h1 {
 	margin-top: 10px;
 	z-index: 100000;
 }
+
 .progress-bar {
 	height: 100%;
 	background-color: #76c7c0;

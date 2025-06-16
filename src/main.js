@@ -62,7 +62,22 @@ async function processinfo_think() {
     await sleep(250);
     let state = await invoke("get_gameprocess_state", {});
 
-    if (state == false) {
+    if (state && state.game) {
+      // Game is running, highlight it
+      document
+        .querySelectorAll(".game-card")
+        .forEach((el) => el.classList.remove("running"));
+      document
+        .querySelectorAll(".game-list-item")
+        .forEach((el) => el.classList.remove("running"));
+
+      let card = document.querySelector(`.game-card[game="${state.game}"]`);
+      let listItem = document.querySelector(`.game-list-item[game="${state.game}"]`);
+
+      if (card) card.classList.add("running");
+      if (listItem) listItem.classList.add("running");
+    } else {
+      // No game is running
       document
         .querySelectorAll(".game-card")
         .forEach((el) => el.classList.remove("running"));
@@ -94,6 +109,13 @@ async function showGameInfo() {
   gamesSection.classList.remove("hidden");
 }
 
+function extractImageUrls(imageString) {
+  if (!imageString) return [];
+  const urls = imageString.split(",");
+  return urls[0];
+}
+
+//DISPLAY
 async function displayGamePreview(game, data) {
   const gamesSection = document.querySelector("#game-preview-container");
 
@@ -119,12 +141,6 @@ async function displayGamePreview(game, data) {
     );
     document.querySelector("#game-preview-container").classList.add("hidden");
   }
-}
-
-function extractImageUrls(imageString) {
-  if (!imageString) return [];
-  const urls = imageString.split(",");
-  return urls[0];
 }
 
 async function changeGamePreview(game, data) {
@@ -179,6 +195,23 @@ async function displayGameList(game, data, running) {
   );
 }
 
+function refreshDisplay(combined, running, game_click_handler) {
+  // Clear the current display
+  document.getElementById("games").innerHTML = "";
+  document.getElementById("game-list").innerHTML = "";
+
+  // Re-render the sorted list
+  combined.forEach(({ game, data }) => {
+    displayLibrary(game, data, running);
+    displayGameList(game, data, running);
+  });
+
+  // Re-attach the click handler
+  document.querySelectorAll(".game-card").forEach(game_click_handler);
+  document.querySelectorAll(".game-list-item").forEach(game_click_handler);
+}
+
+//SORTING
 async function sortGames(combined, order) {
   if (order === "descending") {
     combined.sort((a, b) =>
@@ -195,28 +228,22 @@ async function sortGames(combined, order) {
   }
 }
 
-async function handleSortBy(combined, running, game_click_handler)
-{
+async function handleSortBy(combined, running, game_click_handler) {
   document.getElementById("sort-select").addEventListener("change", async function () {
     const selectedOrder = this.value;
-  
-    // Sort the combined list
+
     await sortGames(combined, selectedOrder);
-  
-    // Clear the current display
-    document.getElementById("games").innerHTML = "";
-    document.getElementById("game-list").innerHTML = "";
-  
-    // Re-render the sorted list
-    combined.forEach(({ game, data }) => {
-      displayLibrary(game, data, running);
-      displayGameList(game, data, running);
-    });
-  
-    document.querySelectorAll(".game-card").forEach(game_click_handler);
-    document.querySelectorAll(".game-list-item").forEach(game_click_handler);
+
+    refreshDisplay(combined, running, game_click_handler);
   });
 }
+
+//CUSTOM DROPDOWN
+document.getElementById("dropdown-button").addEventListener("click", () => {
+  document.getElementById("dropdown-menu").classList.toggle("hidden");
+});
+
+
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchGameLibrary().then((library) => {
@@ -229,32 +256,51 @@ window.addEventListener("DOMContentLoaded", () => {
       data: library.gamesdata[i],
     }));
 
-
     sortGames(combined, "descending");
-    // Display sorted list
+    // SORT SYSTEM
+    document.querySelectorAll("#dropdown-menu li").forEach(item => {
+      item.addEventListener("click", async () => {
+        const selectedOrder = item.getAttribute("data-value");
+    
+        await sortGames(combined, selectedOrder);
+    
+        refreshDisplay(combined, running, game_click_handler);
+    
+        document.getElementById("dropdown-menu").classList.add("hidden");
+      });
+    });
+        
     combined.forEach(({ game, data }) => {
       data.name = game.name;
       displayLibrary(game, data, running);
       displayGameList(game, data, running);
     });
 
-    function game_click_handler(card) {
-      card.addEventListener("click", function () {
-        const game = this.getAttribute("game");
-        
-        hideGameCards();
-        showGameInfo();
-        let i = 0;
-        let data = library.gamesdata[i];
-        console.log("game =" + game);
-        console.log("gamesdata =" + library.gamesdata[i]);
-        while (data.name != game) {
-          data = library.gamesdata[i];
-          i++;
-        }
-        changeGamePreview(game, data);
-      });
+    //GAME PREVIEW
+function game_click_handler(card) {
+  card.addEventListener("click", function () {
+    const game = this.getAttribute("game");
+
+    hideGameCards();
+    showGameInfo();
+
+    let data = null;
+
+    // Find the correct game data
+    for (let i = 0; i < library.gamesdata.length; i++) {
+      if (library.gamesdata[i].name === game) {
+        data = library.gamesdata[i];
+        break;
+      }
     }
+
+    if (data) {
+      changeGamePreview(game, data);
+    } else {
+      console.error("Game data not found for:", game);
+    }
+  });
+}
 
     handleSortBy(combined, running, game_click_handler);
 
@@ -284,8 +330,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     ////////////GAMECARD//////////////
-
-
 
     document.querySelectorAll(".game-card").forEach(game_click_handler);
     document.querySelectorAll(".game-list-item").forEach(game_click_handler);
