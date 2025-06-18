@@ -167,7 +167,15 @@ impl Launcher {
 		let running_process = self.running_process.lock().unwrap();
 		if running_process.is_some() {
 			drop(running_process);
-			println!("A game is already running!");
+			println!("A game is already running! So killing it...");
+			let mut running_process = self.running_process.lock().unwrap();
+			if let Some(mut child) = running_process.take() {
+				if let Err(e) = child.kill() {
+					eprintln!("Failed to kill the running game: {}", e);
+				} else {
+					println!("Running game killed successfully.");
+				}
+			}
 			return Ok(());
 		}
 		drop(running_process);
@@ -290,18 +298,29 @@ impl Launcher {
 		//	{binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
 
 		//if data.launch_type.as_str() == "native" {
-		let mut	final_command = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
+		let	junest_cmd = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
 				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
 				--bind /media /media				\
 				--bind /tmp/{user} /tmp \
 				--bind /tmp/.X11-unix /tmp/.X11-unix \
-				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec {game_command}", data.workdir.clone().unwrap_or("".to_string()));
-		//}
-				//--bind /run/user/{uid} /run/user/{uid}	\
-				//--uid 5 \
-				//--bind /tmp/.X11-unix /tmp/.X11-unix \
+				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec", data.workdir.clone().unwrap_or("".to_string()));
+
+		if data.prestart.is_some() {
+			let prestart_command = format!("{junest_cmd} {game_path}/{}", data.prestart.as_ref().unwrap());
+			println!("Running prestart command: {}", prestart_command);
+			Command::new("sh")
+				.arg("-c")
+				.arg(prestart_command)
+				.envs(&env_vars)
+				.spawn()
+				.expect("Failed to run prestart command")
+				.wait()
+				.expect("Failed to wait for prestart command");
+		}
+
+		let final_command = format!("{junest_cmd} {game_command}");
 
 		println!("Launching game: {}", final_command);
 		let process = Command::new("sh")

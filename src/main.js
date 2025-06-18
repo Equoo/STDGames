@@ -10,6 +10,7 @@ async function addIcon() {
 }
 
 async function launchGame(game) {
+  let state = await invoke("get_gameprocess_state", {});
   try {
     const result = await invoke("launch_game", { game: game });
   } catch (err) {
@@ -73,9 +74,14 @@ async function processinfo_think() {
 
       let card = document.querySelector(`.game-card[game="${state}"]`);
       let listItem = document.querySelector(`.game-list-item[game="${state}"]`);
+      let playButton = document.querySelector(`.play-button`);
 
       if (card) card.classList.add("running");
       if (listItem) listItem.classList.add("running");
+      if (playButton) {
+        playButton.textContent = "Kill";
+        playButton.classList.add("kill-button");
+      }
     } else {
       // No game is running
       document
@@ -84,6 +90,11 @@ async function processinfo_think() {
       document
         .querySelectorAll(".game-list-item")
         .forEach((el) => el.classList.remove("running"));
+      let playButton = document.querySelector(`.play-button`);
+      if (playButton) {
+        playButton.textContent = "Play";
+        playButton.classList.remove("kill-button");
+      }
     }
   }
 }
@@ -155,7 +166,6 @@ async function changeGamePreview(game, data) {
   const game_preview = document.querySelector(".game-preview");
   game_preview.setAttribute("game", data.name);
   const img = document.querySelector(".game-preview-artwork");
-  const container = document.querySelector(".image-crop-container");
 
   if (data.artworks[0] == null) {
     img.style.backgroundImage = `url(${data.cover})`;
@@ -225,25 +235,31 @@ async function sortGames(combined, order) {
         sensitivity: "base",
       })
     );
+  } else if (order === "multi") {
+    //--------------------------------------------------WIIIIIIIIIIIPPPPP---------------------
+    console.log("multi");
+  } else if (order === "solo") {
+    //--------------------------------------------------WIIIIIIIIIIIPPPPP---------------------
+    console.log("multi");
   }
 }
 
 async function handleSortBy(combined, running, game_click_handler) {
-  document.getElementById("sort-select").addEventListener("change", async function () {
-    const selectedOrder = this.value;
+  document
+    .getElementById("sort-select")
+    .addEventListener("change", async function () {
+      const selectedOrder = this.value;
 
-    await sortGames(combined, selectedOrder);
+      await sortGames(combined, selectedOrder);
 
-    refreshDisplay(combined, running, game_click_handler);
-  });
+      refreshDisplay(combined, running, game_click_handler);
+    });
 }
 
 //CUSTOM DROPDOWN
 document.getElementById("dropdown-button").addEventListener("click", () => {
   document.getElementById("dropdown-menu").classList.toggle("hidden");
 });
-
-
 
 window.addEventListener("DOMContentLoaded", () => {
   fetchGameLibrary().then((library) => {
@@ -258,18 +274,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     sortGames(combined, "descending");
     // SORT SYSTEM
-    document.querySelectorAll("#dropdown-menu li").forEach(item => {
+    document.querySelectorAll("#dropdown-menu li").forEach((item) => {
       item.addEventListener("click", async () => {
         const selectedOrder = item.getAttribute("data-value");
-    
+
         await sortGames(combined, selectedOrder);
-    
+
         refreshDisplay(combined, running, game_click_handler);
-    
+
         document.getElementById("dropdown-menu").classList.add("hidden");
       });
     });
-        
+
     combined.forEach(({ game, data }) => {
       data.name = game.name;
       displayLibrary(game, data, running);
@@ -277,30 +293,30 @@ window.addEventListener("DOMContentLoaded", () => {
     });
 
     //GAME PREVIEW
-function game_click_handler(card) {
-  card.addEventListener("click", function () {
-    const game = this.getAttribute("game");
+    function game_click_handler(card) {
+      card.addEventListener("click", function () {
+        const game = this.getAttribute("game");
 
-    hideGameCards();
-    showGameInfo();
+        hideGameCards();
+        showGameInfo();
 
-    let data = null;
+        let data = null;
 
-    // Find the correct game data
-    for (let i = 0; i < library.gamesdata.length; i++) {
-      if (library.gamesdata[i].name === game) {
-        data = library.gamesdata[i];
-        break;
-      }
+        // Find the correct game data
+        for (let i = 0; i < library.gamesdata.length; i++) {
+          if (library.gamesdata[i].name === game) {
+            data = library.gamesdata[i];
+            break;
+          }
+        }
+
+        if (data) {
+          changeGamePreview(game, data);
+        } else {
+          console.error("Game data not found for:", game);
+        }
+      });
     }
-
-    if (data) {
-      changeGamePreview(game, data);
-    } else {
-      console.error("Game data not found for:", game);
-    }
-  });
-}
 
     handleSortBy(combined, running, game_click_handler);
 
