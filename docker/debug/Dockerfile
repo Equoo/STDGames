@@ -42,6 +42,22 @@ RUN apt update -y && \
 RUN curl -fsSL "https://deb.nodesource.com/setup_20.x" | bash -
 RUN apt-get install -y nodejs
 
+RUN apt-get update && apt-get install -y \
+    libgtk-3-dev \
+    libx11-xcb-dev \
+    libdbus-1-dev \
+    libxcomposite-dev \
+    libxrandr-dev \
+    libxdamage-dev \
+    libxfixes-dev \
+    libxrender-dev \
+    libxtst-dev \
+    libxss-dev \
+    libgconf-2-4 \
+    libnss3 \
+    libasound2 \
+    zsh
+
 RUN export RUSTC_WRAPPER=sccache \
     export RUSTFLAGS="-Z threads=$(nproc)" \
     export CARGO_BUILD_JOBS=$(nproc)
