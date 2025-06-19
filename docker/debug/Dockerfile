@@ -61,6 +61,9 @@ RUN apt-get update && apt-get install -y \
     zsh \
     firefox
 
+# Install Tauri CLI
+RUN npm install -g @tauri-apps/cli
+
 RUN export RUSTC_WRAPPER=sccache \
     export RUSTFLAGS="-Z threads=$(nproc)" \
     export CARGO_BUILD_JOBS=$(nproc)
