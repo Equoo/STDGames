@@ -46,6 +46,10 @@ RUN export RUSTC_WRAPPER=sccache \
     export RUSTFLAGS="-Z threads=$(nproc)" \
     export CARGO_BUILD_JOBS=$(nproc)
 
+
+# Install Tauri CLI
+RUN npm install -g @tauri-apps/cli
+
 WORKDIR /app
 
 CMD ["npm", "run", "tauri", "build"]
