@@ -99,6 +99,11 @@ async fn setup(app: tauri::AppHandle) {
 	let mut state_lock = state.lock().await;
 	state_lock.progress = 100;
 	drop(state_lock);
+
+	let splash_window = app.get_webview_window("splashscreen").unwrap();
+	let main_window = app.get_webview_window("main").unwrap();
+	splash_window.close().unwrap();
+	main_window.show().unwrap();
 }
 
 #[tauri::command]
@@ -129,6 +134,22 @@ pub fn run() {
 		.setup(|app| {
             // Spawn setup as a non-blocking task so the windows can be
             // created and ran while it executes
+			let window = app.get_webview_window("splashscreen").unwrap();
+
+			let monitor = window.current_monitor()?.unwrap();
+            let monitor_size = monitor.size();
+            let monitor_position = monitor.position();
+
+            // Calculate the position to truly center the window
+            let new_x = monitor_position.x + (monitor_size.width as i32 / 2) - 200;
+            let new_y = monitor_position.y + (monitor_size.height as i32 / 2) - 200;
+
+            // Move the window to the computed position
+            window.set_position(tauri::Position::Logical(tauri::LogicalPosition {
+				x: new_x as f64,
+				y: new_y as f64,
+			})).unwrap();
+			
             spawn(setup(app.handle().clone()));
             // The hook expects an Ok result
             Ok(())

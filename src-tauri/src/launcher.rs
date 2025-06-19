@@ -1,8 +1,6 @@
 use std::env;
 use std::fs;
 use std::io::Write;
-use nix::libc::open;
-use nix::libc::NOEXPR;
 use nix::unistd::Uid;
 use serde_json::{Number};
 use serde::Deserialize;
