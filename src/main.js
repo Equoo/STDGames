@@ -281,6 +281,40 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    document.querySelectorAll(".tag-button").forEach((button) => {
+      button.addEventListener("click", function () {
+        const tag = this.getAttribute("tag");
+        const gameCards = document.querySelectorAll(".game-card");
+        const gameListItems = document.querySelectorAll(".game-list-item");
+
+        let isactive = this.classList.contains("active")
+        document.querySelectorAll(".tag-button").forEach((card) => {
+            card.classList.remove("active");
+        });
+
+        if (isactive) {
+          gameCards.forEach((card) => {
+            card.classList.remove("hidden");
+          });
+
+          return;
+        }
+        
+        this.classList.add("active");
+
+        gameCards.forEach((card) => {
+          const game = card.getAttribute("game");
+          const data = combined.find((item) => item.game.name === game).game;
+
+          if (data.tags && data.tags.includes(tag) || !data.tags && tag === "solo") {
+            card.classList.remove("hidden");
+          } else {
+            card.classList.add("hidden");
+          }
+        });
+      });
+    });
+
     combined.forEach(({ game, data }) => {
       data.name = game.name;
       displayLibrary(game, data, running);

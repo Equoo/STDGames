@@ -47,14 +47,16 @@
 		<div id="library" class="page">
 			<div class="library-header">
 				<h1 class="title">Library</h1>
-				<button class="tag-button" category="multiplayer">Multiplayer</button>
-				<button class="tag-button" category="solo">Solo</button>
-				<div class="custom-dropdown">
-					<button id="dropdown-button">Sort by ▼</button>
-					<ul id="dropdown-menu" class="hidden">
-					  <li data-value="descending">Name A → Z</li>
-					  <li data-value="ascending">Name Z → A</li>
-					</ul>
+				<div class="right">
+					<button class="tag-button" tag="multiplayer">Multiplayer</button>
+					<button class="tag-button" tag="solo">Solo</button>
+					<div class="custom-dropdown">
+						<button id="dropdown-button">Sort by ▼</button>
+						<ul id="dropdown-menu" class="hidden">
+						<li data-value="descending">Name A → Z</li>
+						<li data-value="ascending">Name Z → A</li>
+						</ul>
+					</div>
 				</div>
 			</div>
 			<div id="games" class="container"></div>

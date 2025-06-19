@@ -333,6 +333,20 @@ h1.title {
 
 .tag-button {
 	border-radius: 25px;
+	background: none;
+	border: 1px solid #444;
+}
+.tag-button.active {
+	background-color: #444;
+	color: #fff;
+}
+
+.tag-button.active:hover {
+	background-color: rgba(122, 122, 122, 0.151)
+}
+
+.right {
+	align-self: right;
 }
 
 /* all gamecard preview */
