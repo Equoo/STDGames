@@ -29,14 +29,14 @@ pub struct Launcher {
 	pub user_data: UserData
 }
 
-pub fn storeData(data: UserData) {
+pub fn store_data(data: UserData) {
 	let user = env::var("USER").unwrap_or("".to_string());
 	let path = format!("/sgoinfre/{user}/.stdgames_saves/user_data.json");
 	let json = serde_json::to_string(&data).unwrap();
 	fs::write(path, json).expect("Unable to write file");
 }
 
-pub fn loadData() -> UserData {
+pub fn load_data() -> UserData {
 	let user = env::var("USER").unwrap_or("".to_string());
 	let uid = Uid::current();
 	let path = format!("/sgoinfre/{user}/.stdgames_saves/user_data.json");
@@ -153,7 +153,7 @@ impl Launcher {
 			running_process: Arc::new(Mutex::new(None)),
 			running_game: Arc::new(Mutex::new(String::new())),
 			library: library,
-			user_data: loadData()
+			user_data: load_data()
 		}
 	}
 

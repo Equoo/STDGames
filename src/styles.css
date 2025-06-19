@@ -110,6 +110,16 @@ h1 {
 .right-group {
 	margin-left: auto;
 }
+.right-group .logo {
+	width: auto;
+	height: 50px;
+	padding: 0%;
+	margin: 0%;
+}
+.right-group button {
+	padding	: 5%;
+	margin-right: 10px;
+}
 
 .topbar-content .title {
 	margin: 0;
@@ -319,6 +329,10 @@ h1.title {
 
 #dropdown-menu li:hover {
 	background-color: #333;
+}
+
+.tag-button {
+	border-radius: 25px;
 }
 
 /* all gamecard preview */

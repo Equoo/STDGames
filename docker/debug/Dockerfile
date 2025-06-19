@@ -42,6 +42,8 @@ RUN apt update -y && \
 RUN curl -fsSL "https://deb.nodesource.com/setup_20.x" | bash -
 RUN apt-get install -y nodejs
 
+RUN curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -sSf | apt install
+#RUN apt install 
 RUN apt-get update && apt-get install -y \
     libgtk-3-dev \
     libx11-xcb-dev \
@@ -56,7 +58,8 @@ RUN apt-get update && apt-get install -y \
     libgconf-2-4 \
     libnss3 \
     libasound2 \
-    zsh
+    zsh \
+    firefox
 
 RUN export RUSTC_WRAPPER=sccache \
     export RUSTFLAGS="-Z threads=$(nproc)" \

@@ -15,6 +15,8 @@ docker run --cap-add=SYS_ADMIN --cap-add=SYS_CHROOT --privileged -it --rm \
   -v /sgoinfre:/sgoinfre \
   -v /goinfre:/goinfre \
   -v /tmp:/tmp \
+  -v $HOME/.cargo:/usr/local/cargo \
+  -v $HOME/.rustup:/usr/local/rustup \
   -e USER=$USER \
   -e GDK_BACKEND=x11 \
   -e GDK_SCALE=1 \
@@ -25,5 +27,3 @@ docker run --cap-add=SYS_ADMIN --cap-add=SYS_CHROOT --privileged -it --rm \
   -e GDK_DISABLE_MITSHM=1 \
   -e DISPLAY=$DISPLAY \
   stddev
-#  -v $HOME/.cargo:/usr/local/cargo \
-#  -v $HOME/.rustup:/usr/local/rustup \

@@ -27,6 +27,8 @@ pub struct GameInfo {
     pub exec_path: String,
     pub config: Option<Vec<ConfigPath>>,
     pub prestart: Option<String>,
+    pub disabled: Option<bool>,
+    pub tags: Option<Vec<String>>,
     pub r_conf: Option<Vec<Rconf>>,
 }
 

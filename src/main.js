@@ -1,4 +1,5 @@
 const { invoke } = window.__TAURI__.core;
+const { shell } = window.__TAURI__;
 
 async function addIcon() {
   try {
@@ -235,26 +236,20 @@ async function sortGames(combined, order) {
         sensitivity: "base",
       })
     );
-  } else if (order === "multi") {
-    //--------------------------------------------------WIIIIIIIIIIIPPPPP---------------------
-    console.log("multi");
-  } else if (order === "solo") {
-    //--------------------------------------------------WIIIIIIIIIIIPPPPP---------------------
-    console.log("multi");
   }
 }
 
-async function handleSortBy(combined, running, game_click_handler) {
-  document
-    .getElementById("sort-select")
-    .addEventListener("change", async function () {
-      const selectedOrder = this.value;
+//async function handleSortBy(combined, running, game_click_handler) {
+//  document
+//    .getElementById("sort-select")
+//    .addEventListener("change", async function () {
+//      const selectedOrder = this.value;
 
-      await sortGames(combined, selectedOrder);
+//      await sortGames(combined, selectedOrder);
 
-      refreshDisplay(combined, running, game_click_handler);
-    });
-}
+//      refreshDisplay(combined, running, game_click_handler);
+//    });
+//}
 
 //CUSTOM DROPDOWN
 document.getElementById("dropdown-button").addEventListener("click", () => {
@@ -309,7 +304,6 @@ window.addEventListener("DOMContentLoaded", () => {
             break;
           }
         }
-
         if (data) {
           changeGamePreview(game, data);
         } else {
@@ -318,7 +312,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    handleSortBy(combined, running, game_click_handler);
+    //handleSortBy(combined, running, game_click_handler);
 
     //////////////////ONCLICK////////////////////////
 
@@ -335,9 +329,11 @@ window.addEventListener("DOMContentLoaded", () => {
       showGameCards();
     });
     //aboutus
+
     let aboutus_button = document.getElementById("aboutus-button");
     aboutus_button.addEventListener("click", function () {
-      openAboutUs();
+      console.log(window.__TAURI__);
+      window.__TAURI__.opener.openUrl("https://discord.gg/YR7fwGy5D7");
     });
     //settings
     let settings_button = document.getElementById("settings-button");

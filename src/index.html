@@ -22,11 +22,15 @@
 
 			<div class="middle-group">
 				<button id="library-button">Library</button>
-				<button id="aboutus-button">About Us</button>
-			</div>
 
+			</div>
 			<div class="right-group">
-				<button id="settings-button">Settings</button>
+				<button id="aboutus-button">
+					<img src="/resources/icons/discord_100x100.png" alt="Logo" class="logo" />
+				</button>
+				<button id="settings-button">
+					<img src="/resources/icons/settings.png" alt="Logo" class="logo" />
+				</button>
 			</div>
 		</div>
 	</div>
@@ -35,9 +39,6 @@
 		<div class="sidebar">
 			<div class="search">
 				<input type="text" id="search-input" placeholder="Search games..." />
-				<button id="search-button">
-					<span class="material-symbols-outlined">search</span>
-				</button>
 			</div>
 			<div class="sidebar-content">
 				<ul id="game-list"></ul>
@@ -46,15 +47,15 @@
 		<div id="library" class="page">
 			<div class="library-header">
 				<h1 class="title">Library</h1>
+				<button class="tag-button" category="multiplayer">Multiplayer</button>
+				<button class="tag-button" category="solo">Solo</button>
 				<div class="custom-dropdown">
 					<button id="dropdown-button">Sort by ▼</button>
 					<ul id="dropdown-menu" class="hidden">
 					  <li data-value="descending">Name A → Z</li>
 					  <li data-value="ascending">Name Z → A</li>
-					  <li data-value="multi">Multi</li>
-					  <li data-value="solo">Solo</li>
 					</ul>
-				  </div>
+				</div>
 			</div>
 			<div id="games" class="container"></div>
 		</div>
