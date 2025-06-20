@@ -358,6 +358,5 @@ window.addEventListener("DOMContentLoaded", () => {
       launchGame(game);
     });
   });
-  setup_progressbar();
   processinfo_think();
 });
