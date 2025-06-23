@@ -1,0 +1,45 @@
+/* For smooth transitions and animations */
+.game-card,
+.game-list-item,
+.play-button,
+.game-settings-button {
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000px;
+	will-change: transform;
+}
+
+.game-list {
+	contain: strict;
+	transform-style: preserve-3d;
+}
+
+.container {
+	contain: content;
+	transform-style: preserve-3d;
+}
+
+.sidebar {
+	contain: strict;
+	will-change: transform;
+}
+
+.game-card,
+.game-list-item {
+	transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#games:has(.running)> :not(.running) {
+	transition: opacity 0.4s ease-out;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.library-container {
+    background-size: 200% 200%;
+    animation: gradientShift 15s ease infinite;
+}
