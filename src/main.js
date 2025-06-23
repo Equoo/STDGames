@@ -104,59 +104,87 @@ async function displayGamePreview(game, data) {
   const gamesSection = document.querySelector("#game-preview-container");
 
   if (gamesSection == null) {
-    document.querySelector("#main-page").insertAdjacentHTML(
-      "beforeend",
-      `<div id="game-preview-container" class="page">
-          <div class="game-preview" game="asd">
-            <div class="image-crop-container">
-              <div class="game-preview-artwork"></div>
-              <h1 class="title-overlay">Game Title</h1>
-                <div class="button-overlay">
-                  <button class="play-button">Play</button>
-                  <button class="game-settings-button">Game Settings</button>
-                </div>
-              </div>
-          </div>
-          <h2>Summary</h2>
-          <div class="game-description"></div>
-          <h3>Genres</h3>
-          <div class="game-genres"></div>
-        </div>`
-    );
     document.querySelector("#game-preview-container").classList.add("hidden");
   }
 }
 
+// Update the changeGamePreview function
 async function changeGamePreview(game, data) {
   const gameSection = document.querySelector("#game-preview-container");
   if (!gameSection) return;
 
-  // Change title
-  const titleElement = gameSection.querySelector(".title-overlay");
-  titleElement.textContent = data.displayname;
+  // Update game attribute on preview container
+  gameSection.querySelector(".game-preview").setAttribute("game", game.name);
 
-  // Change image source
-  const game_preview = document.querySelector(".game-preview");
-  game_preview.setAttribute("game", data.name);
-  const img = document.querySelector(".game-preview-artwork");
+  // Update artwork - fallback to cover if no artwork
+  const artworkUrl = data.artworks?.[0] || data.cover || './resources/default-game.jpg';
+  document.querySelector(".game-preview-artwork").style.backgroundImage = `url('${artworkUrl}')`;
 
-  if (data.artworks[0] == null) {
-    img.style.backgroundImage = `url(${data.cover})`;
-  } else {
-    img.style.backgroundImage = `url(${data.artworks[0]})`;
+  // Update title
+  document.querySelector(".title-overlay").textContent = data.displayname || game.name;
+
+  // Back button
+  // Update the back button handler in changeGamePreview
+  document.getElementById('back-to-library').addEventListener('click', () => {
+    showGameCards();
+    hideGameInfo();
+    // Set library button as active when returning
+    document.getElementById("library-button").classList.add("active");
+  });
+
+  // Update description
+  const descElement = document.querySelector(".game-description");
+  descElement.textContent = data.summary || "No description available";
+  descElement.style.display = data.summary ? "block" : "none";
+
+  // Update genres
+  const genresContainer = document.querySelector(".game-genres");
+  genresContainer.innerHTML = "";
+
+  if (data.genres && data.genres.length > 0) {
+    data.genres.forEach(genre => {
+      const genreElement = document.createElement("div");
+      genreElement.className = "game-genres-item";
+      genreElement.textContent = genre;
+      genresContainer.appendChild(genreElement);
+    });
   }
 
-  //data.genres.forEach((genre) => {
-  //  document.querySelector(".game-genres").innerHTML("afterbegin" ,`<div class="game-genres-item"></div>`);
-  //  document.querySelector(".game-genres-item").textContent = genre;
-  //});
-  // Change description
-  const descriptionElement = gameSection.querySelector(".game-description");
-  if (data.summary) {
-    descriptionElement.textContent = data.summary;
+  // Update play button
+  const playButton = document.querySelector(".play-button");
+  playButton.setAttribute("data-game", game.name);
+  playButton.onclick = () => launchGame(game.name);
+
+  // Update screenshots
+  const screenshotsContainer = document.querySelector(".screenshots-container");
+  screenshotsContainer.innerHTML = "";
+
+  if (data.screenshots && data.screenshots.length > 0) {
+    const screenshotsTitle = document.createElement("h3");
+    screenshotsContainer.appendChild(screenshotsTitle);
+
+    const grid = document.createElement("div");
+    grid.className = "screenshots-grid";
+
+    data.screenshots.forEach(url => {
+      const img = document.createElement("img");
+      img.src = url;
+      img.className = "screenshot-thumbnail";
+      img.onclick = () => openFullscreen(url);
+      grid.appendChild(img);
+    });
+
+    screenshotsContainer.appendChild(grid);
   }
-  // Reveal the section (if needed)
-  gameSection.classList.remove("hidden");
+
+  // Show the preview
+  showGameInfo();
+}
+
+function openFullscreen(imageUrl) {
+  // Implement a lightbox/fullscreen viewer
+  console.log("Opening fullscreen:", imageUrl);
+  // You can use a library like basicLightbox or implement your own solution
 }
 
 async function displayLibrary(game, data, running) {
@@ -211,18 +239,6 @@ async function sortGames(combined, order) {
   }
 }
 
-//async function handleSortBy(combined, running, game_click_handler) {
-//  document
-//    .getElementById("sort-select")
-//    .addEventListener("change", async function () {
-//      const selectedOrder = this.value;
-
-//      await sortGames(combined, selectedOrder);
-
-//      refreshDisplay(combined, running, game_click_handler);
-//    });
-//}
-
 //CUSTOM DROPDOWN
 document.getElementById("dropdown-button").addEventListener("click", () => {
   document.getElementById("dropdown-menu").classList.toggle("hidden");
@@ -252,47 +268,79 @@ window.addEventListener("DOMContentLoaded", () => {
         document.getElementById("dropdown-menu").classList.add("hidden");
       });
     });
+    // Replace your existing tag button event listener with this:
 
     document.querySelectorAll(".tag-button").forEach((button) => {
       button.addEventListener("click", function () {
         const tag = this.getAttribute("tag");
+        const allButtons = document.querySelectorAll(".tag-button");
         const gameCards = document.querySelectorAll(".game-card");
         const gameListItems = document.querySelectorAll(".game-list-item");
 
-        let isactive = this.classList.contains("active")
-        document.querySelectorAll(".tag-button").forEach((card) => {
-            card.classList.remove("active");
-        });
+        // Check if this button was already active
+        const wasActive = this.classList.contains("active");
 
-        if (isactive) {
-          gameCards.forEach((card) => {
-            card.classList.remove("hidden");
-          });
+        // First remove active class from all buttons
+        allButtons.forEach(btn => btn.classList.remove("active"));
 
+        if (wasActive) {
+          // If clicking an active button, show all games
+          gameCards.forEach(card => card.classList.remove("hidden"));
+          gameListItems.forEach(item => item.classList.remove("hidden"));
           return;
         }
-        
+
+        // Activate the clicked button
         this.classList.add("active");
 
-        gameCards.forEach((card) => {
-          const game = card.getAttribute("game");
-          const data = combined.find((item) => item.game.name === game).game;
+        // Filter games based on tag
+        gameCards.forEach(card => {
+          const gameName = card.getAttribute("game");
+          const gameData = combined.find(item => item.game.name === gameName);
 
-          if (data.tags && data.tags.includes(tag) || !data.tags && tag === "solo") {
-            card.classList.remove("hidden");
-          } else {
+          if (!gameData) {
             card.classList.add("hidden");
+            return;
           }
+
+          const hasTag = gameData.game.tags && gameData.game.tags.includes(tag);
+          const isSoloTag = tag === "solo" && (!gameData.game.tags || gameData.game.tags.length === 0);
+
+          card.classList.toggle("hidden", !(hasTag || isSoloTag));
+        });
+
+        // Also filter the sidebar list items
+        gameListItems.forEach(item => {
+          const gameName = item.getAttribute("game");
+          const gameData = combined.find(item => item.game.name === gameName);
+
+          if (!gameData) {
+            item.classList.add("hidden");
+            return;
+          }
+
+          const hasTag = gameData.game.tags && gameData.game.tags.includes(tag);
+          const isSoloTag = tag === "solo" && (!gameData.game.tags || gameData.game.tags.length === 0);
+
+          item.classList.toggle("hidden", !(hasTag || isSoloTag));
         });
       });
     });
-
     combined.forEach(({ game, data }) => {
       data.name = game.name;
       displayLibrary(game, data, running);
       displayGameList(game, data, running);
     });
 
+
+    //library
+    let lib_button = document.getElementById("library-button");
+    lib_button.addEventListener("click", function () {
+      hideGameInfo();
+      showGameCards();
+      // Set library button as active
+      this.classList.add("active");
+    });
     //GAME PREVIEW
     function game_click_handler(card) {
       card.addEventListener("click", function () {
@@ -301,9 +349,11 @@ window.addEventListener("DOMContentLoaded", () => {
         hideGameCards();
         showGameInfo();
 
-        let data = null;
+        // Remove active class from library button
+        document.getElementById("library-button").classList.remove("active");
 
-        // Find the correct game data
+        // Rest of your existing code...
+        let data = null;
         for (let i = 0; i < library.gamesdata.length; i++) {
           if (library.gamesdata[i].name === game) {
             data = library.gamesdata[i];
@@ -318,6 +368,7 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+
     //handleSortBy(combined, running, game_click_handler);
 
     //////////////////ONCLICK////////////////////////
@@ -328,12 +379,7 @@ window.addEventListener("DOMContentLoaded", () => {
     addicon_button.addEventListener("click", function () {
       addIcon();
     });
-    //library
-    let lib_button = document.getElementById("library-button");
-    lib_button.addEventListener("click", function () {
-      hideGameInfo();
-      showGameCards();
-    });
+
     //aboutus
 
     let aboutus_button = document.getElementById("aboutus-button");
@@ -360,3 +406,78 @@ window.addEventListener("DOMContentLoaded", () => {
   });
   processinfo_think();
 });
+
+// Debounce scroll events for better performance
+function debounce(func, wait = 20, immediate = true) {
+  let timeout;
+  return function () {
+    const context = this, args = arguments;
+    const later = function () {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
+// Optimize scroll performance
+window.addEventListener('scroll', debounce(function () {
+  // Any scroll-related logic can go here
+}), { passive: true });
+
+// Smooth scroll for all anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  });
+});
+
+// Search functionality for game list
+document.addEventListener('DOMContentLoaded', function () {
+  const searchInput = document.getElementById('search-input');
+  const gameList = document.getElementById('game-list');
+  const games = gameList.getElementsByTagName('li');
+  const noResults = document.createElement('div');
+  noResults.className = 'no-results';
+  noResults.textContent = 'No games found';
+  gameList.parentNode.insertBefore(noResults, gameList.nextSibling);
+
+  searchInput.addEventListener('input', function () {
+    const searchTerm = this.value.toLowerCase();
+    let hasResults = false;
+
+    Array.from(games).forEach(game => {
+      const gameName = game.textContent.toLowerCase();
+      const isVisible = gameName.includes(searchTerm);
+
+      if (isVisible) hasResults = true;
+
+      game.style.display = isVisible ? 'flex' : 'none';
+
+      // Remove previous highlights
+      const spans = game.getElementsByTagName('span');
+      while (spans[0]) {
+        game.replaceChild(document.createTextNode(spans[0].textContent), spans[0]);
+      }
+
+      // Add new highlights
+      if (searchTerm && isVisible) {
+        const regex = new RegExp(searchTerm, 'gi');
+        game.innerHTML = game.textContent.replace(regex,
+          match => `<span class="highlight">${match}</span>`);
+      }
+    });
+
+    noResults.style.display = hasResults || !searchTerm ? 'none' : 'block';
+  });
+
+
+});
+

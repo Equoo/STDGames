@@ -10,25 +10,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "label": "splashscreen",
-        "url": "/splashscreen",
-        "title": "STD Games",
-        "minWidth": 400,
-        "minHeight": 400,
-        "width": 400,
-        "height": 400,
-        "transparent": true,
-        "resizable": false,
-        "fullscreen": false,
-        "decorations": false,
-        "visible": true,
-        "maximizable": false,
-        "minimizable": true
-      },
-      {
         "label": "main",
         "title": "STD Games",
-        "visible": false,
+        "visible": true,
         "minWidth": 600,
         "minHeight": 400,
         "width": 1200,
@@ -41,7 +25,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "rpm", "app"],
+    "targets": [
+      "deb",
+      "rpm",
+      "app"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

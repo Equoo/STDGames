@@ -1,0 +1,109 @@
+/* ========================= SIDEBAR SEARCH BAR ========================= */
+
+
+/* ========================= SIDEBAR ========================= */
+/* ========================= SIDEBAR ========================= */
+.sidebar {
+    flex: 0 0 20%;
+    background-color: none;
+    color: #fff;
+    padding: 16px 10px;
+    overflow-y: auto;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    position: relative;
+    /* Add this */
+}
+
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar li {
+    padding: 5px;
+    margin: 10px 0;
+    cursor: pointer;
+    align-content: center;
+    align-items: center;
+    background-color: rgba(37, 66, 94, 0.479);
+    transition: background-color 0.3s;
+    font-size: 0.8em;
+}
+
+.sidebar li:hover {
+    background-color: rgba(50, 50, 50, 0.329);
+}
+
+.sidebar .running {
+    color: rgba(105, 205, 4, 0.363);
+    font-weight: bold;
+    background-color: rgba(2, 122, 128, 0.486);
+}
+
+.sidebar .running::after {
+    content: "is Running";
+    font-size: 0.8em;
+}
+
+/* ========================= SIDEBAR SEARCH BAR ========================= */
+.search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Ensure it stays above other elements */
+    display: flex;
+    align-items: center;
+    background: rgba(20, 20, 30, 0.7);
+    border-radius: 15px;
+    border: 1px solid rgba(0, 102, 255, 0.3);
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(5px);
+    /* Match your header style */
+}
+
+.search-bar:hover {
+    border-color: #ff00cc65;
+}
+
+.sidebar .search-bar:focus-within {
+    border-color: #79fa0069;
+    background: rgba(0, 102, 255, 0.1);
+}
+
+.sidebar .search-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 0.9rem;
+    padding: 4px 8px;
+    outline: none;
+}
+
+.sidebar .search-bar input::placeholder {
+    color: rgba(255, 255, 255, 0.644);
+}
+
+.sidebar .search-icon {
+    color: rgba(255, 255, 255, 0.6);
+    margin-right: 8px;
+    font-size: 1rem;
+}
+
+/* Highlight matching text */
+.game-list li span.highlight {
+    background-color: rgba(0, 102, 255, 0.3);
+    color: #79fa00ea;
+}
+
+/* No results message */
+.no-results {
+    display: none;
+    padding: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}

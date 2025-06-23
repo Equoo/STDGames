@@ -32,6 +32,8 @@ RUN apt update -y && \
 	libwebkit2gtk-4.1-dev \
   build-essential \
   curl \
+  libcanberra-gtk-module \
+  libcanberra-gtk3-module \
   wget \
   file \
   libxdo-dev \

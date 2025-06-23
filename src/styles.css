@@ -1,22 +1,55 @@
-/*                                              BASICS                                             */
-html, body, * {
-  -webkit-user-select: none !important;  /* Safari */
-  -moz-user-select: none !important;     /* Firefox */
-  -ms-user-select: none !important;      /* IE/Edge */
-  user-select: none !important;          /* Standard */
+/* ========================= BASICS ========================= */
+*,
+html,
+body {
+	user-select: none !important;
+	-webkit-user-select: none !important;
+	-moz-user-select: none !important;
+	-ms-user-select: none !important;
+	scroll-behavior: smooth;
 }
 
+body,
+html {
+	margin: 0;
+	padding: 0;
+	font-family: 'Inter', sans-serif;
+	color: white;
+	background:
+		radial-gradient(circle at bottom left, rgba(255, 0, 204, 0.3), transparent 30%),
+		radial-gradient(circle at bottom right, rgba(0, 102, 255, 0.3), transparent 30%),
+		linear-gradient(to bottom, #000000, #000000);
+	min-height: 100vh;
+}
 
 body {
 	font-family: Arial, sans-serif;
 	background-color: #222;
 	color: #fff;
 	text-align: center;
-	margin-left: 0%;
-	margin-top: 0%;
-	margin-right: 0%;
-	margin-bottom: 0%;
+	margin: 0;
 }
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(16, 34, 51, 0.3);
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(to bottom, #4a6ee0, #3a5bc7);
+	border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(to bottom, #5a7ef0, #4a6bd7);
+}
+
 
 select {
 	color: #444;
@@ -30,37 +63,14 @@ option {
 	color: aqua;
 }
 
-/* button */
-button {
-	padding: 10px 20px;
-	margin: 10px;
-	font-size: 18px;
-	background-color: #444;
-	color: #fff;
-	border: none;
-	border-radius: 5px;
-	cursor: pointer;
+/* ========================= TITLES ========================= */
+h1 {
+	margin-bottom: 20px;
 }
 
-button:hover {
-	background-color: #666;
-}
-
-/* title section */
 .title {
 	font-size: 24px;
 	margin-bottom: 10px;
-}
-
-.title:hover {
-	/*text-decoration: underline;*/
-}
-
-.title:active {
-	text-decoration: none;
-}
-
-.title:focus {
 	outline: none;
 }
 
@@ -76,433 +86,152 @@ button:hover {
 	text-decoration: none;
 }
 
-h1 {
-	margin-bottom: 20px;
-}
-
-/*                                              TOPBAR                                              */
+/* ========================= TOPBAR ========================= */
 .topbar {
-	position: relative;
+	
+	position: sticky;
 	top: 0;
-	left: 0;
-	right: 0;
-	margin-top: 0;
-	height: fit-content;
-	align-content: center;
-	background-color: rgb(23, 23, 23);
-}
-
-.topbar img {
-	width: 80px;
-	height: 80px;
-	margin-right: 10px;
-}
-
-.topbar-content {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0px 10px;
+	padding-top: 5px;
+	padding-left:10px;
+	padding-right:10px;
+	padding-bottom:5px;
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(1px);
+	z-index: 100;
+
 }
 
-/* Left and middle groups align side-by-side if needed */
+.topbar img {
+	width: auto;
+	height: 7vh;
+	object-fit: contain;
+}
+.topbar img:first-child {
+	width: auto;
+	height: 7vh;
+	object-fit: contain;
+}
+.topbar img:last-child {
+	width: auto;
+	height: 5vh;
+	object-fit: contain;
+}
+.topbar img:hover {
+	transform: scale(1.05);
+	transition: transform 0.2s ease-in-out;
+}
+
+
+.topbar-content {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+
+}
+
 .left-group,
-.middle-group,
+.middle-group {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	margin-right: 10px;
+
+}
+
 .right-group {
 	display: flex;
 	align-items: center;
-	/* optional spacing */
-}
-
-/* Push right-group (settings button) to the far right */
-.right-group {
+	gap: 10px;
 	margin-left: auto;
 }
-.right-group .logo {
-	width: auto;
+
+.right-group img {
+	width: 50px;
 	height: 50px;
-	padding: 0%;
-	margin: 0%;
-}
-.right-group button {
-	padding	: 5%;
-	margin-right: 10px;
+	object-fit: fit;
+	transition: all 0.2s ease-out;
 }
 
-.topbar-content .title {
-	margin: 0;
-}
 
-.topbar-content .title:hover {
-	text-decoration: none;
-}
-
-/* Bigcontainer section wich contain sidebar and the library sections*/
+/* ========================= LAYOUT ========================= */
 .big-container {
 	display: flex;
 	width: 100%;
-	height: 87vh;
+	height: 90vh;
 }
 
-/*                                              SIDEBAR LEFT                                              */
-.sidebar {
-	flex: 0 0 20%;
-	background-color: rgb(30, 30, 30);
-	color: #fff;
-	margin-left: 0%;
-	padding: 10px;
-	overflow-y: auto;
-	/* allows vertical scrolling */
-	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-}
-
-.sidebar ul {
-	list-style: none;
-	padding: 0px;
-	margin: 0;
-	align-items: left;
-	overflow: hidden;
-}
-
-.sidebar h2 {
-	list-style: none;
-	padding: 0px;
-	margin: 0;
-}
-
-.sidebar li {
-	padding: 5px;
-	margin: 10px 0;
-	cursor: pointer;
-	transition: background-color 0.3s;
-	align-content: space-around;
-	font-size: 0.8em;
-	font-weight: normal;
-	align-items: center;
-}
-
-.sidebar li:hover {
-	background-color: rgb(50, 50, 50);
-}
-
-.sidebar .running {
-	color: rgb(104, 205, 4);
-	font-weight: bold;
-	background-color: rgb(2, 121, 128);
-}
-
-.sidebar .running::after {
-	content: "is Running";
-	text-align: end;
-	align-content: space-around;
-	flex: 10%;
-	font-size: 0.8em;
-}
-
-.sidebar .search {
-	display: flex;
-	align-items: center;
-	margin-bottom: 10px;
-}
-
-.sidebar .search input {
-	flex: 1;
-	padding: 5px;
-	border: none;
-	overflow: hidden;
-	border-radius: 5px 0 0 5px;
-	background-color: #444;
-	color: #fff;
-	height: 1.8em;
-}
-
-.sidebar .search input:focus {
-	outline: none;
-	box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-}
-
-.sidebar .search button {
-	margin: 0;
-	padding: 5px;
-	background-color: #555;
-	color: #fff;
-	border: none;
-	border-radius: 0 5px 5px 0;
-	cursor: pointer;
-	transition: background-color 0.3s;
-	height: 1.8em;
-}
-
-.sidebar .search button:hover {
-	background-color: #666;
-}
-
-
-/*gamelist is the leftsidebar section elements*/
-.game-list {
-	list-style-type: none;
-	padding: 0;
-	margin: 0;
-}
-
-.game-list-icon {
-	padding: 0%;
-	margin-left: 1%;
-	margin-right: 5%;
-	width: 20px;
-	height: 26px;
-	border-radius: 5px;
-}
-
-.game-list-item {
-	display: flex;
-	flex-direction: row;
-	height: 25px;
-	white-space: nowrap;
-	/* Prevent line wrapping */
-	overflow: hidden;
-	/* Hide overflowed text */
-	text-overflow: ellipsis;
-	/* Show "..." when text is cut */
-	background-color: #444;
-	border-radius: 5px;
-}
-
-/* page and library section */
+/* ========================= LIBRARY ========================= */
 .page {
 	flex: 1;
-	width: 75%;
 	height: 100%;
 	overflow-y: auto;
-	/* allows vertical scrolling */
 }
 
-/*                                              LIBRARY                                              */
 .container {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
 }
 
+/* ========================= LIBRARY HEADER ========================= */
 .library-header {
+	position: sticky;
+	top: 0;
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 10px;
-	/* optional spacing */
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(10px);
+	z-index: 100;
 }
 
-h1.title {
-	margin-left: 50px;
+/* Title on the left */
+.library-header .title {
+	margin: 0;
+	padding-left: 10px;
+	margin-left: 8px;
+	color: rgba(245, 245, 245, 0.90);
+	font-family: 'Brunson', sans-serif;
+	font-size: 4.2rem;
+	letter-spacing: 5px;
+	white-space: nowrap;
 }
 
 .sort-container {
 	display: flex;
-	align-items: center;
-	gap: 8px;
+	align-items: right;
+	gap: 5px;
 	margin-right: 20px;
-
-	/* space between label and select */
 }
 
-.custom-dropdown {
-	position: relative;
-	display: inline-block;
-}
-
-#dropdown-button {
-	background-color: #333;
-	color: white;
-	padding: 5px 10px;
-	border: 1px solid white;
-	cursor: pointer;
-}
-
-#dropdown-menu {
-	position: absolute;
-	background-color: #444;
-	color: white;
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	border: 1px solid white;
-	width: 90%;
-}
-
-#dropdown-menu li {
-	padding: 5px 10px;
-	cursor: pointer;
-	font-size: small;
-}
-
-#dropdown-menu li:hover {
-	background-color: #333;
-}
-
-.tag-button {
-	border-radius: 25px;
-	background: none;
-	border: 1px solid #444;
-}
-.tag-button.active {
-	background-color: #444;
-	color: #fff;
-}
-
-.tag-button.active:hover {
-	background-color: rgba(122, 122, 122, 0.151)
-}
 
 .right {
-	align-self: right;
-}
-
-/* all gamecard preview */
-.game-card {
-	width: 12vw;
-	height: 17vw;
-	padding: 0;
-	background-color: #333;
-	margin: 10px;
-	border-radius: 10px;
+	align-self: flex-end;
 	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	color: #fff;
-	text-align: center;
-	background-size: cover;
-	background-position: center;
-	transition: scale 0.2s;
-}
-
-.game-card div {
-	width: 100%;
 	height: 100%;
-	background-color: #333;
-	border-radius: 10px;
-	position: static;
-	display: block;
-	justify-content: center;
 	align-items: center;
-	color: #fff;
-	text-align: center;
-	background-size: cover;
-	background-position: center;
-	transition: scale 0.2s;
-	content: "";
-	margin: 0;
 }
 
-#games:has(.running)> :not(.running) {
-	opacity: 0.4;
-}
 
-.game-card.running div {
-	padding-top: 50%;
-}
-
-.game-card.running div::after {
-	content: "Running";
-	position: static;
-	width: 100%;
-	height: 100%;
-	background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0));
-	color: #fff;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	font-size: auto;
-	text-align: center;
-	border-radius: 10px;
-}
-
-.game-card div:hover {
-	transform: scale(1.02);
-	transition: transform 0.2s;
-}
-
-/*                                              GAME PREVIEW                                              */
-.image-crop-container {
-	width: 100%;
-	max-height: 50vh;
-	aspect-ratio: 16 / 9;
-	/* auto height based on width */
-	overflow: hidden;
-	position: relative;
-}
-
-#game-preview-container {
-	margin-left: 2px;
-}
-
-/* Image centered vertically */
-.game-preview-artwork {
-	width: 100%;
-	height: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	background-repeat: no-repeat;
-	background-size: cover;
-	background-position: center;
-}
-
-.game-description {
-	margin-top: 10px;
-}
-
-.game-genres {
-	display: flex;
-}
-
-.game-genres-item {}
-
-/* Title in top-left */
-.title-overlay {
-	position: absolute;
-	top: 10px;
-	left: 10px;
-	border-radius: 5px;
-	background: rgba(0, 0, 0, 0.4);
-	color: white;
-	padding: 4px 10px;
-	font-size: 1.8em;
-	z-index: 2;
-}
-
-/* Buttons individually positioned */
-.play-button {
-	position: absolute;
-	bottom: 10px;
-	left: 10px;
-	z-index: 2;
-	padding: 6px 12px;
-	background: rgba(0, 0, 0, 0.6);
-	color: white;
-	border: none;
-	cursor: pointer;
-}
-
-.play-button.kill-button {
-	background: rgba(218, 33, 33, 0.6);
-}
-
-.game-settings-button {
-	position: absolute;
-	bottom: 10px;
-	right: 10px;
-	z-index: 2;
-	padding: 6px 12px;
-	background: rgba(0, 0, 0, 0.6);
-	color: white;
-	border: none;
-	cursor: pointer;
-}
-
-/*                                         UTILS                                 */
+/* ========================= UTILITIES ========================= */
 .hidden {
 	display: none;
+}
+
+/* ====================== SCROLLBAR ====================== */
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(#27182431, #0066ffa8);
+	border-radius: 4px;
 }
