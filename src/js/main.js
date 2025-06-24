@@ -28,15 +28,17 @@ function createGameClickHandler(library) {
       document.getElementById("library-button").classList.remove("active");
 
       let data = null;
+      let gamedata = null;
       for (let i = 0; i < library.gamesdata.length; i++) {
-        if (library.gamesdata[i].name === game) {
+        if (library.games[i].name === game) {
           data = library.gamesdata[i];
+          gamedata = library.games[i];
           break;
         }
       }
       
       if (data) {
-        changeGamePreview(game, data);
+        changeGamePreview(gamedata, data);
       } else {
         console.error("Game data not found for:", game);
       }
@@ -188,20 +190,6 @@ function setupUIEventListeners(combined, library, gameClickHandler) {
   const settingsButton = document.getElementById("settings-button");
   if (settingsButton) {
     settingsButton.addEventListener("click", openSettings);
-  }
-
-  // Play button
-  const playButton = document.querySelector(".play-button");
-  if (playButton) {
-    playButton.addEventListener("click", function() {
-      const gamePreview = document.querySelector(".game-preview");
-      if (gamePreview) {
-        const game = gamePreview.getAttribute("game");
-        if (game) {
-          launchGame(game);
-        }
-      }
-    });
   }
 }
 
