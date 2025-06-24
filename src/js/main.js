@@ -1,4 +1,5 @@
 // Import all modules
+const { invoke } = window.__TAURI__.core;
 import { addIcon, openUrl } from './api/system.js';
 import { launchGame, fetchGameLibrary, monitorGameProcess } from './api/games.js';
 import { 
@@ -88,11 +89,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     // Attach click handlers after elements are created
     document.querySelectorAll(".game-card").forEach(gameClickHandler);
     document.querySelectorAll(".game-list-item").forEach(gameClickHandler);
+
+    // Invoke the backend to set client loaded
+    invoke("set_client_loaded", {});
   }, 0);
 
   // Setup UI event listeners
   setupUIEventListeners(combined, library, gameClickHandler);
-  
+
   // Start process monitoring
   monitorGameProcess();
 });

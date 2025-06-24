@@ -48,6 +48,7 @@ fn get_game_library() -> Arc<GameLibrary> {
 struct SetupState {
     progress: u8,
     finish: bool,
+	client_loaded: bool
 }
 
 async fn setup(app: tauri::AppHandle) {
@@ -100,6 +101,15 @@ async fn setup(app: tauri::AppHandle) {
 	state_lock.progress = 100;
 	drop(state_lock);
 
+	loop {
+		let state_lock = state.lock().await;
+		if state_lock.client_loaded {
+			break;
+		}
+		drop(state_lock);
+		tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+	}
+
 	let splash_window = app.get_webview_window("splashscreen").unwrap();
 	let main_window = app.get_webview_window("main").unwrap();
 	splash_window.close().unwrap();
@@ -112,7 +122,15 @@ async fn get_setup_state(state: State<'_, Mutex<SetupState>>) -> Result<SetupSta
 	Ok(SetupState {
 		progress: state.progress,
 		finish: state.finish,
+		client_loaded: state.client_loaded
 	})
+}
+
+#[tauri::command]
+async fn set_client_loaded(state: State<'_, Mutex<SetupState>>) -> Result<(), ()> {
+	let mut state = state.lock().await;
+	state.client_loaded = true;
+	return Ok(());
 }
 
 #[tauri::command]
@@ -129,8 +147,9 @@ pub fn run() {
 		.manage(Mutex::new(SetupState {
             progress: 0,
             finish: false,
+			client_loaded: false
         }))
-		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state])
+		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state, set_client_loaded])
 		.setup(|app| {
             // Spawn setup as a non-blocking task so the windows can be
             // created and ran while it executes
