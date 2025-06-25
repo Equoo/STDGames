@@ -67,10 +67,33 @@ async fn setup(app: tauri::AppHandle) {
 	let user = env::var("USER").unwrap_or("".to_string());
 	fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
 		.expect("Erreur lors de la création du répertoire .stdgames_saves");
-
 	let junest_dst = format!("/tmp/{user}/.stdgames/junest");
-	copy_recursively(Path::new("/sgoinfre/stdgames/.ressources/tmp_junest"), Path::new(&junest_dst)).await
-		.expect("Erreur lors de la copie du répertoire .junest");
+	fs::create_dir_all(format!("{junest_dst}/usr"))
+		.expect("Erreur lors de la création du répertoire junest");
+
+	std::process::Command::new("rsync")
+		.arg("-aAXHv")
+		.arg("--numeric-ids")
+		.arg("--exclude=/dev/")
+		.arg("--exclude=/proc/")
+		.arg("--exclude=/sys/")
+		.arg("--exclude=/tmp/")
+		.arg("--exclude=/mnt/")
+		.arg("--exclude=/media/*")
+		.arg("--exclude=/lost+found")
+		.arg("--exclude=/usr")
+		.arg("/sgoinfre/stdgames/.ressources/junest/")
+		.arg(&junest_dst)
+		.output()
+		.expect("Erreur lors de l'exécution de rsync");
+	std::process::Command::new("rsync")
+		.arg("-aAXHv")
+		.arg("--numeric-ids")
+		.arg("/sgoinfre/stdgames/.ressources/junest_tmp_usr/")
+		.arg(format!("{junest_dst}/usr"))
+		.output()
+		.expect("Erreur lors de l'exécution de rsync");
+
 	let mut state_lock = state.lock().await;
 	state_lock.progress = 60;
 	drop(state_lock);

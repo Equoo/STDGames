@@ -200,11 +200,14 @@ impl Launcher {
 			.expect("Erreur lors de la copie des fichiers de configuration");
 
 		let user = env::var("USER").unwrap_or("".to_string());
+		let original_junest_home = format!("/sgoinfre/stdgames/.ressources/junest");
 		let junest_home = format!("/tmp/{user}/.stdgames/junest");
 		
 		let mut binds: HashMap<String, String> = HashMap::new();
 		let mut env_vars: HashMap<String, String> = data.env.clone();
 		env_vars.insert("JUNEST_HOME".to_string(), junest_home.to_string());
+		binds.insert(format!("{original_junest_home}/usr"), "/usr".to_string());
+
 
 		const JUNEST_PATH: &str = "/sgoinfre/dderny/junest/bin/junest";
 		let game_path = format!("{GAMES_PATH}/{}", &data.name);
@@ -276,26 +279,6 @@ impl Launcher {
 		}
 
 		let uid = Uid::current().to_string();
-		//let mut final_command = format!("cd {game_path}/{} && bwrap \
-		//	--uid 5 \
-		//	--bind / / \
-		//	--dev /dev --proc /proc \
-		//	--bind /run /run \
-		//	--bind /usr /usr \
-		//	--bind /lib /lib \
-		//	--bind /lib64 /lib64 \
-		//	--bind /etc /etc \
-		//	--bind /etc/group /etc/group --bind /etc/shadow /etc/shadow	\
-		//	--tmpfs /tmp \
-		//	--bind /tmp/{user} /tmp \
-		//	--bind /tmp/.X11-unix /tmp/.X11-unix \
-		//	--bind /dev/dri /dev/dri \
-		//	--bind /dev/shm /dev/shm \
-		//	--bind /sgoinfre /sgoinfre \
-		//	--bind /goinfre /goinfre \
-		//	{binds_str} {game_command}", data.workdir.clone().unwrap_or("".to_string()));
-
-		//if data.launch_type.as_str() == "native" {
 		let	junest_cmd = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
 				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
@@ -303,7 +286,7 @@ impl Launcher {
 				--bind /media /media				\
 				--bind /tmp/{user} /tmp \
 				--bind /tmp/.X11-unix /tmp/.X11-unix \
-				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec", data.workdir.clone().unwrap_or("".to_string()));
+				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec ", data.workdir.clone().unwrap_or("".to_string()));
 
 		if data.prestart.is_some() {
 			let prestart_command = format!("{junest_cmd} {game_path}/{}", data.prestart.as_ref().unwrap());
