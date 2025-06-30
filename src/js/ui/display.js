@@ -37,8 +37,8 @@ export function displayGameList(game, data, running, containerId = "game-list") 
   document.querySelector(`#${containerId}`).insertAdjacentHTML(
     "afterbegin",
     `<li class="game-list-item ${running}" id="item_${game.name}" game="${game.name}">
-      <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon">
-      ${data.displayname}
+      <img src="${data.icon}" alt="${game.name} icon" class="game-list-icon"></img>
+      <h5>${data.displayname}</h5>
     </li>`
   );
 }

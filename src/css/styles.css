@@ -70,6 +70,9 @@ option {
 	display: none;
 }
 
+.game-card.hidden {
+	display: none;
+}
 /* ====================== SCROLLBAR ====================== */
 ::-webkit-scrollbar {
 	width: 8px;

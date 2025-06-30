@@ -108,8 +108,6 @@
 
 .search-bar input:focus {
 	outline: none;
-	/* border-color: red;
-	box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.993); */
 }
 
 .search-bar input::placeholder {
