@@ -105,7 +105,9 @@
 	margin-left: 3vw;
 	color: rgba(245, 245, 245, 0.90);
 	font-family: 'Brunson', sans-serif;
-	font-size: 3.8rem;
+	font-size: auto;
+	align-content: center;
+	height: 100%;
 	letter-spacing: 5px;
 	white-space: nowrap;
 	transition: font-size 0.3s ease;
@@ -377,7 +379,7 @@
 /* Responsive adjustments */
 @media (max-width: 800px) {
 	.library-header .title {
-		font-size: 3rem;
+		font-size: auto;
 		transition: font-size 0.3s ease;
 	}
 
