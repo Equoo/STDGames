@@ -39,6 +39,9 @@ RUN apt update -y && \
   libayatana-appindicator3-dev \
   librsvg2-dev
 
+# install dev deps
+RUN apt install -y rsync
+
 RUN curl -fsSL "https://deb.nodesource.com/setup_20.x" | bash -
 RUN apt-get install -y nodejs
 
