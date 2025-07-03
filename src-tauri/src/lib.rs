@@ -2,6 +2,7 @@ pub mod utils;
 pub mod game_library;
 pub mod launcher;
 pub mod desktop_icons;
+pub mod check_authorized;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -10,6 +11,7 @@ use tauri::{Manager, State};
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 use utils::copy_recursively;
+use check_authorized::is_authorized;
 use std::env;
 use std::path::Path;
 use std::sync::Arc;
@@ -174,6 +176,14 @@ pub fn run() {
         }))
 		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state, set_client_loaded])
 		.setup(|app| {
+
+
+            if let Some(msg) = is_authorized() {
+                println!("access denied: {} !!!", msg);
+                std::process::exit(1);
+            }
+
+
             // Spawn setup as a non-blocking task so the windows can be
             // created and ran while it executes
 			let window = app.get_webview_window("splashscreen").unwrap();
