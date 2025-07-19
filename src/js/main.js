@@ -83,7 +83,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Initial display - wait for next tick to ensure DOM is ready
   setTimeout(() => {
     combined.forEach(({ game, data }) => {
-      data.name = game.name;
       displayLibrary(game, data, running);
       displayGameList(game, data, running);
     });

@@ -17,7 +17,7 @@ export function changeGamePreview(game, data) {
   const artworkUrl = data.artworks?.[0] || data.cover || './resources/default-game.jpg';
   document.querySelector(".game-preview-artwork").style.backgroundImage = `url('${artworkUrl}')`;
 
-  document.querySelector(".title-overlay").textContent = data.displayname || game.name;
+  document.querySelector(".title-overlay").textContent = data.name || game.name;
 
   document.getElementById('back-to-library').addEventListener('click', () => {
     showGameCards();

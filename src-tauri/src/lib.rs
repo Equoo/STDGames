@@ -124,14 +124,15 @@ async fn setup(app: tauri::AppHandle) {
 	state_lock.progress = 100;
 	drop(state_lock);
 
-	loop {
-		let state_lock = state.lock().await;
-		if state_lock.client_loaded {
-			break;
-		}
-		drop(state_lock);
-		tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-	}
+	// why is this loop here, it make the launcher freeze at 100% loading
+	// loop {
+	// 	let state_lock = state.lock().await;
+	// 	if state_lock.client_loaded {
+	// 		break;
+	// 	}
+	// 	drop(state_lock);
+	// 	tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+	// }
 
 	let splash_window = app.get_webview_window("splashscreen").unwrap();
 	let main_window = app.get_webview_window("main").unwrap();
