@@ -12,6 +12,7 @@ button {
 
 button:hover {
 	background: linear-gradient(to bottom, #3a4a5a, #2a3a4a);
+	transform: scale(1.05);
 }
 
 /* -----------------------TOPBAR--------------------------- */
@@ -25,9 +26,17 @@ button:hover {
 	transform-origin: center;
 }
 
+.right-group img {
+	width: fit-content;
+	height: fit-content;
+	image-rendering:auto;
+	image-resolution: auto;
+	transform: scale(1);
+}
+
+
 .right-group button:hover img {
-	transform: scale(1.1);
-	filter: drop-shadow(0 0 8px rgba(0, 102, 255, 0.5));
+	transform: scale(1.2);
 }
 
 .right-group button:active img {
@@ -39,7 +48,6 @@ button:hover {
 #aboutus-button,
 #settings-button {
 	height: 80%;
-	padding: 8px 16px;
 	border-radius: 10px;
 	background: rgba(24, 24, 56, 0.5);
 	border: 2px solid rgba(0, 102, 255, 0.212);

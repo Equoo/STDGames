@@ -20,79 +20,77 @@
 </head>
 
 <body>
-
-	<div class="topbar">
-		<div class="topbar-content">
-			<div class="left-group">
-				<img src="/resources/icons/stdgames.png" alt="Logo" class="logo">
-				<button id="addicon-button">Add to desktop</button>
-			</div>
-
-			<div class="middle-group">
-				<button id="library-button" class="active">Library</button>
-			</div>
-
-			<div class="right-group">
-				<button id="aboutus-button">
-					<img src="/resources/icons/discord_100x100.png" alt="Discord">
-				</button>
-				<button id="settings-button">
-					<img src="/resources/icons/settings.png" alt="Settings">
-				</button>
-			</div>
-		</div>
-	</div>
-
-	<div id="main-page" class="big-container">
-		<div class="sidebar">
-			<div class="search-container">
-				<div class="search-bar">
-					<span class="search-icon">⌕</span>
-					<input type="text" id="search-input" placeholder="Search ..." />
+	<div class="frosted-glass">
+		<div class="topbar">
+			<div class="topbar-content">
+				<div class="left-group">
+					<img src="/resources/icons/stdgames.png" alt="Logo" class="logo">
+					<button id="addicon-button">Add to desktop</button>
+					<button id="library-button" class="active">Library</button>
 				</div>
-			</div>
-			<div class="sidebar-content">
-				<ul id="game-list"></ul>
+
+				<div class="right-group">
+					<button id="aboutus-button">
+						<img src="/resources/icons/discord_100x100.png" alt="Discord">
+					</button>
+					<button id="settings-button">
+						<img src="/resources/icons/settings_white.png" alt="Settings">
+					</button>
+				</div>
 			</div>
 		</div>
 
-		<div id="library" class="page">
-			<div class="library-header">
-				<h1 class="title">Library</h1>
-				<div class="right">
-					<button class="tag-button" tag="multiplayer">Multiplayer</button>
-					<button class="tag-button" tag="solo">Solo</button>
-
-					<div class="custom-dropdown">
-						<button id="dropdown-button">Sort by ▼</button>
-						<ul id="dropdown-menu" class="hidden">
-							<li data-value="descending">Name A → Z</li>
-							<li data-value="ascending">Name Z → A</li>
-						</ul>
+		<div id="main-page" class="big-container">
+			<div class="sidebar">
+				<div class="search-container">
+					<div class="search-bar">
+						<span class="search-icon">⌕</span>
+						<input type="text" id="search-input" placeholder="Search ..." />
 					</div>
 				</div>
-			</div>
-			<div id="games" class="container"></div>
-		</div>
-		<div id="game-preview-container" class="hidden">
-			<button class="back-button" id="back-to-library">← Back to library</button>
-
-			<div class="game-preview">
-				<div class="image-crop-container">
-					<div class="game-preview-artwork"></div>
-					<h1 class="title-overlay">Game Title</h1>
-					<div class="game-genres"></div>
-					<div class="game-meta">
-						<div class="game-description"></div>
-					</div>
-					<div class="button-overlay">
-						<button class="play-button">Play</button>
-						<button class="game-settings-button">⚙️ Settings</button>
-					</div>
+				<div class="sidebar-content">
+					<ul id="game-list"></ul>
 				</div>
 			</div>
-			<div class="game-details">
-				<div class="screenshots-container"></div>
+
+			<div id="library" class="page">
+				<div class="library-header">
+					<h1 class="title">Library</h1>
+					<div class="right">
+						<button class="tag-button" tag="multiplayer">Multiplayer</button>
+						<button class="tag-button" tag="solo">Solo</button>
+
+						<div class="custom-dropdown">
+							<button id="dropdown-button">Sort by ▼</button>
+							<ul id="dropdown-menu" class="hidden">
+								<li data-value="descending">Name A → Z</li>
+								<li data-value="ascending">Name Z → A</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div id="games" class="container"></div>
+			</div>
+			<div id="game-preview-container" class="hidden">
+				<button class="back-button" id="back-to-library">← Back to library</button>
+
+				<div class="game-preview">
+					<div class="image-crop-container">
+						<div class="game-preview-artwork"></div>
+						<h1 class="title-overlay">Game Title</h1>
+						<div class="game-genres"></div>
+						<div class="game-meta">
+							<div class="game-description"></div>
+						</div>
+						<div class="button-overlay">
+							<button class="play-button">Play</button>
+							<button class="game-settings-button">⚙️ Settings</button>
+						</div>
+					</div>
+				</div>
+				<div class="game-details">
+					<div class="screenshots-container"></div>
+				</div>
 			</div>
 		</div>
 	</div>
