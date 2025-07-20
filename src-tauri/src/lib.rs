@@ -180,8 +180,8 @@ pub fn run() {
 
 
             if let Some(msg) = is_authorized() {
-                println!("access denied: {} !!!", msg);
-                std::process::exit(1);
+                println!("accès refusé: {} !!!", msg);
+                std::process::exit(1); // change this dirty exit by an error screen
             }
 
 
