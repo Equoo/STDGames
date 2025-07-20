@@ -62,16 +62,11 @@ fn fetch_igdb(category: &str, query: &str) -> Result<serde_json::Value, String> 
     let res = client
         .post(&url)
         .header("Accept", "application/json")
-        // old tokens
-        // .header("Client-ID", "rggouo5m4dsiowf6upejcgzyskt2vj")
-        // .header("Authorization", "Bearer nziqmeslg7vw0q6lhuz7kp3cv2rjkp")
-        // new tokens
         .header("Client-ID", "r4z683p4v0aeu2ep2s4dakzf525mut")
         .header("Authorization", "Bearer 50z1fteuhoicu6gvp6ew6lm55i171d")
         .body(query.to_string())
-        .send()
-        .map_err(|e| e.to_string())?;
-
+        .send().map_err(|e| e.to_string())?
+        .error_for_status().map_err(|e| e.to_string())?;
     let json = res.json::<serde_json::Value>().map_err(|e| e.to_string())?;
     Ok(json)
 }
