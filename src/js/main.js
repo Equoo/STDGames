@@ -83,7 +83,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Initial display - wait for next tick to ensure DOM is ready
   setTimeout(() => {
     combined.forEach(({ game, data }) => {
-      data.name = game.name;
       displayLibrary(game, data, running);
       displayGameList(game, data, running);
     });
@@ -137,26 +136,29 @@ function setupTagFiltering(combined) {
           return;
         }
 
-        const hasTag = gameData.game.tags && gameData.game.tags.includes(tag);
-        const isSoloTag = tag === "solo" && (!gameData.game.tags || gameData.game.tags.length === 0);
+		let hasTag = false;
+		if (gameData.game.tags)
+        	hasTag = gameData.game.tags.includes(tag);
+		console.log(gameName, hasTag)
+        // const isSoloTag = tag === "solo" && (!gameData.game.tags || gameData.game.tags.length === 0);
 
-        card.classList.toggle("hidden", !(hasTag || isSoloTag));
+        card.classList.toggle("hidden", !hasTag);
       });
 
-      gameListItems.forEach(item => {
-        const gameName = item.getAttribute("game");
-        const gameData = combined.find(item => item.game.name === gameName);
+    //   gameListItems.forEach(item => {
+    //     const gameName = item.getAttribute("game");
+    //     const gameData = combined.find(item => item.game.name === gameName);
 
-        if (!gameData) {
-          item.classList.add("hidden");
-          return;
-        }
+    //     if (!gameData) {
+    //       item.classList.add("hidden");
+    //       return;
+    //     }
 
-        const hasTag = gameData.game.tags && gameData.game.tags.includes(tag);
-        const isSoloTag = tag === "solo" && (!gameData.game.tags || gameData.game.tags.length === 0);
+    //     const hasTag = gameData.game.tags && gameData.game.tags.includes(tag);
+    //     const isSoloTag = tag === "solo" && (!gameData.game.tags || gameData.game.tags.length === 0);
 
-        item.classList.toggle("hidden", !(hasTag || isSoloTag));
-      });
+    //     item.classList.toggle("hidden", !(hasTag || isSoloTag));
+    //   });
     });
   });
 }

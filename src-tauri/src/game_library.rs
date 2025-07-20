@@ -37,7 +37,6 @@ pub struct GameData {
     pub cover: String,
     pub icon: String,
     pub name: String,
-    pub displayname: String,
     pub gamemode: String,
     pub genres: Vec<String>,
     pub publisher: String,
@@ -63,12 +62,11 @@ fn fetch_igdb(category: &str, query: &str) -> Result<serde_json::Value, String> 
     let res = client
         .post(&url)
         .header("Accept", "application/json")
-        .header("Client-ID", "rggouo5m4dsiowf6upejcgzyskt2vj")
-        .header("Authorization", "Bearer nziqmeslg7vw0q6lhuz7kp3cv2rjkp")
+        .header("Client-ID", "r4z683p4v0aeu2ep2s4dakzf525mut")
+        .header("Authorization", "Bearer 50z1fteuhoicu6gvp6ew6lm55i171d")
         .body(query.to_string())
-        .send()
-        .map_err(|e| e.to_string())?;
-
+        .send().map_err(|e| e.to_string())?
+        .error_for_status().map_err(|e| e.to_string())?;
     let json = res.json::<serde_json::Value>().map_err(|e| e.to_string())?;
     Ok(json)
 }
@@ -117,7 +115,7 @@ query games \"games\" {{
             query_games, query_games, query_games
         );
         let games_rq = fetch_igdb("multiquery", &query).unwrap();
-        //println!("Multi: {} {:?}", query, games_rq);
+        // println!("Multi: {} {:?}", query, games_rq);
 
         let void = vec![];
         let covers = games_rq
@@ -133,7 +131,7 @@ query games \"games\" {{
             .and_then(|v| v.get("result").and_then(|v| v.as_array()))
             .unwrap_or(&void);
 
-        //println!("Covers: {:?}", covers);
+        // println!("Covers: {:?}", covers);
         //println!("all_artworks: {:?}", all_artworks);
 
         for i in 0..games.len() {
@@ -190,11 +188,6 @@ query games \"games\" {{
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
-            let displayname = gameinfo
-                .get("name")
-                .and_then(|v| v.as_str())
-                .expect("Missing game name")
-                .to_string();
             let gamemode = gameinfo
                 .get("gamemode")
                 .and_then(|v| v.as_str())
@@ -218,7 +211,6 @@ query games \"games\" {{
                 cover,
                 icon,
                 name,
-                displayname,
                 gamemode,
                 genres,
                 publisher,

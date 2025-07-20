@@ -105,23 +105,23 @@ button:hover {
 	display: flex;
 	height: 100%;
 	align-items: center;
+	align-content: center;
 }
 
 .custom-dropdown {
 	position: relative;
 	display: inline-block;
 	margin: 0%;
-	height: 82%;
+	height: 100%;
 	align-items: center;
+	display: flex;
 }
 
 #dropdown-button {
-	margin: 0%;
-	height: 80%;
 	background: rgba(20, 20, 30, 0.7);
+	padding: 8px 10px;
 
 	color: white;
-	padding: 2px 10px ;
 	font-size: 0.75rem;
 	border: 1px solid rgba(0, 102, 255, 0.3);
 	border-radius: 8px;

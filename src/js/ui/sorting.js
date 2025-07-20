@@ -1,13 +1,13 @@
 export function sortGames(combined, order) {
   if (order === "descending") {
     combined.sort((a, b) =>
-      b.data.displayname.localeCompare(a.data.displayname, undefined, {
+      b.data.name.localeCompare(a.data.displayname, undefined, {
         sensitivity: "base",
       })
     );
   } else if (order === "ascending") {
     combined.sort((a, b) =>
-      a.data.displayname.localeCompare(b.data.displayname, undefined, {
+      a.data.name.localeCompare(b.data.displayname, undefined, {
         sensitivity: "base",
       })
     );
