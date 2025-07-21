@@ -69,7 +69,7 @@ async fn setup(app: tauri::AppHandle) {
 	let user = env::var("USER").unwrap_or("".to_string());
 	fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
 		.expect("Erreur lors de la création du répertoire .stdgames_saves");
-	let junest_dst = format!("/tmp/{user}/.stdgames/junest");
+	let junest_dst = format!("/tmp/{user}/.stdgames/junest_home");
 	fs::create_dir_all(format!("{junest_dst}/usr"))
 		.expect("Erreur lors de la création du répertoire junest");
 

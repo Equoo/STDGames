@@ -4,8 +4,6 @@
 	flex: 0 0 20%;
 
 	flex-direction: column;
-	position: relative;
-	height: 100%;
 	padding: 10px 10px;
 	margin-top: 0;
 	margin-bottom: 0;
@@ -17,8 +15,8 @@
 }
 
 .sidebar ul {
-	position: relative;
 	display: flex;
+	width: 100%;
 	flex-direction: column;
 	list-style: none;
 	padding: 0;
@@ -142,6 +140,7 @@
 .sidebar-content {
 	display: flex;
 	width: 100%;
+	height: auto;
 	overflow-y: auto;
 	overflow-x: hidden;
 }
