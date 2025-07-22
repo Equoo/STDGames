@@ -26,13 +26,14 @@
         "minimizable": true
       },
       {
+		"maximized": true,
         "label": "main",
         "title": "STD Games",
         "visible": false,
         "minWidth": 600,
         "minHeight": 400,
-        "width": 1200,
-        "height": 800
+        "width": 1600,
+        "height": 900
       }
     ],
     "security": {
@@ -43,11 +44,7 @@
     "active": true,
     "targets": ["deb", "rpm", "app"],
     "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
+      "icons/stdgames.png"
     ]
   }
 }

@@ -34,6 +34,7 @@ export function setupSearch() {
 			}
 		});
 
-		noResults.style.display = hasResults || !searchTerm ? 'none' : 'block';
+		noResults.style.display = hasResults || !searchTerm ? 'none' : 'block' ;
+		noResults.style.position = hasResults || !searchTerm ? 'none' : 'absolute' ;
 	});
 }
