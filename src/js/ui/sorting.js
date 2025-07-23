@@ -1,3 +1,4 @@
+// sort
 export function sortGames(combined, order) {
   if (order === "descending") {
     combined.sort((a, b) =>
@@ -14,6 +15,7 @@ export function sortGames(combined, order) {
   }
 }
 
+// dropdown sort
 export function setupSorting(combined, running, gameClickHandler, refreshDisplay) {
   document.querySelectorAll("#dropdown-menu li").forEach((item) => {
     item.addEventListener("click", async () => {

@@ -49,7 +49,7 @@ function createGameClickHandler(library) {
 // Initialize the app
 window.addEventListener("DOMContentLoaded", async () => {
   // Setup utilities
-  setupSmoothScroll();
+  debounce(setupSmoothScroll());
   setupSearch();
   
   // Load game library

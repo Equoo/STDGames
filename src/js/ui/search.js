@@ -1,3 +1,5 @@
+
+// Search bar
 export function setupSearch() {
 	const searchInput = document.getElementById('search-input');
 	const gameList = document.getElementById('game-list');
