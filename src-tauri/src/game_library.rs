@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Number;
@@ -55,6 +58,34 @@ pub struct GameLibrary {
     pub gamesdata: Vec<GameData>,
 }
 
+fn gen_igdb_multiquery(games: Vec<GameInfo>) -> String {
+    let fields = "slug, name, summary, genres.slug, genres.name, \
+    cover.image_id, cover.width, cover.height, \
+    artworks.image_id, artworks.width, artworks.height, \
+    screenshots.image_id, screenshots.width, screenshots.height, \
+    videos.video_id, videos.name, websites.url, websites.type \
+    ";
+    let ids = games.iter().map(|x| x.igdb.to_string()).collect::<Vec<_>>().join(", ");
+    return format!("query games \"Get All Games Infos\" {{ fields {}; where id = ({}); limit 500; }};", fields, ids);
+}
+
+fn igdb_multiquery(query: &str) -> Result<serde_json::Value, dyn Error> {
+    let client = reqwest::blocking::Client::new();
+    let url = format!("https://api.igdb.com/v4/multiquery");
+    let res = client
+        .post(&url)
+        .header("Accept", "application/json")
+        .header("Client-ID", "r4z683p4v0aeu2ep2s4dakzf525mut")
+        .header("Authorization", "Bearer 50z1fteuhoicu6gvp6ew6lm55i171d")
+        .body(query.to_string())
+        .send()?.error_for_status()?;
+    let json = res.json::<serde_json::Value>()?;
+    Ok(json)
+}
+
+
+
+
 fn fetch_igdb(category: &str, query: &str) -> Result<serde_json::Value, String> {
     let client = reqwest::blocking::Client::new();
     let url = format!("https://api.igdb.com/v4/{}", category);
@@ -72,7 +103,7 @@ fn fetch_igdb(category: &str, query: &str) -> Result<serde_json::Value, String> 
 }
 
 impl GameLibrary {
-    pub fn new() -> Result<GameLibrary, Box<dyn std::error::Error>> {
+    pub fn old() -> Result<GameLibrary, Box<dyn std::error::Error>> {
         let file_content = match fs::read_to_string("/sgoinfre/dderny/games.json") {
             Ok(content) => content,
             Err(e) => {
@@ -225,6 +256,23 @@ query games \"games\" {{
         }
 
         Ok(GameLibrary { games, gamesdata })
+    }
+
+    pub fn new() -> Result<GameLibrary, Box<dyn Error>> {
+
+        let file = File::open("/sgoinfre/stdgames/.ressources/games.json")?;
+        let reader = BufReader::new(file);
+        let games: Vec<GameInfo> = serde_json::from_reader(reader)?;
+
+        let multiquery = gen_igdb_multiquery(games.clone());
+        println!("{}", multiquery);
+        let games_data: serde_json::Value = igdb_multiquery(&multiquery)?;
+
+
+        let gamesdata = vec![];
+
+        return Ok(GameLibrary { games, gamesdata });
+
     }
 
     pub fn get_game(&self, name: &str) -> Option<&GameInfo> {
