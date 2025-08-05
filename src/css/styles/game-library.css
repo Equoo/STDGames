@@ -4,34 +4,21 @@
 	top: 0;
 	display: flex;
 	padding-top: 5px;
-	padding-right:10px;
-	padding-bottom:5px;
-	padding-left:10px;
+	padding-right: 10px;
+	padding-bottom: 5px;
+	padding-left: 10px;
 
 	background: rgba(0, 0, 0, 0.8);
 	align-items: center;
 	justify-content: space-between;
-	backdrop-filter: blur(1px);
 	z-index: 100;
 }
-.topbar img {
-	width: auto;
-	height: 7vh;
+
+.topbar img.logo {
+	width: 10%;
+	height: 10%;
+	margin-bottom: 0px;
 	object-fit: contain;
-}
-.topbar img:first-child {
-	width: auto;
-	height: 7vh;
-	object-fit: contain;
-}
-.topbar img:last-child {
-	width: auto;
-	height: 5vh;
-	object-fit: contain;
-}
-.topbar img:hover {
-	transform: scale(1.05);
-	transition: transform 0.2s ease-in-out;
 }
 
 .topbar-content {
@@ -54,29 +41,24 @@
 .right-group {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 15px;
 	margin-left: auto;
 }
 
 .right-group img {
-	width: 50px;
-	height: 50px;
-	object-fit: fit;
+	padding: 0;
+	width: 60%;
+	height: 60%;
+	object-fit: contain;
 	transition: all 0.2s ease-out;
 }
 
 
-/* ========================= LAYOUT ========================= */
-.big-container {
-	display: flex;
-	width: 100%;
-	height: 90vh;
-}
 
 /* ========================= LIBRARY ========================= */
 .page {
 	flex: 1;
-	height: 100%;
+	height: auto;
 	overflow-y: auto;
 }
 
@@ -84,32 +66,40 @@
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
+	height: auto;
 }
 
 /* ========================= LIBRARY HEADER ========================= */
 .library-header {
 	position: sticky;
-	top: 0;
-	height: 7vh;
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
 	background: rgba(0, 0, 0, 0.6);
+
+	top: 0;
+	height: 10%;
+	align-items: center;
+	
+	justify-content: space-between;
 	backdrop-filter: blur(10px);
 	z-index: 100;
 }
 
 /* Title on the left */
+
 .library-header .title {
 	margin: 0;
-	margin-left: 3vw;
+	padding-left: 5px;
+	margin-left: 1%;
 	color: rgba(245, 245, 245, 0.90);
 	font-family: 'Brunson', sans-serif;
-	font-size: 3.8rem;
+	font-size: auto;
+	align-content: center;
+	height: 100%;
 	letter-spacing: 5px;
 	white-space: nowrap;
 	transition: font-size 0.3s ease;
 }
+
 /* ========================= TITLES ========================= */
 
 .library-header .title:focus-visible {
@@ -133,21 +123,32 @@
 
 /* ========================= GAME CARD ========================= */
 .game-card {
+	display: flex;
+	flex-direction: column;
 	width: 12vw;
 	height: 17vw;
 	margin: 5px;
-	background: linear-gradient(145deg, #1e2a3a, #2a3a4a);
-	border-radius: 10px;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	text-align: center;
-	color: #fff;
 	padding: 1%;
+
+	border-radius: 10px;
+	background: rgba(30, 30, 45, 0.6);
 	background-size: auto;
 	background-position: center;
-	transition: transform 0.2s;
+	justify-content: center;
+	align-items: center;
+	
+	text-align: center;
+	color: #fff;
+	
+	image-rendering: optimizeQuality;
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	transition: all 0.3s ease;
+}
+
+.game-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 102, 255, 0.3);
 }
 
 .game-card div {
@@ -164,6 +165,7 @@
 
 .game-card div:hover {
 	transform: scale(1.02);
+	image-rendering: optimizeQuality;
 	background-color: linear-gradient(145deg, #2a3a4a, #3a4a5a);
 }
 
@@ -177,27 +179,15 @@
 
 .game-card.running div::after {
 	content: "Running";
+	width: 100%;
+	height: 100%;
+
 	background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	color: #fff;
 	border-radius: 10px;
-	height: 100%;
-	width: 100%;
-}
-
-
-.game-card {
-	background: rgba(30, 30, 45, 0.6);
-	backdrop-filter: blur(10px);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	transition: all 0.3s ease;
-}
-
-.game-card:hover {
-	transform: translateY(-5px);
-	box-shadow: 0 10px 20px rgba(0, 102, 255, 0.3);
 }
 
 /* ========================= GAME PREVIEW ========================= */
@@ -212,6 +202,7 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
+	
 	background-repeat: no-repeat;
 	background-size: cover;
 	background-position: center;
@@ -377,7 +368,7 @@
 /* Responsive adjustments */
 @media (max-width: 800px) {
 	.library-header .title {
-		font-size: 3rem;
+		font-size: auto;
 		transition: font-size 0.3s ease;
 	}
 

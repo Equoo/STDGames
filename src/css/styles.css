@@ -16,10 +16,11 @@ html {
 	font-family: 'Inter', sans-serif;
 	color: white;
 	background:
-		radial-gradient(circle at bottom left, rgba(255, 0, 204, 0.3), transparent 30%),
-		radial-gradient(circle at bottom right, rgba(0, 102, 255, 0.3), transparent 30%),
+		radial-gradient(circle at bottom left, rgba(255, 0, 204, 0.3), transparent 50%),
+		radial-gradient(circle at bottom right, rgba(0, 102, 255, 0.3), transparent 50%),
 		linear-gradient(to bottom, #000000, #000000);
 	min-height: 100vh;
+	z-index: 1;
 }
 
 body {
@@ -28,6 +29,41 @@ body {
 	color: #fff;
 	text-align: center;
 	margin: 0;
+
+}
+
+/* ========================= LAYOUT ========================= */
+.big-container {
+	display: flex;
+	width: 100%;
+	height: 90%;
+	max-height: 95%;
+
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+
+/* WIP */
+/* .bottom-bar {
+	position:absolute;
+	bottom: 0;
+	height: 5%;
+	background: #3a5bc7;
+	z-index: 5;
+} */
+
+/* ========================= EFFECT ========================= */
+
+.frosted-glass {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	background: linear-gradient(to bottom,#000000cb,#2e2e2e56);
+	backdrop-filter: blur(100px);
+	border-radius: 15px;
 }
 
 /* Custom scrollbar styling */
@@ -67,6 +103,10 @@ option {
 
 /* ========================= UTILITIES ========================= */
 .hidden {
+	display: none;
+}
+
+.game-card.hidden {
 	display: none;
 }
 

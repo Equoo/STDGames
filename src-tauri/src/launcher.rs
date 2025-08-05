@@ -203,7 +203,7 @@ impl Launcher {
 
 		let user = env::var("USER").unwrap_or("".to_string());
 		let original_junest_home = format!("/sgoinfre/stdgames/.ressources/junest");
-		let junest_home = format!("/tmp/{user}/.stdgames/junest");
+		let junest_home = format!("/tmp/{user}/.stdgames/junest_home");
 		
 		let mut binds: HashMap<String, String> = HashMap::new();
 		let mut env_vars: HashMap<String, String> = data.env.clone();

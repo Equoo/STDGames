@@ -2,6 +2,7 @@ pub mod utils;
 pub mod game_library;
 pub mod launcher;
 pub mod desktop_icons;
+pub mod check_authorized;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -10,6 +11,7 @@ use tauri::{Manager, State};
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 use utils::copy_recursively;
+use check_authorized::is_authorized;
 use std::env;
 use std::path::Path;
 use std::sync::Arc;
@@ -67,7 +69,7 @@ async fn setup(app: tauri::AppHandle) {
 	let user = env::var("USER").unwrap_or("".to_string());
 	fs::create_dir_all(format!("/sgoinfre/{user}/.stdgames_saves/"))
 		.expect("Erreur lors de la création du répertoire .stdgames_saves");
-	let junest_dst = format!("/tmp/{user}/.stdgames/junest");
+	let junest_dst = format!("/tmp/{user}/.stdgames/junest_home");
 	fs::create_dir_all(format!("{junest_dst}/usr"))
 		.expect("Erreur lors de la création du répertoire junest");
 
@@ -124,14 +126,15 @@ async fn setup(app: tauri::AppHandle) {
 	state_lock.progress = 100;
 	drop(state_lock);
 
-	loop {
-		let state_lock = state.lock().await;
-		if state_lock.client_loaded {
-			break;
-		}
-		drop(state_lock);
-		tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-	}
+	// why is this loop here, it make the launcher freeze at 100% loading
+	// loop {
+	// 	let state_lock = state.lock().await;
+	// 	if state_lock.client_loaded {
+	// 		break;
+	// 	}
+	// 	drop(state_lock);
+	// 	tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+	// }
 
 	let splash_window = app.get_webview_window("splashscreen").unwrap();
 	let main_window = app.get_webview_window("main").unwrap();
@@ -174,6 +177,14 @@ pub fn run() {
         }))
 		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state, set_client_loaded])
 		.setup(|app| {
+
+
+            if let Some(msg) = is_authorized() {
+                println!("accès refusé: {} !!!", msg);
+                std::process::exit(1); // change this dirty exit by an error screen
+            }
+
+
             // Spawn setup as a non-blocking task so the windows can be
             // created and ran while it executes
 			let window = app.get_webview_window("splashscreen").unwrap();

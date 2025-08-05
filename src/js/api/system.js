@@ -1,5 +1,5 @@
 const { invoke } = window.__TAURI__.core;
-const { shell } = window.__TAURI__;
+const { opener } = window.__TAURI__;
 
 export async function addIcon() {
   try {
@@ -11,5 +11,5 @@ export async function addIcon() {
 }
 
 export function openUrl(url) {
-  shell.open(url);
+  opener.openUrl(url);
 }

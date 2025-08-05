@@ -1,19 +1,21 @@
+// sort
 export function sortGames(combined, order) {
   if (order === "descending") {
     combined.sort((a, b) =>
-      b.data.displayname.localeCompare(a.data.displayname, undefined, {
+      b.data.name.localeCompare(a.data.name, undefined, {
         sensitivity: "base",
       })
     );
   } else if (order === "ascending") {
     combined.sort((a, b) =>
-      a.data.displayname.localeCompare(b.data.displayname, undefined, {
+      a.data.name.localeCompare(b.data.name, undefined, {
         sensitivity: "base",
       })
     );
   }
 }
 
+// dropdown sort
 export function setupSorting(combined, running, gameClickHandler, refreshDisplay) {
   document.querySelectorAll("#dropdown-menu li").forEach((item) => {
     item.addEventListener("click", async () => {
