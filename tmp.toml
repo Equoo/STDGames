@@ -1,0 +1,45 @@
+
+
+[[games]]
+slug = "balatro" # only used in the front
+status = "working|multiplayer broken|broken|developement"
+
+[[games.metadata]]
+idgb_id = 4242
+store_pages = ["urls to the store pages"]
+name = "Balatro"
+thumbnail = "url or file (embeded file)"
+header = "url or file (embeded file)"
+icon = "url or file (embeded file)"
+tags = ["solo", "multiplayer"]
+
+[[games.launch]]
+type = "native|ge7.23|wine|proton12"
+environ = { "abc" = "def" }
+overlays = [ "gamedir1", "gamedir2", "gamedir3" ]
+start = [ "./love2d", "src/balatro.lua" ]
+prestart = [ "./prestart.sh" ]
+
+
+
+[[games]]
+status = "working|multiplayer broken|broken|developement"
+
+[[games.metadata]]
+idgb_id = 4242
+slug = "balatro" # only used in the front
+store_pages = ["urls to the store pages"]
+name = "Balatro"
+thumbnail = "url or file (embeded file)"
+header = "url or file (embeded file)"
+icon = "url or file (embeded file)"
+tags = ["solo", "multiplayer"]
+
+[[games.launch]]
+type = "native|ge7.23|wine|proton12"
+environ = { "abc" = "def" }
+overlays = [ "gamedir1", "gamedir2", "gamedir3" ]
+start = [ "./love2d", "src/balatro.lua" ]
+prestart = [ "./prestart.sh" ]
+
+

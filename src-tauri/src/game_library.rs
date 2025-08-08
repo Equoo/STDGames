@@ -261,8 +261,7 @@ query games \"games\" {{
     pub fn new() -> Result<GameLibrary, Box<dyn Error>> {
 
         let file = File::open("/sgoinfre/stdgames/.ressources/games.json")?;
-        let reader = BufReader::new(file);
-        let games: Vec<GameInfo> = serde_json::from_reader(reader)?;
+        let games: Vec<GameInfo> = serde_json::from_reader(BufReader::new(file))?;
 
         let multiquery = gen_igdb_multiquery(games.clone());
         println!("{}", multiquery);

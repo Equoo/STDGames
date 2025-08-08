@@ -1,7 +1,5 @@
 FROM buildpack-deps:jammy
 
-LABEL org.opencontainers.image.source=https://github.com/rust-lang/docker-rust
-
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
@@ -30,23 +28,19 @@ RUN set -eux; \
 RUN apt update -y && \
 	apt install -y \
 	libwebkit2gtk-4.1-dev \
-  build-essential \
-  curl \
-  wget \
-  file \
-  libxdo-dev \
-  libssl-dev \
-  libayatana-appindicator3-dev \
-  librsvg2-dev
-
-# install dev deps
-RUN apt install -y rsync
+	build-essential \
+	curl \
+	wget \
+	file \
+	libxdo-dev \
+	libssl-dev \
+	libayatana-appindicator3-dev \
+	librsvg2-dev
 
 RUN curl -fsSL "https://deb.nodesource.com/setup_20.x" | bash -
 RUN apt-get install -y nodejs
 
 RUN curl https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -sSf | apt install
-#RUN apt install 
 RUN apt-get update && apt-get install -y \
     libgtk-3-dev \
     libx11-xcb-dev \
@@ -62,6 +56,7 @@ RUN apt-get update && apt-get install -y \
     libnss3 \
     libasound2 \
     zsh \
+    rsync \
     firefox
 
 # Install Tauri CLI

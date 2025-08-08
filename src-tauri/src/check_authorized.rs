@@ -1,4 +1,4 @@
-use users::{get_user_by_uid, get_current_uid};
+use uzers::{get_user_by_uid, get_current_uid};
 
 const PISCINER_GROUP: &str = "2025_lyon";
 
