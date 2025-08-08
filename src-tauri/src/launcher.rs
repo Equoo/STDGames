@@ -186,6 +186,8 @@ impl Launcher {
             },
         };
 
+		let gamename = &data.name;
+
 		println!("Game data: {:?}", data);
 
 		create_golberg_config(self, data).await
@@ -211,14 +213,14 @@ impl Launcher {
 
 		const JUNEST_PATH: &str = "/sgoinfre/dderny/junest/bin/junest";
 		let game_path = format!("{GAMES_PATH}/{}", &data.name);
-		let exec_path = format!("{game_path}/{}", &data.exec_path);
+		let exec_path = format!("/tmp/.stdgames/{gamename}/{}", &data.exec_path);
 
-		if !data.config.is_none() {
-			for conf in data.config.as_ref().unwrap().iter() {
-				let path = format!("/sgoinfre/{user}/.stdgames_saves/{}/{}", &data.name, conf.user);
-				binds.insert(path, format!("{game_path}/{}", conf.original));
-			}
-		}
+		//if !data.config.is_none() {
+		//	for conf in data.config.as_ref().unwrap().iter() {
+		//		let path = format!("/sgoinfre/{user}/.stdgames_saves/{}/{}", &data.name, conf.user);
+		//		binds.insert(path, format!("{game_path}/{}", conf.original));
+		//	}
+		//}
 
 		if !data.r_conf.is_none() {
 			for conf in data.r_conf.as_ref().unwrap().iter() {
@@ -278,18 +280,30 @@ impl Launcher {
 			println!("Error creating /tmp/{user}: {}", e);
 		}
 
+		if let Err(e) = fs::create_dir_all(format!("/tmp/{user}/rw")) {
+			println!("Error creating /tmp/{user}/rw: {}", e);
+		}
+
+		if let Err(e) = fs::create_dir_all(format!("/tmp/{user}/overlay_work")) {
+			println!("Error creating /tmp/{user}/overlay_work: {}", e);
+		}
+
+		if let Err(e) = fs::create_dir_all(format!("/tmp/.stdgames/{gamename}")) {
+			println!("Error creating /tmp/.stdgames/{gamename}: {}", e);
+		}
+
 		let uid = Uid::current().to_string();
 		let	junest_cmd = format!("cd {game_path}/{} && {JUNEST_PATH} -b \"\
-				--uid 5 \
 				--bind /sgoinfre /sgoinfre				\
 				--bind /goinfre /goinfre				\
 				--bind /media /media				\
 				--bind /tmp/{user} /tmp \
 				--bind /tmp/.X11-unix /tmp/.X11-unix \
+				--overlay-src {game_path} --overlay /tmp/{user}/rw /tmp/{user}/overlay_work /tmp/.stdgames/{gamename} \
 				--bind /run/user/{uid}/pulse/native /run/pulse/native {binds_str}\" exec ", data.workdir.clone().unwrap_or("".to_string()));
 
 		if data.prestart.is_some() {
-			let prestart_command = format!("{junest_cmd} {game_path}/{}", data.prestart.as_ref().unwrap());
+			let prestart_command = format!("{junest_cmd}  /tmp/.stdgames/{gamename}/{}", data.prestart.as_ref().unwrap());
 			println!("Running prestart command: {}", prestart_command);
 			Command::new("sh")
 				.arg("-c")
@@ -301,7 +315,7 @@ impl Launcher {
 				.expect("Failed to wait for prestart command");
 		}
 
-		let final_command = format!("{junest_cmd} {game_command}");
+		let final_command = format!("{junest_cmd} /sgoinfre/stdgames/.ressources/autosave.sh {game_command} /tmp/rw /sgoinfre/{user}/.stdgames_saves/overlays/{gamename}");
 
 		println!("Launching game: {}", final_command);
 		let process = Command::new("sh")
