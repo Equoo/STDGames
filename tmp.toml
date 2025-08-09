@@ -4,7 +4,7 @@
 slug = "balatro" # only used in the front
 status = "working|multiplayer broken|broken|developement"
 
-[[games.metadata]]
+[games.metadata]
 idgb_id = 4242
 store_pages = ["urls to the store pages"]
 name = "Balatro"
@@ -14,33 +14,33 @@ cover = "url or file (embeded file)"
 logo = "url or file (embeded file)"
 tags = ["solo", "multiplayer"]
 
-[[games.launch]]
-type = "native|ge7.23|wine|proton12"
+[games.launch]
+flags = "native|ge7.23|wine|proton12"
 environ = { "abc" = "def" }
 overlays = [ "gamedir1", "gamedir2", "gamedir3" ]
+gamedata = [ "gamedata folder" ]
 start = [ "./love2d", "src/balatro.lua" ]
 prestart = [ "./prestart.sh" ]
-
 
 
 [[games]]
+slug = "r3rte" # only used in the front
 status = "working|multiplayer broken|broken|developement"
 
-[[games.metadata]]
+[games.metadata]
 idgb_id = 4242
-slug = "balatro" # only used in the front
 store_pages = ["urls to the store pages"]
-name = "Balatro"
-thumbnail = "url or file (embeded file)"
-header = "url or file (embeded file)"
+name = "r3rte"
+description = "desc"
 icon = "url or file (embeded file)"
+cover = "url or file (embeded file)"
+logo = "url or file (embeded file)"
 tags = ["solo", "multiplayer"]
 
-[[games.launch]]
-type = "native|ge7.23|wine|proton12"
+[games.launch]
+flags = "native|ge7.23|wine|proton12"
 environ = { "abc" = "def" }
 overlays = [ "gamedir1", "gamedir2", "gamedir3" ]
-start = [ "./love2d", "src/balatro.lua" ]
+gamedata = [ "gamedata folder" ]
+start = [ "./love2d", "src/r3rte.lua" ]
 prestart = [ "./prestart.sh" ]
-
-

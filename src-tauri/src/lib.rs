@@ -2,7 +2,7 @@ pub mod check_authorized;
 
 use check_authorized::is_authorized;
 
-use std::{error::Error, vec};
+use std::{collections::HashMap, error::Error, vec};
 use tauri::{Manager, Emitter};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
@@ -16,8 +16,10 @@ struct Games {
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Game {
+	slug: String,
+	status: String,
     metadata: GameMetadata,
-    launchdata: GameLaunchData,
+    launch: GameLaunchData,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -35,10 +37,10 @@ struct GameMetadata {
 #[derive(Debug, Deserialize, Serialize)]
 struct GameLaunchData {
     flags: String,
-	environs: Option<Vec<String>>,
+	environs: Option<HashMap<String, String>>,
 	overlays: Vec<String>,
-	start: String,
-	prestart: Option<String>
+	start: Vec<String>,
+	prestart: Option<Vec<String>>,
 }
 
 use std::fs;
@@ -68,7 +70,10 @@ async fn splashscreen_loading(app: tauri::AppHandle) -> anyhow::Result<()> {
 		app.emit("splashscreen-progress", progress)?;
 	}
 
-
+	println!("Loading resources...");
+	let games = load_config("/sgoinfre/dderny/private/STDGames/tmp.toml")
+		.map_err(|e| println!("Failed to load config: {}", e));
+	println!("Games loaded: {:?}", games);
 
 	// After loading, close the splash screen and show the main window
 	let splash_window = app.get_webview_window("splashscreen")
