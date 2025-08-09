@@ -8,9 +8,10 @@ status = "working|multiplayer broken|broken|developement"
 idgb_id = 4242
 store_pages = ["urls to the store pages"]
 name = "Balatro"
-thumbnail = "url or file (embeded file)"
-header = "url or file (embeded file)"
+description = "desc"
 icon = "url or file (embeded file)"
+cover = "url or file (embeded file)"
+logo = "url or file (embeded file)"
 tags = ["solo", "multiplayer"]
 
 [[games.launch]]

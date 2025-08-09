@@ -2,11 +2,53 @@ pub mod check_authorized;
 
 use check_authorized::is_authorized;
 
-use std::error::Error;
-use tauri::Manager;
-use tauri::async_runtime::Mutex;
+use std::{error::Error, vec};
+use tauri::{Manager, Emitter};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Games {
+    games: Vec<Game>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Game {
+    metadata: GameMetadata,
+    launchdata: GameLaunchData,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct GameMetadata {
+    idgb_id: Option<i32>,
+    store_pages: Option<Vec<String>>,
+	name: Option<String>,
+	cover: Option<String>,
+	icon: Option<String>,
+	logo: Option<String>,
+	description: Option<String>,
+	tags: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct GameLaunchData {
+    flags: String,
+	environs: Option<Vec<String>>,
+	overlays: Vec<String>,
+	start: String,
+	prestart: Option<String>
+}
+
+use std::fs;
+use toml;
+
+fn load_config(path: &str) -> Result<Games, Box<dyn std::error::Error>> {
+    let content = fs::read_to_string(path)?;
+    let config: Games = toml::from_str(&content)?;
+    Ok(config)
+}
 
 fn center_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), Box<dyn Error>> {
 	let monitor = window.current_monitor()?.ok_or("Failed to get current monitor")?;
@@ -19,7 +61,27 @@ fn center_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) -> Result<
 }
 
 
-fn setup_app<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn Error>> {
+async fn splashscreen_loading(app: tauri::AppHandle) -> anyhow::Result<()> {
+	let mut progress = 0;
+	while progress < 100 {
+		progress += 10;
+		app.emit("splashscreen-progress", progress)?;
+	}
+
+
+
+	// After loading, close the splash screen and show the main window
+	let splash_window = app.get_webview_window("splashscreen")
+		.ok_or_else(|| anyhow::anyhow!("Failed to get splashscreen window"))?;
+	let main_window = app.get_webview_window("main")
+		.ok_or_else(|| anyhow::anyhow!("Failed to get main window"))?;
+	splash_window.close()?;
+	main_window.show()?;
+
+	Ok(())
+}
+
+fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn Error>> {
 
 	if let Some(reason) = is_authorized()
 	{
@@ -31,10 +93,13 @@ fn setup_app<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn E
 		return Ok(());
 	}
 
+	// Initialize the splashscreen window
 	let window = app.get_webview_window("splashscreen").ok_or("Failed to get splashscreen window")?;
-
 	center_window(&window)?;
 	window.show()?;
+
+	// Thread to handle application resources loading
+	tauri::async_runtime::spawn(splashscreen_loading(app.handle().clone()));
 
 	Ok(())
 }
