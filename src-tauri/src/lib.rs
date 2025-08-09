@@ -4,11 +4,12 @@ use check_authorized::is_authorized;
 
 use std::error::Error;
 use tauri::Manager;
+use tauri::async_runtime::Mutex;
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 
 fn center_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), Box<dyn Error>> {
-	let monitor = window.current_monitor()?.unwrap(); // TODO: remove this
+	let monitor = window.current_monitor()?.ok_or("Failed to get current monitor")?;
 	let monitor_size = monitor.size();
 	let window_size = window.inner_size()?;
 	let x = (monitor_size.width - window_size.width) / 2;
@@ -30,7 +31,7 @@ fn setup_app<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn E
 		return Ok(());
 	}
 
-	let window = app.get_webview_window("splashscreen").unwrap(); // TODO: remove this
+	let window = app.get_webview_window("splashscreen").ok_or("Failed to get splashscreen window")?;
 
 	center_window(&window)?;
 	window.show()?;
