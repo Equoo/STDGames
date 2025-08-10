@@ -1,6 +1,8 @@
-pub mod check_authorized;
+mod check_authorized;
+mod errors;
 
 use check_authorized::is_authorized;
+use errors::AppError;
 
 use std::error::Error;
 use tauri::Manager;
@@ -8,7 +10,8 @@ use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 
 fn center_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), Box<dyn Error>> {
-	let monitor = window.current_monitor()?.unwrap(); // TODO: remove this
+	let monitor = window.current_monitor()?
+		.ok_or(AppError::new("didn't find any monitor"))?;
 	let monitor_size = monitor.size();
 	let window_size = window.inner_size()?;
 	let x = (monitor_size.width - window_size.width) / 2;
@@ -30,9 +33,13 @@ fn setup_app<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn E
 		return Ok(());
 	}
 
-	let window = app.get_webview_window("splashscreen").unwrap(); // TODO: remove this
+	let window = app.get_webview_window("splashscreen").
+		ok_or(AppError::new("didn't find 'splashscreen webview'"))?;
 
-	center_window(&window)?;
+	if let Err(e) = center_window(&window) {
+		eprintln!("failed to center window: {}", e);
+	}
+
 	window.show()?;
 
 	Ok(())
