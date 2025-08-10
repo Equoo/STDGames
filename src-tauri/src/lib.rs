@@ -5,11 +5,11 @@ use check_authorized::is_authorized;
 use errors::AppError;
 
 use std::error::Error;
-use tauri::Manager;
+use tauri::{Manager, Emitter};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 
-fn center_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), Box<dyn Error>> {
+fn center_window(window: &tauri::WebviewWindow) -> Result<(), Box<dyn Error>> {
 	let monitor = window.current_monitor()?
 		.ok_or(AppError::new("didn't find any monitor"))?;
 	let monitor_size = monitor.size();
@@ -21,10 +21,23 @@ fn center_window<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) -> Result<
 }
 
 
-fn setup_app<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn Error>> {
+use std::thread;
+use std::time::Duration;
+// setup error return in this function
+async fn setup_tools(app: tauri::AppHandle)
+{
+	loop {
+		app.emit("progressbar_update", 42);
+		thread::sleep(Duration::new(3, 0));
+		app.emit("progressbar_update", 84);
+		thread::sleep(Duration::new(3, 0));
+	}
+}
 
-	if let Some(reason) = is_authorized()
-	{
+
+fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn Error>> {
+
+	if let Some(reason) = is_authorized() {
 		app.dialog()
 			.message(reason)
 			.title("Access Denied")
@@ -42,20 +55,17 @@ fn setup_app<R: tauri::Runtime>(app: &mut tauri::App<R>) -> Result<(), Box<dyn E
 
 	window.show()?;
 
+	// maybe use spawn_blocking instead, if there is lag maybe it's because of that
+	tauri::async_runtime::spawn(setup_tools(app.handle().clone()));
+
 	Ok(())
 }
-
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.plugin(tauri_plugin_dialog::init())
-		// .manage(Mutex::new(SetupState {
-		//     progress: 0,
-		//     finish: false,
-		//     client_loaded: false
-		// }))
 		.invoke_handler(tauri::generate_handler![])
 		.setup(setup_app)
 		.run(tauri::generate_context!())
