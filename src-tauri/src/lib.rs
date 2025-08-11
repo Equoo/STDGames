@@ -1,5 +1,6 @@
 mod check_authorized;
 mod setup_tools;
+mod commands;
 mod config;
 mod errors;
 
@@ -10,6 +11,7 @@ use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use crate::check_authorized::is_authorized;
 use crate::setup_tools::setup_tools;
 use crate::errors::AppError;
+use crate::config::Config;
 
 
 async fn setup_tools_wrapper(app: AppHandle) {
@@ -36,7 +38,7 @@ fn center_window(window: &WebviewWindow) -> Result<(), Box<dyn Error>> {
 
 
 fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
-	
+
 	if let Some(reason) = is_authorized() {
 		app.dialog()
 			.message(reason)
@@ -61,10 +63,15 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+	let config = Config::default()
+		.expect("Failed to load configuration");
 	Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.plugin(tauri_plugin_dialog::init())
-		.invoke_handler(tauri::generate_handler![])
+		.manage(config)
+		.invoke_handler(tauri::generate_handler![
+			commands::add_launcher_to_desktop
+		])
 		.setup(setup_app)
 		.run(tauri::generate_context!())
 		.expect("Erreur lors du lancement de Tauri");

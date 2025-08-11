@@ -5,7 +5,6 @@ use tar::Archive;
 use std::fs::{self, File};
 
 use crate::errors::AppError;
-use crate::config::Config;
 
 
 pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
@@ -19,10 +18,8 @@ pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
     splashscreen_window.emit("progressbar_update", 0)?;
     splashscreen_window.show()?;
 
-    let config = Config::default()?;
-
-    // for directory in vec![config.resources_junest_home_dir.clone(), config.temp_junest_home_dir.clone()] {
-    // 		fs::create_dir_all(directory)?;
+    // for directory in [config.resources_junest_home_dir.clone(), config.temp_junest_home_dir.clone()] {
+    //     fs::create_dir_all(directory)?;
     // }
 
     
@@ -35,8 +32,6 @@ pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
     // fs_extra::copy_items_with_progress(&vec![config.resources_junest_home_dir.clone()], config.temp_dir.clone(), &option, handle)?;
     fs_extra::copy_items_with_progress(&vec!["/home/sky/game/cracked/art of rally"], "./dst", &option, handle)?;
 
-    println!("finished copying files");
-
 
     // splashscreen_window.emit("progressbar_update", 60)?;
 
@@ -47,8 +42,11 @@ pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
     println!("Finished installing tools.");
 
 
-    // splashscreen_window.close()?;
-    // launcher_window.show()?;
+    splashscreen_window.close()?;
+    launcher_window.show()?;
 
+    // TODO: the interface is not displayed if there is no loading,
+    // : maybe readd the client_loaded switch
+    
     Ok(())
 }
