@@ -21,8 +21,8 @@ use crate::desktop_icons::add_launcher_desktop_icon;
 use std::fs;
 
 static LAUNCHER: Lazy<Arc<Launcher>> = Lazy::new(|| {
-    let library = Arc::new(GameLibrary::new().expect("Failed to create game library"));
-    Arc::new(Launcher::new(library))
+	let library = Arc::new(GameLibrary::new().expect("Failed to create game library"));
+	Arc::new(Launcher::new(library))
 });
 
 #[tauri::command]
@@ -30,26 +30,26 @@ fn launch_game(game: String) {
 	let launcher = &LAUNCHER;
 	tauri::async_runtime::block_on(async {
 		println!("Lancement du jeu : {}", game);
-    	let _ = launcher.launch_game(&game).await;
+		let _ = launcher.launch_game(&game).await;
 	});
 }
 
 #[tauri::command]
 fn game_state() -> Option<String> {
 	let launcher = &LAUNCHER;
-    launcher.is_game_running()
+	launcher.is_game_running()
 }
 
 #[tauri::command]
 fn get_game_library() -> Arc<GameLibrary> {
-    let _launcher = &LAUNCHER;
-    _launcher.library.clone()
+	let _launcher = &LAUNCHER;
+	_launcher.library.clone()
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 struct SetupState {
-    progress: u8,
-    finish: bool,
+	progress: u8,
+	finish: bool,
 	client_loaded: bool
 }
 
@@ -171,42 +171,42 @@ pub fn run() {
 	tauri::Builder::default()
 		.plugin(tauri_plugin_opener::init())
 		.manage(Mutex::new(SetupState {
-            progress: 0,
-            finish: false,
+			progress: 0,
+			finish: false,
 			client_loaded: false
-        }))
-		.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state, set_client_loaded])
+		}))
+	.invoke_handler(tauri::generate_handler![game_state, get_game_library, launch_game, add_launcher_desktop_icon, get_setup_state, get_gameprocess_state, set_client_loaded])
 		.setup(|app| {
 
 
-            if let Some(msg) = is_authorized() {
-                println!("accès refusé: {} !!!", msg);
-                std::process::exit(1); // change this dirty exit by an error screen
-            }
+			if let Some(msg) = is_authorized() {
+				println!("accès refusé: {} !!!", msg);
+				std::process::exit(1); // change this dirty exit by an error screen
+			}
 
 
-            // Spawn setup as a non-blocking task so the windows can be
-            // created and ran while it executes
+			// Spawn setup as a non-blocking task so the windows can be
+			// created and ran while it executes
 			let window = app.get_webview_window("splashscreen").unwrap();
 
 			let monitor = window.current_monitor()?.unwrap();
-            let monitor_size = monitor.size();
-            let monitor_position = monitor.position();
+			let monitor_size = monitor.size();
+			let monitor_position = monitor.position();
 
-            // Calculate the position to truly center the window
-            let new_x = monitor_position.x + (monitor_size.width as i32 / 2) - 200;
-            let new_y = monitor_position.y + (monitor_size.height as i32 / 2) - 200;
+			// Calculate the position to truly center the window
+			let new_x = monitor_position.x + (monitor_size.width as i32 / 2) - 200;
+			let new_y = monitor_position.y + (monitor_size.height as i32 / 2) - 200;
 
-            // Move the window to the computed position
-            window.set_position(tauri::Position::Logical(tauri::LogicalPosition {
+			// Move the window to the computed position
+			window.set_position(tauri::Position::Logical(tauri::LogicalPosition {
 				x: new_x as f64,
 				y: new_y as f64,
 			})).unwrap();
-			
-            spawn(setup(app.handle().clone()));
-            // The hook expects an Ok result
-            Ok(())
-        })
-		.run(tauri::generate_context!())
+
+			spawn(setup(app.handle().clone()));
+			// The hook expects an Ok result
+			Ok(())
+		})
+	.run(tauri::generate_context!())
 		.expect("Erreur lors du lancement de Tauri");
-}
+	}
