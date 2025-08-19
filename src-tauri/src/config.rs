@@ -16,7 +16,7 @@ pub struct Config {
 impl Config {
 	pub fn default() -> Result<Config, Box<dyn Error>> {
 		let username = env::var("USER")?;
-		let resources_dir = "/sgoinfre/stdgames/.ressources"; // TODO: fix the typo
+		let resources_dir = "/sgoinfre/stdgames/.resources";
 		let temp_dir = format!("/tmp/stdgames/{}", username);
 		Ok(Config {
 			user_home: format!("/home/{}", username).to_string(),

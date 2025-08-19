@@ -11,7 +11,7 @@ pub fn add_launcher_to_desktop(config: State<'_, Config>) -> Result<(), String> 
 	println!("executed !!!");
 	let dest = format!("{}/.local/share/applications/stdgames.desktop", config.user_home);
 	if Path::new(&dest).exists() {
-		fs_extra::remove_items(&[&dest]).map_err(|e| e.to_string())?; 
+		fs_extra::remove_items(&[&dest]).map_err(|e| e.to_string())?;
 	}
 	std::os::unix::fs::symlink(&config.resources_desktop_file, &dest).map_err(|e| e.to_string())?;
 	Ok(())

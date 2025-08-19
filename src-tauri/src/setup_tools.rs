@@ -1,13 +1,15 @@
 use std::error::Error;
-use tauri::{Manager, Emitter, AppHandle};
-use fs_extra::{TransitProcess, dir::TransitProcessResult, dir::CopyOptions};
+use tauri::{Manager, Emitter, AppHandle, State};
+use fs_extra::dir::{TransitProcess, TransitProcessResult, CopyOptions, copy_with_progress, copy};
 use tar::Archive;
 use std::fs::{self, File};
+use std::path::Path;
 
 use crate::errors::AppError;
+use crate::config::Config;
+use crate::copy_directory::copy_directory;
 
-
-pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
+pub fn setup_tools(app: AppHandle, config: State<'_, Config>) -> Result<(), Box<dyn Error>> {
 	println!("Installing tools ...");
 
 	let splashscreen_window = app.get_webview_window("splashscreen")
@@ -18,10 +20,9 @@ pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
 	splashscreen_window.emit("progressbar_update", 0)?;
 	splashscreen_window.show()?;
 
-	// for directory in [config.resources_junest_home_dir.clone(), config.temp_junest_home_dir.clone()] {
-	//     fs::create_dir_all(directory)?;
-	// }
-
+	for directory in [config.resources_junest_home_dir.clone(), config.temp_junest_home_dir.clone()] {
+		fs::create_dir_all(directory)?;
+	}
 
 	let option = CopyOptions::new().skip_exist(true);
 	let handle = |process_info: TransitProcess| {
@@ -29,8 +30,11 @@ pub fn setup_tools(app: AppHandle) -> Result<(), Box<dyn Error>> {
 		TransitProcessResult::ContinueOrAbort
 	};
 	// this copy as a lot of excluded folders, just delete the folders on the src folder
-	// fs_extra::copy_items_with_progress(&vec![config.resources_junest_home_dir.clone()], config.temp_dir.clone(), &option, handle)?;
-	fs_extra::copy_items_with_progress(&vec!["/home/sky/game/cracked/art of rally"], "./dst", &option, handle)?;
+	println!("copy from {} to {}", config.resources_junest_home_dir.clone(), config.temp_junest_home_dir.clone());
+	copy_directory(Path::new(&config.resources_junest_home_dir), Path::new(&config.temp_junest_home_dir))?;
+
+	// copy_with_progress(config.resources_junest_home_dir.clone(), config.temp_junest_home_dir.clone(), &option, handle)?;
+	// copy_with_progress("/sgoinfre/stdgames/artofrally", "/goinfre/tdaclin/dst", &option, handle)?;
 
 
 	// splashscreen_window.emit("progressbar_update", 60)?;

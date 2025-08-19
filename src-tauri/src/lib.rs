@@ -3,6 +3,7 @@ mod setup_tools;
 mod commands;
 mod config;
 mod errors;
+mod copy_directory;
 
 use std::error::Error;
 use tauri::{Builder, Manager, App, AppHandle, WebviewWindow};
@@ -15,7 +16,7 @@ use crate::config::Config;
 
 
 async fn setup_tools_wrapper(app: AppHandle) {
-	if let Err(e) = setup_tools(app.clone()) {
+	if let Err(e) = setup_tools(app.clone(), app.state()) {
 		app.dialog()
 			.message(format!("setup_tools failed: {}", e))
 			.title("Error")
