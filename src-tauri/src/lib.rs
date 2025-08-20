@@ -3,16 +3,66 @@ mod setup_tools;
 mod commands;
 mod config;
 mod errors;
+mod library;
+mod game_execution;
 mod copy_directory;
 
 use std::error::Error;
 use tauri::{Builder, Manager, App, AppHandle, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+use clap::{Parser, Subcommand};
 
 use crate::check_authorized::is_authorized;
 use crate::setup_tools::setup_tools;
 use crate::errors::AppError;
 use crate::config::Config;
+
+
+#[derive(Parser, Debug)]
+#[command(
+    name = "stdgames",
+    version,
+    about = "Stdgames launcher by zsonie, tdaclin and dderny.",
+    author = "zsonie, tdaclin, dderny"
+)]
+struct Cli {
+    /// Use a custom config file
+    #[arg(short, long, value_name = "FILE")]
+    config: Option<String>,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Run a game from the stdgames repository
+    Run {
+        /// Game name
+        game: String,
+    },
+
+    /// Run bash with the game's config
+    Bash {
+        /// Game name
+        game: String,
+    },
+
+    /// Run a game with a custom config file
+    RunConfig {
+        /// Path to TOML config file
+        file: String,
+    },
+
+    /// Run bash with a custom config file
+    BashConfig {
+        /// Path to TOML config file
+        file: String,
+    },
+
+    /// Enter the Junest environment
+    Junest,
+}
 
 
 async fn setup_tools_wrapper(app: AppHandle) {
@@ -25,7 +75,6 @@ async fn setup_tools_wrapper(app: AppHandle) {
 	}
 }
 
-
 fn center_window(window: &WebviewWindow) -> Result<(), Box<dyn Error>> {
 	let monitor = window.current_monitor()?
 		.ok_or(AppError::new("didn't find any monitor"))?;
@@ -37,9 +86,7 @@ fn center_window(window: &WebviewWindow) -> Result<(), Box<dyn Error>> {
 	Ok(())
 }
 
-
 fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
-
 	if let Some(reason) = is_authorized() {
 		app.dialog()
 			.message(reason)
@@ -66,14 +113,35 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
 pub fn run() {
 	let config = Config::default()
 		.expect("Failed to load configuration");
-	Builder::default()
-		.plugin(tauri_plugin_opener::init())
-		.plugin(tauri_plugin_dialog::init())
-		.manage(config)
-		.invoke_handler(tauri::generate_handler![
-			commands::add_launcher_to_desktop
-		])
-		.setup(setup_app)
-		.run(tauri::generate_context!())
-		.expect("Erreur lors du lancement de Tauri");
+		
+	let cli = Cli::parse();
+	match cli.command {
+        Some(Commands::Run { game }) => {
+            println!("Running game: {}", game);
+        }
+        Some(Commands::Bash { game }) => {
+            println!("Starting bash with game config: {}", game);
+        }
+        Some(Commands::RunConfig { file }) => {
+            println!("Running game with config file: {}", file);
+        }
+        Some(Commands::BashConfig { file }) => {
+            println!("Running bash with config file: {}", file);
+        }
+        Some(Commands::Junest) => {
+            println!("Entering Junest environment...");
+        }
+        None => {
+			Builder::default()
+				.plugin(tauri_plugin_opener::init())
+				.plugin(tauri_plugin_dialog::init())
+				.manage(config)
+				.invoke_handler(tauri::generate_handler![
+					commands::add_launcher_to_desktop
+				])
+				.setup(setup_app)
+				.run(tauri::generate_context!())
+				.expect("Erreur lors du lancement de Tauri");
+		}
+    }
 }
