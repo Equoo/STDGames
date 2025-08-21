@@ -22,7 +22,7 @@ pub fn setup_tools(app: AppHandle, config: State<'_, Config>) -> Result<(), Box<
     splashscreen_window.show()?;
 
     for directory in [
-        config.resources_junest_home_dir.clone(),
+        config.junest_home_dir.clone(),
         config.temp_junest_home_dir.clone(),
     ] {
         fs::create_dir_all(directory)?;
@@ -35,7 +35,7 @@ pub fn setup_tools(app: AppHandle, config: State<'_, Config>) -> Result<(), Box<
         );
     };
     copy_directory(
-        Path::new(&config.resources_junest_home_dir),
+        Path::new(&config.junest_home_dir),
         Path::new(&config.temp_junest_home_dir),
         handle,
     )?;

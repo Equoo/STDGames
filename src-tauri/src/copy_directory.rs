@@ -73,6 +73,7 @@ pub fn copy_directory(src: &Path, dest: &Path, handle: impl Fn(CopyData)) -> Res
 		let file_type = entry.file_type();
 		let file = entry.path();
 
+		println!("Copying file {} of {}: {:?}", i + 1, total, file);
 		if file_type.is_symlink() {
 			let _ = copy_symlink(file, src, dest)?;
 		}

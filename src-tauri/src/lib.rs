@@ -8,6 +8,7 @@ mod game_execution;
 mod copy_directory;
 
 use std::error::Error;
+use std::path::Path;
 use tauri::{Builder, Manager, App, AppHandle, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use clap::{Parser, Subcommand};
@@ -16,52 +17,53 @@ use crate::check_authorized::is_authorized;
 use crate::setup_tools::setup_tools;
 use crate::errors::AppError;
 use crate::config::Config;
+use crate::copy_directory::copy_directory;
 
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "stdgames",
-    version,
-    about = "Stdgames launcher by zsonie, tdaclin and dderny.",
-    author = "zsonie, tdaclin, dderny"
+	name = "stdgames",
+	version,
+	about = "Stdgames launcher by zsonie, tdaclin and dderny.",
+	author = "zsonie, tdaclin, dderny"
 )]
 struct Cli {
-    /// Use a custom config file
-    #[arg(short, long, value_name = "FILE")]
-    config: Option<String>,
+	/// Use a custom config file
+	#[arg(short, long, value_name = "FILE")]
+	config: Option<String>,
 
-    #[command(subcommand)]
-    command: Option<Commands>,
+	#[command(subcommand)]
+	command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Run a game from the stdgames repository
-    Run {
-        /// Game name
-        game: String,
-    },
+	/// Run a game from the stdgames repository
+	Run {
+		/// Game name
+		game: String,
+	},
 
-    /// Run bash with the game's config
-    Bash {
-        /// Game name
-        game: String,
-    },
+	/// Run bash with the game's config
+	Bash {
+		/// Game name
+		game: String,
+	},
 
-    /// Run a game with a custom config file
-    RunConfig {
-        /// Path to TOML config file
-        file: String,
-    },
+	/// Run a game with a custom config file
+	RunConfig {
+		/// Path to TOML config file
+		file: String,
+	},
 
-    /// Run bash with a custom config file
-    BashConfig {
-        /// Path to TOML config file
-        file: String,
-    },
+	/// Run bash with a custom config file
+	BashConfig {
+		/// Path to TOML config file
+		file: String,
+	},
 
-    /// Enter the Junest environment
-    Junest,
+	/// Enter the Junest environment
+	Junest,
 }
 
 
@@ -114,24 +116,45 @@ pub fn run() {
 	let config = Config::default()
 		.expect("Failed to load configuration");
 		
+	let mut game_exec = game_execution::GameExecution::new();
+	let library = library::load_library(config.library.as_str())
+		.expect("Failed to load game library");
+	
 	let cli = Cli::parse();
+	if cli.command.is_some() { // do setup tools
+		copy_directory(
+			Path::new(&config.junest_home_dir),
+			Path::new(&config.temp_junest_home_dir),
+			|_| {},
+		).expect("Failed to copy Junest home directory");
+	}
 	match cli.command {
-        Some(Commands::Run { game }) => {
-            println!("Running game: {}", game);
-        }
-        Some(Commands::Bash { game }) => {
-            println!("Starting bash with game config: {}", game);
-        }
-        Some(Commands::RunConfig { file }) => {
-            println!("Running game with config file: {}", file);
-        }
-        Some(Commands::BashConfig { file }) => {
-            println!("Running bash with config file: {}", file);
-        }
-        Some(Commands::Junest) => {
-            println!("Entering Junest environment...");
-        }
-        None => {
+		Some(Commands::Run { game }) => {
+			
+		}
+		Some(Commands::Bash { game }) => {
+			let mut launch_data = library.iter()
+				.find(|g| g.slug == game) 
+				.expect("Game not found in library").launch
+				.clone();
+			launch_data.start = ["/bin/bash".to_string()].to_vec();
+			
+			println!("Running bash for game: {}, {:?}", game, launch_data);
+			let proc = game_exec.run(game, &launch_data)
+				.expect("Failed to run game");
+			// give to process stdin of the actual process and stdout
+			proc.process.wait().expect("Failed to wait for game process");
+		}
+		Some(Commands::RunConfig { file }) => {
+			println!("Running game with config file: {}", file);
+		}
+		Some(Commands::BashConfig { file }) => {
+			println!("Running bash with config file: {}", file);
+		}
+		Some(Commands::Junest) => {
+			println!("Entering Junest environment...");
+		}
+		None => {
 			Builder::default()
 				.plugin(tauri_plugin_opener::init())
 				.plugin(tauri_plugin_dialog::init())
@@ -143,5 +166,5 @@ pub fn run() {
 				.run(tauri::generate_context!())
 				.expect("Erreur lors du lancement de Tauri");
 		}
-    }
+	}
 }

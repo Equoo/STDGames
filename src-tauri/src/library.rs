@@ -27,9 +27,9 @@ pub struct GameMetadata {
 	pub tags: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct GameLaunchData {
-    pub flags: String,
+    pub method: String,
 	pub environs: Option<HashMap<String, String>>,
 	pub overlays: Vec<String>,
 	pub start: Vec<String>,
