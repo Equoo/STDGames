@@ -29,14 +29,14 @@ pub struct GameMetadata {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct GameLaunchData {
-    pub method: String,
+    pub method: Vec<String>,
 	pub environs: Option<HashMap<String, String>>,
 	pub overlays: Vec<String>,
 	pub start: Vec<String>,
 	pub prestart: Option<Vec<String>>,
 }
 
-pub fn load_library(path: &str) -> Result<Vec<Game>, Box<dyn std::error::Error>> {
+pub fn load_library(path: String) -> Result<Vec<Game>, Box<dyn std::error::Error>> {
     let content = fs::read_to_string(path)?;
     let config: Games = toml::from_str(&content)?;
     Ok(config.games)

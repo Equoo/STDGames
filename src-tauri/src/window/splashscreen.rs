@@ -8,6 +8,16 @@ use crate::config::Config;
 use crate::copy_directory::{CopyData, copy_directory};
 use crate::errors::AppError;
 
+async fn setup_tools_wrapper(app: AppHandle) {
+	if let Err(e) = setup_tools(app.clone(), app.state()) {
+		app.dialog()
+			.message(format!("setup_tools failed: {}", e))
+			.title("Error")
+			.kind(MessageDialogKind::Error)
+			.show(|_| std::process::exit(1));
+	}
+}
+
 pub fn setup_tools(app: AppHandle, config: State<'_, Config>) -> Result<(), Box<dyn Error>> {
     println!("Installing tools ...");
 
