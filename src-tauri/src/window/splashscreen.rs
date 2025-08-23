@@ -1,15 +1,13 @@
-use std::error::Error;
-use std::fs;
-use std::path::Path;
-use tar::Archive;
-use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::config::Config;
-use crate::copy_directory::{CopyData, copy_directory};
-use crate::errors::AppError;
+use tauri::{AppHandle, Manager, Emitter};
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+use anyhow::{Result, anyhow};
 
-async fn setup_tools_wrapper(app: AppHandle) {
-	if let Err(e) = setup_tools(app.clone(), app.state()) {
+use crate::execution::GameExecution;
+
+
+pub async fn setup_tools_wrapper(app: AppHandle) {
+	if let Err(e) = setup_tools(app.clone()) {
 		app.dialog()
 			.message(format!("setup_tools failed: {}", e))
 			.title("Error")
@@ -18,43 +16,28 @@ async fn setup_tools_wrapper(app: AppHandle) {
 	}
 }
 
-pub fn setup_tools(app: AppHandle, config: State<'_, Config>) -> Result<(), Box<dyn Error>> {
+pub fn setup_tools(app: AppHandle) -> Result<()> {
     println!("Installing tools ...");
 
     let splashscreen_window = app
         .get_webview_window("splashscreen")
-        .ok_or(AppError::new("didn't find the 'splashscreen' webview"))?;
+        .ok_or(anyhow!("didn't find the 'splashscreen' webview"))?;
     let launcher_window = app
         .get_webview_window("main")
-        .ok_or(AppError::new("didn't find the 'main' webview"))?;
+        .ok_or(anyhow!("didn't find the 'main' webview"))?;
 
     splashscreen_window.emit("progressbar_update", 0)?;
     splashscreen_window.show()?;
 
-    for directory in [
-        config.junest_home_dir.clone(),
-        config.temp_junest_home_dir.clone(),
-    ] {
-        fs::create_dir_all(directory)?;
-    }
-
-    let handle = |copy_data: CopyData| {
+    let handle = |progress: f32| {
         let _ = splashscreen_window.emit(
             "progressbar_update",
-            copy_data.files_copied * 50 / copy_data.num_files,
+            progress as u8,
         );
     };
-    copy_directory(
-        Path::new(&config.junest_home_dir),
-        Path::new(&config.temp_junest_home_dir),
-        handle,
-    )?;
-
-    // splashscreen_window.emit("progressbar_update", 60)?;
-
-    // untested code
-    // Archive::new(File::open(config.resource_umu_archive_file.clone())?).unpack(config.temp_dir.clone())?;
-
+    
+    GameExecution::setup(handle)?;
+    
     splashscreen_window.emit("progressbar_update", 100)?;
     println!("Finished installing tools.");
 

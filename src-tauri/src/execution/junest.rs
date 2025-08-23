@@ -9,12 +9,10 @@ use crate::{
 
 impl GameExecution {
 	pub fn junest_cmd(
-		mut environ: HashMap<String, String>,
+		environ: HashMap<String, String>,
 		overlay: &Option<Overlay>,
 	) -> Command {
-		environ.insert("JUNEST_HOME".to_string(), CONFIG.temp_junest_home_dir);
-
-		let cmd = Command::new(CONFIG.junest_bin);
+		let mut cmd = Command::new(CONFIG.junest_bin.clone());
 		
 		let work_dir = if overlay.is_some() {
 			PathBuf::from(format!("/tmp/{}/stdgames/work", CONFIG.username))
@@ -22,27 +20,28 @@ impl GameExecution {
 			PathBuf::from(&CONFIG.user_home)
 		};
 		
+		cmd.env("JUNEST_HOME", CONFIG.temp_junest_home_dir.clone());
+		cmd.env("PYTHONPATH", "/usr/lib/python3/dist-packages");
 		cmd.envs(environ)
 			.current_dir(work_dir);
 
+		let user = CONFIG.username.clone();
 		let overlay_str = if let Some(o) = overlay {
 			// Ensure the overlay directories exist
-			let user = CONFIG.username;
 			[
 				&format!("/tmp/{user}"),
 				&format!("/tmp/{user}/stdgames/rw"),
+				&format!("/tmp/{user}/{user}/stdgames/rw"),
 				&format!("/tmp/{user}/stdgames/overlay_work"),
+				&format!("/tmp/{user}/{user}/stdgames/overlay_work"),
 				&format!("/tmp/{user}/stdgames/work"),
+				&format!("/tmp/{user}/{user}/stdgames/work"),
 			].iter()
 			.for_each(|folder| {
 				std::fs::create_dir_all(folder).unwrap_or_else(|e| {
 					eprintln!("Failed to create directory {}: {}", folder, e);
 				});
 			});
-
-			cmd.arg(CONFIG.overlay);
-			cmd.arg(format!("/tmp/{user}/stdgames/rw"));
-			cmd.arg(o.dst);
 
 			format!(
 				"--overlay-src {}
@@ -66,6 +65,13 @@ impl GameExecution {
 				{overlay_str}
 			", CONFIG.username, CONFIG.junest_bind
 			));
+
+		if overlay.is_some() {
+			cmd.arg(CONFIG.overlay.clone());
+			cmd.arg(format!("/tmp/{user}/stdgames/rw"));
+			cmd.arg(overlay.as_ref().unwrap().dst.clone());
+		}
+
 		cmd
 	}
 }

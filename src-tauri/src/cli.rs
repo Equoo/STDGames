@@ -1,9 +1,13 @@
 
+use std::collections::HashMap;
+use std::os::unix::process::CommandExt;
+
 use clap::{Parser, Subcommand};
 use anyhow::Result;
 
+use crate::config::CONFIG;
 use crate::library::Game;
-use crate::execution::GameExecution;
+use crate::execution::{GameExecution, GameProcess};
 
 #[derive(Parser, Debug)]
 #[command(
@@ -18,11 +22,11 @@ pub struct Cli {
 	config: Option<String>,
 
 	#[command(subcommand)]
-	command: Option<Commands>,
+	pub command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+pub enum Commands {
 	/// Run a game from the stdgames repository
 	Run {
 		/// Game name
@@ -51,38 +55,41 @@ enum Commands {
 	Junest,
 }
 
+fn get_game<'a>(library: &'a Vec<Game>, name: &'a String) -> Result<&'a Game> {
+	library.iter()
+		.find(|g| &g.slug == name)
+		.ok_or_else(|| anyhow::anyhow!("Game '{}' not found in library", name))
+}
+
 pub fn init_cli(
 	cli: &Cli,
 	library: &Vec<Game>,
 	game_exec: &mut GameExecution,
 ) -> Result<()> {
-	GameExecution::setup();
+	GameExecution::setup(|progress: f32| {
+		println!("Setup progress: <{}{}>", "#".repeat((progress / 5.0) as usize), " ".repeat(20 - (progress / 5.0) as usize));
+	})?;
 
-	match cli.command {
+	let vars = CONFIG.clone().build_vars();
+
+	match &cli.command {
 		Some(Commands::Run { game }) => {
-			let launch_data = library.iter()
-				.find(|g| g.slug == game) 
-				.expect("Game not found in library").launch
-				.clone();
+			let mut launch_data = get_game(library, &game)?.launch.clone();
+			launch_data.replace_vars(&vars);
 			
-			let proc = game_exec.run(&game, &launch_data)
-				.expect("Failed to run game")
-				.spawn()
-				.expect("Failed to spawn game process");
+			let proc = GameExecution::build_command(&game, &launch_data)?
+				.spawn()?;
 			game_exec.running = Some(GameProcess {
 				process: proc,
-				game: game
+				game: game.to_string()
 			});
 		}
 		Some(Commands::Bash { game }) => {
-			let mut launch_data = library.iter()
-				.find(|g| g.slug == game) 
-				.expect("Game not found in library").launch
-				.clone();
+			let mut launch_data = get_game(library, &game)?.launch.clone();
 			launch_data.start = ["/bin/bash".to_string()].to_vec();
+			launch_data.replace_vars(&vars);
 			
-			let err = game_exec.run(&game, &launch_data)
-				.expect("Failed to run game")
+			let err = GameExecution::build_command(&game, &launch_data)?
 				.exec();
 			println!("Error running bash: {}", err);
 		}
@@ -93,7 +100,8 @@ pub fn init_cli(
 			println!("Running bash with config file: {}", file);
 		}
 		Some(Commands::Junest) => {
-			let err = GameExecution::junest_run(["bash".to_string()].to_vec(), HashMap::new(), &None)
+			let err = GameExecution::junest_cmd(HashMap::new(), &None)
+				.arg("/bin/bash")
 				.exec();
 			println!("Error running Junest: {}", err);
 		}

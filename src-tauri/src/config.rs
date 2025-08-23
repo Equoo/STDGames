@@ -21,6 +21,7 @@ pub struct Config {
     pub temp_junest_home_dir: String,
     pub temp_umu_dir: String,
     pub library: String,
+    pub umu_run: String,
 }
 
 impl Config {
@@ -42,6 +43,7 @@ impl Config {
             archive_file:	    format!("{resources_dir}/umu.zip").to_string(),
             protons_dir:		format!("{resources_dir}/protons").to_string(),
             overlay:	        format!("{resources_dir}/overlay").to_string(),
+            umu_run:            format!("{resources_dir}/umu-launcher/umu-run").to_string(),
             resources_dir:			resources_dir,
             temp_junest_home_dir:	format!("{temp_dir}/junest").to_string(),
             temp_umu_dir:			format!("{temp_dir}/umu").to_string(),
@@ -49,21 +51,26 @@ impl Config {
         })
     }
 
-    pub fn into_env_vars(self) -> HashMap<String, String> {
+    pub fn build_vars(self) -> HashMap<String, String> {
         let mut env_vars = HashMap::new();
         env_vars.insert("GAMES_DIR".to_string(), self.games_dir);
         env_vars.insert("USER_HOME".to_string(), self.user_home);
         env_vars.insert("USER_SAVE_DIR".to_string(), self.user_save_dir);
+        env_vars.insert("USERNAME".to_string(), self.username);
+        env_vars.insert("LIBRARY".to_string(), self.library);
         env_vars.insert("RESOURCES_DIR".to_string(), self.resources_dir);
         env_vars.insert("JUNEST_BIN".to_string(), self.junest_bin);
         env_vars.insert("DESKTOP_FILE".to_string(), self.desktop_file);
         env_vars.insert("JUNEST_HOME_DIR".to_string(), self.junest_home_dir);
+        env_vars.insert("JUNEST_BIND".to_string(), self.junest_bind);
         env_vars.insert("ARCHIVE_FILE".to_string(), self.archive_file);
         env_vars.insert("PROTONS_DIR".to_string(), self.protons_dir);
         env_vars.insert("OVERLAY".to_string(), self.overlay);
         env_vars.insert("TEMP_DIR".to_string(), self.temp_dir);
         env_vars.insert("TEMP_JUNEST_HOME_DIR".to_string(), self.temp_junest_home_dir);
         env_vars.insert("TEMP_UMU_DIR".to_string(), self.temp_umu_dir);
+        env_vars.insert("UMU_RUN".to_string(), self.umu_run);
+        env_vars.extend(env::vars().map(|(k, v)| (k, v)));
         env_vars
     }
 }

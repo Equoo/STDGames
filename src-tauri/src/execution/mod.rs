@@ -1,7 +1,8 @@
 use std::process::Child;
 
-mod build_command;
-mod junest;
+pub mod setup;
+pub mod build_command;
+pub mod junest;
 
 #[derive(Clone)]
 pub struct Overlay {
@@ -9,7 +10,7 @@ pub struct Overlay {
 	pub dst: String,
 }
 
-#[derive(Clone)]
+//#[derive(Clone)]
 pub struct GameProcess {
 	pub process: Child,
 	pub game: String,
@@ -17,4 +18,10 @@ pub struct GameProcess {
 
 pub struct GameExecution {
 	pub running: Option<GameProcess>,
+}
+
+impl GameExecution {
+	pub fn new() -> Self {
+		Self { running: None }
+	}
 }

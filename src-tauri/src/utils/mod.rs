@@ -1,2 +1,5 @@
 mod copy_directory;
-mod check_authorized;
+mod is_authorized;
+
+pub use copy_directory::copy_directory;
+pub use is_authorized::is_authorized;

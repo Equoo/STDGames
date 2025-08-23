@@ -4,26 +4,69 @@ use anyhow::{Context, Result};
 
 use crate::{
 	config::CONFIG,
-	execution::{GameProcess, Overlay},
+	execution::{GameExecution, Overlay},
 	library::GameLaunchData
 };
 
-impl GameProcess {
-	fn build_command(
+fn command_clone(self_v: &Command) -> Command {
+	let mut cmd = Command::new(self_v.get_program());
+	cmd.args(self_v.get_args());
+	for (key, value) in self_v.get_envs().filter_map(|(k, v)| v.map(|v| (k, v))) {
+		cmd.env(key, value);
+	}
+	if self_v.get_current_dir().is_some() {
+		cmd.current_dir(self_v.get_current_dir().unwrap());
+	}
+	cmd
+}
+
+impl GameExecution {
+	pub fn build_command(
 		name: &str,
 		data: &GameLaunchData,
-		env_vars: HashMap<String, String>,
 	) -> Result<Command> {
 		let overlay = Some(Overlay{
-			src: data.overlays,
+			src: data.overlays.clone(),
 			dst: format!("{}/{}", CONFIG.user_save_dir, name)
 		});
-		
-		let cmd = Self::junest_cmd(
-			env_vars,
+
+		let mut cmd = Self::junest_cmd(
+			data.environs.clone().unwrap_or(HashMap::new()),
 			&overlay,
 		);
-		cmd.envs(env_vars);
+
+		if data.proton.is_some() {
+			let proton = data.proton.as_ref().unwrap();
+			let prefix = format!("{}/{proton}", CONFIG.user_save_dir);
+			
+			cmd.env("STEAM_COMPAT_DATA_PATH", prefix.clone())
+			.env("WINEPREFIX", prefix)
+			.env("PROTONPATH", proton);
+		} else {
+			cmd.env("UMU_NO_PROTON", "1");
+		}
+
+		cmd.env("PROTONPATH", CONFIG.protons_dir.clone())
+			.env("DXVK_ASYNC", "1")
+			.env("GAMEID", "0")
+			.env("UMU_RUNTIME_UPDATE", "0");
+
+		if !data.noruntime.unwrap_or(false) {
+			cmd.arg(CONFIG.umu_run.clone());
+		}
+
+		if data.winetricks.is_some() {
+			let mut trick_cmd = command_clone(&cmd);
+			trick_cmd.arg("winetricks")
+				.args(data.winetricks.as_ref().unwrap())
+				.spawn()
+				.with_context(|| format!("Failed to run winetricks for {}", name))?
+				.wait()
+				.with_context(|| format!("Failed to wait for winetricks to finish for {}", name))?;
+		}
+
+		cmd.args(&data.start)
+			.current_dir(format!("/tmp/{}/stdgames/work", CONFIG.username));
 
 		Ok(cmd)
 	}

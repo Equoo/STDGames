@@ -1,10 +1,9 @@
-use std::error::Error;
 use std::fs;
 use std::io;
 use std::path::Path;
 use walkdir::{WalkDir, DirEntry};
 use std::os::unix;
-use anyhow::anyhow;
+use anyhow::Result;
 
 pub struct CopyData {
 	pub num_files: usize,
@@ -63,7 +62,7 @@ fn copy_symlink(src_file: &Path, src_root: &Path, dest_root: &Path) -> io::Resul
 }
 
 /// Recursively copy files from one folder to another with progress
-pub fn copy_directory(src: &Path, dest: &Path, handle: impl Fn(CopyData)) -> Result<(), Box<dyn Error>> {
+pub fn copy_directory(src: &Path, dest: &Path, handle: impl Fn(CopyData)) -> Result<()> {
 	let files = collect_files(src)?;
 	let total = files.len();
 	println!("Found {} files to copy.", total);

@@ -1,8 +1,10 @@
 
-use crate::config::{Config, CONFIG};
+use clap::Parser;
+
+use crate::config::CONFIG;
 use crate::cli::{Cli, init_cli};
 use crate::execution::GameExecution;
-use crate::window::init_window;
+use crate::window::init::init_window;
 use crate::library::load_library;
 
 mod execution;
@@ -14,16 +16,16 @@ mod library;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-	CONFIG = Config::default();
+	//CONFIG = Lazy::new(|| Config::default().expect("Failed to load config"));
 
 	let mut exec = GameExecution::new();
-	let library = load_library(CONFIG.library)
+	let library = load_library(CONFIG.library.clone())
 		.expect("Failed to load game library");
 	
 	let cli = Cli::parse();
 	if cli.command.is_some() { // do setup tools
-		init_cli(&cli, &library, &mut exec);
+		init_cli(&cli, &library, &mut exec).expect("Failed to run CLI command");
 	} else {
-		init_window(&library, &mut exec);
+		init_window(library, exec);
 	}
 }

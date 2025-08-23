@@ -1,3 +1,3 @@
-mod init;
-mod commands;
-mod slpashscreen;
+pub mod init;
+pub mod commands;
+mod splashscreen;
