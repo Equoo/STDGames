@@ -68,7 +68,7 @@ impl GameExecution {
 
 		if overlay.is_some() {
 			cmd.arg(CONFIG.overlay.clone());
-			cmd.arg(format!("/tmp/{user}/stdgames/rw"));
+			cmd.arg(format!("/tmp/stdgames/rw")); // really weird
 			cmd.arg(overlay.as_ref().unwrap().dst.clone());
 		}
 
