@@ -41,13 +41,12 @@ impl GameExecution {
 			
 			cmd.env("STEAM_COMPAT_DATA_PATH", prefix.clone())
 			.env("WINEPREFIX", prefix)
-			.env("PROTONPATH", proton);
+			.env("PROTONPATH", format!("{}/{}", CONFIG.protons_dir, proton));
 		} else {
 			cmd.env("UMU_NO_PROTON", "1");
 		}
 
-		cmd.env("PROTONPATH", CONFIG.protons_dir.clone())
-			.env("DXVK_ASYNC", "1")
+		cmd.env("DXVK_ASYNC", "1")
 			.env("GAMEID", "0")
 			.env("UMU_RUNTIME_UPDATE", "0");
 

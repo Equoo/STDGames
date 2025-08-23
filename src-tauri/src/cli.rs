@@ -87,6 +87,7 @@ pub fn init_cli(
 		Some(Commands::Bash { game }) => {
 			let mut launch_data = get_game(library, &game)?.launch.clone();
 			launch_data.start = ["/bin/bash".to_string()].to_vec();
+			launch_data.noruntime = Some(true);
 			launch_data.replace_vars(&vars);
 			
 			let err = GameExecution::build_command(&game, &launch_data)?
