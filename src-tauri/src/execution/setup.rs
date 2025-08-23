@@ -32,15 +32,15 @@ impl GameExecution {
 			Path::new(&CONFIG.junest_home_dir),
 			Path::new(&CONFIG.temp_junest_home_dir),
 			|data| {
-				handle(data.files_copied as f32 / data.num_files as f32 * 50.0);
+				handle(data.files_copied as f32 / data.num_files as f32 * 75.0);
 			},
 		)?;
 
-		if !Path::new(&CONFIG.umu_run).exists() {
+		if !Path::new(&CONFIG.temp_umu_dir).exists() {
 			let zip_file = format!("{}/{}", CONFIG.temp_dir, "umu.zip");
 			copy(CONFIG.archive_file.clone(), zip_file.clone())?;
 
-			handle(75.0);
+			handle(83.0);
 
 			zip_extract(&PathBuf::from(zip_file), &PathBuf::from(CONFIG.temp_umu_dir.clone()))?;
 		}

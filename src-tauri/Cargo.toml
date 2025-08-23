@@ -1,6 +1,6 @@
 [package]
 name = "stdgames"
-version = "0.1.1"
+version = "0.1.5"
 description = "A Game Launcher"
 authors = ["Saru", "Timéo", "David"]
 edition = "2024"

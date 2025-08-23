@@ -65,14 +65,14 @@ fn copy_symlink(src_file: &Path, src_root: &Path, dest_root: &Path) -> io::Resul
 pub fn copy_directory(src: &Path, dest: &Path, handle: impl Fn(CopyData)) -> Result<()> {
 	let files = collect_files(src)?;
 	let total = files.len();
-	println!("Found {} files to copy.", total);
+	//println!("Found {} files to copy.", total);
 
 	for (i, entry) in files.iter().enumerate() {
 
 		let file_type = entry.file_type();
 		let file = entry.path();
 
-		println!("Copying file {} of {}: {:?}", i + 1, total, file);
+		//println!("Copying file {} of {}: {:?}", i + 1, total, file);
 		if file_type.is_symlink() {
 			let _ = copy_symlink(file, src, dest)?;
 		}
