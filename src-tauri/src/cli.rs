@@ -4,6 +4,7 @@ use std::os::unix::process::CommandExt;
 
 use clap::{Parser, Subcommand};
 use anyhow::Result;
+use std::io::{self, Write};
 
 use crate::config::CONFIG;
 use crate::library::Game;
@@ -19,7 +20,7 @@ use crate::execution::{GameExecution, GameProcess};
 pub struct Cli {
 	/// Use a custom config file
 	#[arg(short, long, value_name = "FILE")]
-	config: Option<String>,
+	pub config: Option<String>,
 
 	#[command(subcommand)]
 	pub command: Option<Commands>,
@@ -67,7 +68,16 @@ pub fn init_cli(
 	game_exec: &mut GameExecution,
 ) -> Result<()> {
 	GameExecution::setup(|progress: f32| {
-		println!("Setup progress: <{}{}>", "#".repeat((progress / 5.0) as usize), " ".repeat(20 - (progress / 5.0) as usize));
+		let progress = progress / 100.0;
+		let filled = (progress * 50.0) as usize;
+		let empty = 50 - filled;
+		
+		print!("\rSetup progress: [{}{}] {:.1}%", 
+			"█".repeat(filled),
+			"░".repeat(empty),
+			progress * 100.0);
+		
+		io::stdout().flush().unwrap();
 	})?;
 
 	let vars = CONFIG.clone().build_vars();

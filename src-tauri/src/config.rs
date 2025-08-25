@@ -2,6 +2,9 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
+use clap::Parser;
+
+use crate::cli::Cli;
 
 #[derive(Clone)]
 pub struct Config {
@@ -26,16 +29,25 @@ pub struct Config {
 
 impl Config {
     pub fn default() -> Result<Config, Box<dyn Error>> {
+        
         let username = env::var("USER")?;
         let games_dir = "/sgoinfre/stdgames".to_string();
         let resources_dir = format!("{games_dir}/.resources").to_string();
         let temp_dir = format!("/tmp/{username}/stdgames").to_string();
+
+        let cli = Cli::parse();
+        let libdir = if let Some(path) = cli.config {
+            path
+        } else {
+            format!("{resources_dir}/games.toml").to_string()
+        };
+
         Ok(Config {
             games_dir:          games_dir,
 			user_home:			format!("/home/{username}").to_string(),
             user_save_dir:		format!("/sgoinfre/{username}/.stdgames_saves").to_string(),
 			username:			username,
-            library:			format!("{resources_dir}/games.toml").to_string(),
+            library:			libdir,
 			junest_bin:			format!("{resources_dir}/junest/bin/junest").to_string(),
             desktop_file:		format!("{resources_dir}/stdgames.desktop").to_string(),
             junest_home_dir:	format!("{resources_dir}/junest_home").to_string(),
