@@ -16,8 +16,6 @@ mod library;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-	//CONFIG = Lazy::new(|| Config::default().expect("Failed to load config"));
-
 	let mut exec = GameExecution::new();
 	let library = load_library(CONFIG.library.clone())
 		.expect("Failed to load game library");

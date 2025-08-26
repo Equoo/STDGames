@@ -1,15 +1,16 @@
-use libc::exit;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs, path::Path};
 use toml;
 use anyhow::{anyhow, Result};
 use std::fmt::Write;
 
+mod steamdb;
+use crate::library::steamdb::SteamAssetsClient;
 use crate::config::CONFIG;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Games {
-pub     games: Vec<Game>,
+    pub games: Vec<Game>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -22,13 +23,18 @@ pub struct Game {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GameMetadata {
-    pub idgb_id: Option<i32>,
+    pub appid: Option<u32>,
     pub store_pages: Option<Vec<String>>,
 	pub name: Option<String>,
-	pub cover: Option<String>,
 	pub icon: Option<String>,
 	pub logo: Option<String>,
+	pub hero: Option<String>,
+	pub cover: Option<String>,
 	pub description: Option<String>,
+    pub short_description: Option<String>,
+    pub screenshots: Option<Vec<String>>,
+    pub movies: Option<Vec<String>>,
+    pub movies_thumbnails: Option<Vec<String>>,
 	pub tags: Option<Vec<String>>,
 }
 
@@ -159,11 +165,78 @@ fn format_toml_error(content: &str, error: &toml::de::Error, file_path: Option<&
     output
 }
 
-pub fn load_library(path: String) -> Result<Vec<Game>, Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn get_game_data(client: &SteamAssetsClient, meta: &mut GameMetadata, appid: u32) -> Result<()> {
+    match client.get_game_assets_with_icons(appid).await {
+        Ok(assets) => {
+            meta.name = Some(assets.name);
+            meta.description = assets.description;
+            meta.short_description = assets.short_description;
+            meta.logo = Some(assets.logo);
+            meta.icon = Some(assets.icon);
+            meta.hero = Some(assets.library_hero);
+            meta.cover = Some(assets.library_600x900);
+            meta.screenshots = if !assets.screenshots.is_empty() {
+                Some(assets.screenshots)
+            } else {
+                None
+            };
+            meta.movies_thumbnails = if !assets.movies.is_empty() {
+                Some(assets.movies.iter().map(|m| m.thumbnail.clone()).collect())
+            } else {
+                None
+            };
+            meta.movies = if !assets.movies.is_empty() {
+                Some(assets.movies.iter().map(|m| {
+                    m.webm_urls.get("max")
+                    .or_else(|| m.mp4_urls.get("max"))
+                    .or_else(|| m.webm_urls.get("480"))
+                    .or_else(|| m.mp4_urls.get("480"))
+                    .cloned().unwrap_or_default()
+                }).collect())
+            } else {
+                None
+            };
+            
+			//// Example: Download an asset
+			//if let Some(header_image) = &assets.header_image {
+			//	println!("\nDownloading header image...");
+			//	match client.download_asset(header_image, "header_image.jpg").await {
+			//		Ok(_) => println!("Header image downloaded successfully!"),
+			//		Err(e) => println!("Failed to download header image: {}", e),
+			//	}
+			//}
+        }
+        Err(e) => {
+            println!("Error fetching assets with icons: {}", e);
+        }
+    }
+    
+    Ok(())
+}
+
+fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
+    let client = SteamAssetsClient::new(Some("19A33BB7E5367795078D0F3BFB663BD9".to_string()));
+
+    for game in games {
+        if let Some(appid) = game.metadata.appid {
+            get_game_data(&client, &mut game.metadata, appid)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn load_library(path: String) -> Result<Vec<Game>> {
     let content = fs::read_to_string(&path)?;
-    let config: Games = toml::from_str(&content).map_err(|e| {
+    
+    let mut config: Games = toml::from_str(&content).map_err(|e| {
 		let error_msg = format_toml_error(&content, &e, Some(path.as_str())); // or None if no file path
 		anyhow!("\n\n{}", error_msg)
 	})?;
+
+    load_api_data(&mut config.games)?;
+
+    println!("Loaded {:?}", config.games);
+
     Ok(config.games)
 }
