@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::env;
 
 use anyhow::{anyhow, Result};
 use tauri::{App, Builder, Manager, WebviewWindow};
@@ -47,10 +48,20 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn init_env_for_codecs() -> Result<()> {
+    Ok(unsafe {
+        env::set_var("LD_LIBRARY_PATH", format!("{}:/sgoinfre/stdgames/.resources/launcher_libs", env::var("LD_LIBRARY_PATH").unwrap_or_default()));
+        env::set_var("GST_PLUGIN_PATH", format!("{}:/sgoinfre/stdgames/.resources/launcher_libs/gstreamer-1.0", env::var("GST_PLUGIN_PATH").unwrap_or_default()));
+        env::set_var("GST_REGISTRY_UPDATE", "yes");
+    })
+}
+
 pub fn init_window(
     library: Vec<Game>,
     game_exec: GameExecution,
 ) {
+    init_env_for_codecs().expect("Failed to set environment variables for codecs");
+    
     Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())

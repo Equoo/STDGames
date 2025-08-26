@@ -26,14 +26,15 @@
         "minimizable": true
       },
       {
-		"maximized": true,
+		    "maximized": true,
         "label": "main",
         "title": "std::Games",
         "visible": false,
         "minWidth": 600,
         "minHeight": 400,
         "width": 1600,
-        "height": 900
+        "height": 900,
+        "additionalBrowserArgs": "--autoplay-policy=no-user-gesture-required --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --enable-features=VaapiVideoDecoder --use-gl=egl --enable-zero-copy"
       }
     ],
     "security": {

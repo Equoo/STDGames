@@ -345,6 +345,22 @@
 	transition: transform 0.3s ease;
 }
 
+#description-section {
+	text-align: left;
+	line-height: 1.5em;
+    font-size: 14px;
+    margin-top: 30px;
+    overflow: hidden;
+    width: 616px;
+    max-width: 100%;
+    font-weight: normal;
+}
+
+.bb_img_ctn {
+    position: relative;
+    display: inline-block;
+}
+
 
 /* Fix positioning issues */
 #game-preview-container {

@@ -73,14 +73,16 @@ pub struct MovieAsset {
 pub struct SteamAssetsClient {
     client: reqwest::Client,
     api_key: Option<String>,
+    language: String,
 	userids: [u64; 5],
 }
 
 impl SteamAssetsClient {
-    pub fn new(api_key: Option<String>) -> Self {
+    pub fn new(api_key: Option<String>, lang: String) -> Self {
         Self {
             client: reqwest::Client::new(),
             api_key,
+            language: lang,
 			userids: [76561198017975643, 76561198028121353, 76561198355953202, 76561197979911851, 76561198002410826],
         }
     }
@@ -125,7 +127,7 @@ impl SteamAssetsClient {
     }
 
     pub async fn get_game_assets(&self, app_id: u32) -> Result<GameAssets, Box<dyn std::error::Error>> {
-        let url = format!("https://store.steampowered.com/api/appdetails?appids={}", app_id);
+        let url = format!("https://store.steampowered.com/api/appdetails?appids={}&l={}", app_id, self.language);
         
         let response = self.client
             .get(&url)

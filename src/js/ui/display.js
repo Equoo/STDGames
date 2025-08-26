@@ -27,7 +27,7 @@ export function extractImageUrls(imageString) {
 export function displayLibrary(game, running, containerId = "games") {
   document.querySelector(`#${containerId}`).insertAdjacentHTML(
     "afterbegin",
-    `<button class="game-card ${running}" id="${game.name}" game="${game.name}">
+    `<button class="game-card ${running}" id="${game.slug}" game="${game.slug}">
       <div style="background-image: url('${game.cover}');"></div>
     </button>`
   );
@@ -36,9 +36,9 @@ export function displayLibrary(game, running, containerId = "games") {
 export function displayGameList(game, running, containerId = "game-list") {
   document.querySelector(`#${containerId}`).insertAdjacentHTML(
     "afterbegin",
-    `<li class="game-list-item ${running}" id="item_${game.name}" game="${game.name}">
-      <div class="icon-container"><img src="${game.icon}" alt="${game.name} icon" class="game-list-icon"></img></div>
-      <h5>${game.name}</h5>
+    `<li class="game-list-item ${running}" id="item_${game.slug}" game="${game.slug}">
+      <div class="icon-container"><img src="${game.icon}" alt="${game.slug} icon" class="game-list-icon"></img></div>
+      <span>${game.name}</span>
     </li>`
   );
 }

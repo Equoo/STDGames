@@ -28,17 +28,15 @@ function createGameClickHandler(library) {
       document.getElementById("library-button").classList.remove("active");
 
       let data = null;
-      let gamedata = null;
-      for (let i = 0; i < library.gamesdata.length; i++) {
-        if (library.games[i].name === game) {
-          data = library.gamesdata[i];
-          gamedata = library.games[i];
+      for (let i = 0; i < library.length; i++) {
+        if (library[i].slug === game) {
+          data = library[i];
           break;
         }
       }
       
       if (data) {
-        changeGamePreview(gamedata, data);
+        changeGamePreview(data);
       } else {
         console.error("Game data not found for:", game);
       }
@@ -70,7 +68,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Create the game click handler with access to library
-  const gameClickHandler = createGameClickHandler(library);
+  const gameClickHandler = createGameClickHandler(combined);
 
   // Initial sort
   sortGames(combined, "descending");
@@ -97,7 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }, 0);
 
   // Setup UI event listeners
-  setupUIEventListeners(combined, library, gameClickHandler);
+  setupUIEventListeners(combined, gameClickHandler);
 
   // Start process monitoring
   monitorGameProcess();
@@ -130,7 +128,7 @@ function setupTagFiltering(combined) {
 
       gameCards.forEach(card => {
         const gameName = card.getAttribute("game");
-        const gameData = combined.find(item => item.game.name === gameName);
+        const gameData = combined.find(item => item.slug === gameName);
 
         if (!gameData) {
           card.classList.add("hidden");
@@ -138,8 +136,8 @@ function setupTagFiltering(combined) {
         }
 
 		let hasTag = false;
-		if (gameData.game.tags)
-        	hasTag = gameData.game.tags.includes(tag);
+		if (gameData.tags)
+        	hasTag = gameData.tags.includes(tag);
 		console.log(gameName, hasTag)
         card.classList.toggle("hidden", !hasTag);
       });
@@ -148,7 +146,7 @@ function setupTagFiltering(combined) {
   });
 }
 
-function setupUIEventListeners(combined, library, gameClickHandler) {
+function setupUIEventListeners(combined, gameClickHandler) {
   // Library button
   const libButton = document.getElementById("library-button");
   if (libButton) {

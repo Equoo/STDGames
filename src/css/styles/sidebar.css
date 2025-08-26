@@ -170,13 +170,12 @@ h5 .sidebar-content {
 	margin: 0 2%;
 	width: 30px;
 	height: 30px;
-	transform: scale(1.5);
 	image-rendering: optimizeQuality;
 }
 
 .game-list-item {
 	display: flex;
-	min-height:25px;
+	min-height: 25px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

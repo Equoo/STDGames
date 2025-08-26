@@ -1,23 +1,23 @@
 import { showGameCards, hideGameInfo, showGameInfo } from './display.js';
 import { launchGame } from '../api/games.js';
 
-export function displayGamePreview(game, data) {
+export function displayGamePreview(game) {
   const gamesSection = document.querySelector("#game-preview-container");
   if (gamesSection == null) {
     document.querySelector("#game-preview-container").classList.add("hidden");
   }
 }
 
-export function changeGamePreview(game, data) {
+export function changeGamePreview(game) {
   const gameSection = document.querySelector("#game-preview-container");
   if (!gameSection) return;
 
-  gameSection.querySelector(".game-preview").setAttribute("game", game.name);
+  gameSection.querySelector(".game-preview").setAttribute("game", game.slug);
 
-  const artworkUrl = data.artworks?.[0] || data.cover || './resources/default-game.jpg';
+  const artworkUrl = game.hero || game.screenshots?.[0] || game.cover || './resources/default-game.jpg';
   document.querySelector(".game-preview-artwork").style.backgroundImage = `url('${artworkUrl}')`;
 
-  document.querySelector(".title-overlay").textContent = data.name || game.name;
+  document.querySelector(".title-overlay").textContent = game.name;
 
   document.getElementById('back-to-library').addEventListener('click', () => {
     showGameCards();
@@ -26,12 +26,45 @@ export function changeGamePreview(game, data) {
   });
 
   const descElement = document.querySelector(".game-description");
-  descElement.textContent = data.summary || "No description available";
-  descElement.style.display = data.summary ? "block" : "none";
+  descElement.textContent = game.short_description || "No description available";
+  descElement.style.display = game.short_description ? "block" : "none";
 
-  updateGenres(data.genres);
+  if (game.tags) {
+    updateGenres(game.tags);
+  }
   updatePlayButton(game);
-  updateScreenshots(data.screenshots);
+  updateScreenshots(game.screenshots);
+
+  document.getElementById("description-section").innerHTML = game.description || "<p>No description available.</p>";
+  const videos = document.querySelectorAll('video');
+  console.log(videos);
+  videos.forEach(video => {
+      // Ensure autoplay and loop
+      video.muted = true;
+      video.loop = false;
+      video.playsInline = true;
+      
+      // Force loop manually
+      video.addEventListener('ended', function() {
+          this.currentTime = 0;
+          this.play();
+      });
+      
+      // Handle loading and start playing
+      video.addEventListener('loadeddata', function() {
+          video.play().catch(err => {
+              console.error('Video play failed:', err);
+          });
+      });
+      
+      // Additional loop safety
+      video.addEventListener('timeupdate', function() {
+          // If video is near the end, restart it
+          if (video.duration - video.currentTime < 0.1) {
+              video.currentTime = 0;
+          }
+      });
+  });
 
   showGameInfo();
 }
@@ -52,8 +85,8 @@ function updateGenres(genres) {
 
 function updatePlayButton(game) {
   const playButton = document.querySelector(".play-button");
-  playButton.setAttribute("data-game", game.name);
-  playButton.onclick = () => launchGame(game.name);
+  playButton.setAttribute("data-game", game.slug);
+  playButton.onclick = () => launchGame(game.slug);
 }
 
 function updateScreenshots(screenshots) {

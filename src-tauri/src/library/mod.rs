@@ -216,7 +216,7 @@ async fn get_game_data(client: &SteamAssetsClient, meta: &mut GameMetadata, appi
 }
 
 fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
-    let client = SteamAssetsClient::new(Some("19A33BB7E5367795078D0F3BFB663BD9".to_string()));
+    let client = SteamAssetsClient::new(Some("19A33BB7E5367795078D0F3BFB663BD9".to_string()), "french".to_string());
 
     for game in games {
         if let Some(appid) = game.metadata.appid {
@@ -235,8 +235,6 @@ pub fn load_library(path: String) -> Result<Vec<Game>> {
 	})?;
 
     load_api_data(&mut config.games)?;
-
-    println!("Loaded {:?}", config.games);
 
     Ok(config.games)
 }

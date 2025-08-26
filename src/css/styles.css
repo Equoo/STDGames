@@ -32,6 +32,11 @@ body {
 
 }
 
+/* For video transparency (if supported by video format) */
+video {
+    background: transparent;
+}
+
 /* ========================= LAYOUT ========================= */
 .big-container {
 	display: flex;
