@@ -57,7 +57,8 @@ pub fn init_window(
         .manage(library)
 		.manage(game_exec)
         .invoke_handler(tauri::generate_handler![
-			commands::add_launcher_to_desktop
+			commands::add_launcher_to_desktop,
+            commands::get_game_library
 		])
         .setup(setup_app)
         .run(tauri::generate_context!())

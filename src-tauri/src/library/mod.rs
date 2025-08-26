@@ -13,7 +13,7 @@ pub struct Games {
     pub games: Vec<Game>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Game {
 	pub slug: String,
 	pub status: String,
@@ -21,7 +21,7 @@ pub struct Game {
     pub launch: GameLaunchData,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadata {
     pub appid: Option<u32>,
     pub store_pages: Option<Vec<String>>,
@@ -38,7 +38,7 @@ pub struct GameMetadata {
 	pub tags: Option<Vec<String>>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameLaunchData {
     pub proton: Option<String>,
 	pub winetricks: Option<Vec<String>>,

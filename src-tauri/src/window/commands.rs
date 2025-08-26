@@ -1,7 +1,9 @@
+use std::ops::Deref;
 use std::path::Path;
 use tauri::State;
 
 use crate::config::Config;
+use crate::library::Game;
 
 // TODO: update the database using: `update-desktop-database ~/.local/share/applications`
 // TODO: add a desktop file action to remove itself 
@@ -14,6 +16,12 @@ pub fn add_launcher_to_desktop(config: State<'_, Config>) -> Result<(), String> 
 	}
 	std::os::unix::fs::symlink(&config.desktop_file, &dest).map_err(|e| e.to_string())?;
 	Ok(())
+}
+
+#[tauri::command]
+pub fn get_game_library(lib: State<'_, Vec<Game>>) -> Result<Vec<Game>, String> {
+	let lib = lib.inner();
+	Ok(lib.clone())
 }
 
 // #[tauri::command]

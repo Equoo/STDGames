@@ -54,7 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Load game library
   const library = await fetchGameLibrary();
-  if (!library || !library.games || !library.gamesdata) {
+  if (!library) {
     console.error("Failed to load game library or library structure is invalid");
     return;
   }
@@ -63,10 +63,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   displayGamePreview(null, null);
 
   // Combine games and gamesdata
-  const combined = library.games.map((game, i) => ({
-    game: game,
-    data: library.gamesdata[i],
-  }));
+  const combined = library.map((game, i) => {
+    let data = game.metadata;
+    data.slug = game.slug;
+    return (data) 
+  });
 
   // Create the game click handler with access to library
   const gameClickHandler = createGameClickHandler(library);
@@ -82,9 +83,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Initial display - wait for next tick to ensure DOM is ready
   setTimeout(() => {
-    combined.forEach(({ game, data }) => {
-      displayLibrary(game, data, running);
-      displayGameList(game, data, running);
+    combined.forEach((game) => {
+      displayLibrary(game, running);
+      displayGameList(game, running);
     });
 
     // Attach click handlers after elements are created
