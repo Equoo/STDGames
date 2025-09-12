@@ -34,10 +34,10 @@ export function changeGamePreview(game) {
   }
   updatePlayButton(game);
   updateScreenshots(game.screenshots);
+  updateVideos(game.movies, game.movies_thumbnails);
 
   document.getElementById("description-section").innerHTML = game.description || "<p>No description available.</p>";
-  const videos = document.querySelectorAll('video');
-  console.log(videos);
+  const videos = document.querySelectorAll('#description-section video');
   videos.forEach(video => {
       // Ensure autoplay and loop
       video.muted = true;
@@ -95,6 +95,7 @@ function updateScreenshots(screenshots) {
 
   if (screenshots && screenshots.length > 0) {
     const screenshotsTitle = document.createElement("h3");
+    screenshotsTitle.textContent = "Screenshots";
     screenshotsContainer.appendChild(screenshotsTitle);
 
     const grid = document.createElement("div");
@@ -112,6 +113,35 @@ function updateScreenshots(screenshots) {
   }
 }
 
+function updateVideos(videos, thumbnails) {
+  const videosContainer = document.querySelector(".videos-container");
+  videosContainer.innerHTML = "";
+
+  if (videos && videos.length > 0) {
+    const videosTitle = document.createElement("h3");
+    videosTitle.textContent = "Videos";
+    videosContainer.appendChild(videosTitle);
+
+    const grid = document.createElement("div");
+    grid.className = "videos-carousel";
+
+    let i = 0;
+    videos.forEach(url => {
+      const video = document.createElement("video");
+      video.src = url;
+      video.className = "preview-video";
+      video.autoplay = (i === 0); // Autoplay only the first video
+      video.playsInline = true;
+      video.muted = true;
+      video.controls = true;
+      video.poster = thumbnails && thumbnails.length > 0 ? thumbnails[i] : '';
+      grid.appendChild(video);
+      i++;
+    });
+
+    videosContainer.appendChild(grid);
+  }
+}
 function openFullscreen(imageUrl) {
   console.log("Opening fullscreen:", imageUrl);
 }
