@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, sync::Mutex};
 use std::env;
 
 use anyhow::{anyhow, Result};
@@ -42,7 +42,6 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
         eprintln!("failed to center window: {}", e);
     }
 
-    // maybe use spawn_blocking instead, if there is lag maybe it's because of that
     tauri::async_runtime::spawn(setup_tools_wrapper(app.handle().clone()));
 
     Ok(())
@@ -66,10 +65,11 @@ pub fn init_window(
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(library)
-		.manage(game_exec)
+		.manage(Mutex::new(game_exec))
         .invoke_handler(tauri::generate_handler![
 			commands::add_launcher_to_desktop,
-            commands::get_game_library
+            commands::get_game_library,
+            commands::launch_game
 		])
         .setup(setup_app)
         .run(tauri::generate_context!())

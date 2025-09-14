@@ -87,12 +87,8 @@ pub fn init_cli(
 			let mut launch_data = get_game(library, &game)?.launch.clone();
 			launch_data.replace_vars(&vars);
 			
-			let proc = GameExecution::build_command(&game, &launch_data)?
+			let _ = GameExecution::build_command(&game, &launch_data)?
 				.spawn()?;
-			game_exec.running = Some(GameProcess {
-				process: proc,
-				game: game.to_string()
-			});
 		}
 		Some(Commands::Bash { game }) => {
 			let mut launch_data = get_game(library, &game)?.launch.clone();

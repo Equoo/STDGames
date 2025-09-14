@@ -86,7 +86,12 @@ function updateGenres(genres) {
 function updatePlayButton(game) {
   const playButton = document.querySelector(".play-button");
   playButton.setAttribute("data-game", game.slug);
-  playButton.onclick = () => launchGame(game.slug);
+  playButton.onclick = () => {
+    if (launchGame(game.slug)) {
+      playButton.textContent = "Running...";
+      playButton.disabled = true;
+    }
+  };
 }
 
 function updateScreenshots(screenshots) {

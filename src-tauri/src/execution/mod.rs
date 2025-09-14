@@ -1,8 +1,11 @@
 use std::process::Child;
 
+use crate::library::Game;
+
 pub mod setup;
 pub mod build_command;
 pub mod junest;
+pub mod manager;
 
 #[derive(Clone)]
 pub struct Overlay {
@@ -13,15 +16,16 @@ pub struct Overlay {
 //#[derive(Clone)]
 pub struct GameProcess {
 	pub process: Child,
-	pub game: String,
+	pub name: String,
 }
 
 pub struct GameExecution {
+	library: Vec<Game>,
 	pub running: Option<GameProcess>,
 }
 
 impl GameExecution {
-	pub fn new() -> Self {
-		Self { running: None }
+	pub fn new( lib: Vec<Game>) -> Self {
+		Self { library: lib, running: None }
 	}
 }

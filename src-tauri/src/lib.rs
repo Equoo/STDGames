@@ -16,9 +16,9 @@ mod library;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-	let mut exec = GameExecution::new();
 	let library = load_library(CONFIG.library.clone())
 		.expect("Failed to load game library");
+	let mut exec = GameExecution::new(library.clone());
 	
 	let cli = Cli::parse();
 	if cli.command.is_some() { // do setup tools

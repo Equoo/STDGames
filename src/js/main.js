@@ -1,7 +1,7 @@
 // Import all modules
 const { invoke } = window.__TAURI__.core;
 import { addIcon, openUrl } from './api/system.js';
-import { launchGame, fetchGameLibrary, monitorGameProcess } from './api/games.js';
+import { launchGame, fetchGameLibrary } from './api/games.js';
 import { 
   hideGameCards, 
   showGameCards, 
@@ -96,9 +96,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Setup UI event listeners
   setupUIEventListeners(combined, gameClickHandler);
-
-  // Start process monitoring
-  monitorGameProcess();
 });
 
 function setupTagFiltering(combined) {

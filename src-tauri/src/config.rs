@@ -24,6 +24,7 @@ pub struct Config {
     pub temp_junest_home_dir: String,
     pub temp_umu_dir: String,
     pub library: String,
+    pub log_file: String,
     pub umu_run: String,
 }
 
@@ -34,6 +35,7 @@ impl Config {
         let games_dir = "/sgoinfre/stdgames".to_string();
         let resources_dir = format!("{games_dir}/.resources").to_string();
         let temp_dir = format!("/tmp/{username}/stdgames").to_string();
+        let user_save_dir = format!("/sgoinfre/{username}/.stdgames_saves").to_string();
 
         let cli = Cli::parse();
         let libdir = if let Some(path) = cli.config {
@@ -45,7 +47,8 @@ impl Config {
         Ok(Config {
             games_dir:          games_dir,
 			user_home:			format!("/home/{username}").to_string(),
-            user_save_dir:		format!("/sgoinfre/{username}/.stdgames_saves").to_string(),
+			log_file:			format!("{user_save_dir}/log.txt").to_string(),
+            user_save_dir:		user_save_dir,
 			username:			username,
             library:			libdir,
 			junest_bin:			format!("{resources_dir}/junest/bin/junest").to_string(),
@@ -67,6 +70,7 @@ impl Config {
         let mut env_vars = HashMap::new();
         env_vars.insert("GAMES_DIR".to_string(), self.games_dir);
         env_vars.insert("USER_HOME".to_string(), self.user_home);
+        env_vars.insert("LOG_FILE".to_string(), self.log_file);
         env_vars.insert("USER_SAVE_DIR".to_string(), self.user_save_dir);
         env_vars.insert("USERNAME".to_string(), self.username);
         env_vars.insert("LIBRARY".to_string(), self.library);

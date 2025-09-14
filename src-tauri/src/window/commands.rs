@@ -1,8 +1,9 @@
-use std::ops::Deref;
 use std::path::Path;
+use std::sync::Mutex;
 use tauri::State;
 
 use crate::config::Config;
+use crate::execution::GameExecution;
 use crate::library::Game;
 
 // TODO: update the database using: `update-desktop-database ~/.local/share/applications`
@@ -24,14 +25,9 @@ pub fn get_game_library(lib: State<'_, Vec<Game>>) -> Result<Vec<Game>, String> 
 	Ok(lib.clone())
 }
 
-// #[tauri::command]
-// pub fn get_game_list(config: State<'_, Config>) -> Result<Value, String> {
-//     return Ok(load_data_from_toml(config.game_list_file));
-// }
-
-// #[tauri::command]
-// pub fn launch_game(config: State<'_, Config>, launch: GameLaunch) -> Result<(), String> {
-//     // maybe spawn a new thread
-//     // how to be able to kill it afterward
-//     return Ok(launch_game(launch));
-// }
+#[tauri::command]
+pub fn launch_game(exec: State<'_, Mutex<GameExecution>>, game: String) -> Result<(), String> {
+	let mut exec = exec.lock().map_err(|e| e.to_string())?;
+    exec.start(&game).map_err(|e| e.to_string())?;
+    Ok(())
+}
