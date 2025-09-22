@@ -46,9 +46,7 @@ impl GameExecution {
 			cmd.env("UMU_NO_PROTON", "1");
 		}
 
-		cmd.env("DXVK_ASYNC", "1")
-			.env("GAMEID", "0")
-			.env("UMU_RUNTIME_UPDATE", "0");
+		cmd.env("UMU_RUNTIME_UPDATE", "0");
 
 		if !data.noruntime.unwrap_or(false) {
 			cmd.arg(CONFIG.umu_run.clone());

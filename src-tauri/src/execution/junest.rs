@@ -56,6 +56,7 @@ impl GameExecution {
 		cmd.arg("-b")
 			.arg(format!(
 				"--bind /sgoinfre /sgoinfre
+				--uid {uid}
 				--bind /goinfre /goinfre
 				--bind /media /media
 				--bind /tmp/{} /tmp

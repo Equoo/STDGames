@@ -18,6 +18,8 @@ impl GameExecution {
 		&mut self,
 		name: &str,
 	) -> Result<()> {
+		// add possibility to launch via steam
+
 		let vars = CONFIG.clone().build_vars();
 		let mut launch_data = get_game(&self.library, &name.to_string())?.launch.clone();
 			launch_data.replace_vars(&vars);	

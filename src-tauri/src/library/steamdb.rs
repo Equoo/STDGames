@@ -26,6 +26,13 @@ struct AppData {
     background_raw: Option<String>,
     screenshots: Option<Vec<Screenshot>>,
     movies: Option<Vec<Movie>>,
+    genres: Option<Vec<Genre>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Genre {
+    id: String,
+    description: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -47,6 +54,7 @@ pub struct GameAssets {
     pub name: String,
     pub description: Option<String>,
     pub short_description: Option<String>,
+    pub genres: Vec<String>,
     pub header_image: Option<String>,
     pub capsule_image: Option<String>,
     pub background_raw: Option<String>,
@@ -74,7 +82,7 @@ pub struct SteamAssetsClient {
     client: reqwest::Client,
     api_key: Option<String>,
     language: String,
-	userids: [u64; 5],
+	userids: [u64; 6],
 }
 
 impl SteamAssetsClient {
@@ -83,7 +91,7 @@ impl SteamAssetsClient {
             client: reqwest::Client::new(),
             api_key,
             language: lang,
-			userids: [76561198017975643, 76561198028121353, 76561198355953202, 76561197979911851, 76561198002410826],
+			userids: [76561198017975643, 76561198028121353, 76561198355953202, 76561197979911851, 76561198002410826, 76561198879997583],
         }
     }
 
@@ -152,6 +160,10 @@ impl SteamAssetsClient {
             name: app_data.name.clone(),
             description: app_data.detailed_description.clone(),
             short_description: app_data.short_description.clone(),
+            genres: app_data.genres
+                .as_ref()
+                .map(|genres| genres.iter().map(|g| g.description.clone()).collect())
+                .unwrap_or_default(),
             header_image: app_data.header_image.clone(),
             capsule_image: app_data.capsule_image.clone(),
             background: app_data.background.clone(),
@@ -181,25 +193,25 @@ impl SteamAssetsClient {
         Ok(assets)
     }
 
-    pub async fn check_asset_availability(&self, url: &str) -> bool {
-        match self.client.head(url).send().await {
-            Ok(response) => response.status().is_success(),
-            Err(_) => false,
-        }
-    }
+    //pub async fn check_asset_availability(&self, url: &str) -> bool {
+    //    match self.client.head(url).send().await {
+    //        Ok(response) => response.status().is_success(),
+    //        Err(_) => false,
+    //    }
+    //}
 
-    pub async fn download_asset(&self, url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let response = self.client.get(url).send().await?;
+    //pub async fn download_asset(&self, url: &str, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    //    let response = self.client.get(url).send().await?;
         
-        if !response.status().is_success() {
-            return Err(format!("Failed to download asset: HTTP {}", response.status()).into());
-        }
+    //    if !response.status().is_success() {
+    //        return Err(format!("Failed to download asset: HTTP {}", response.status()).into());
+    //    }
 
-        let bytes = response.bytes().await?;
-        tokio::fs::write(file_path, bytes).await?;
+    //    let bytes = response.bytes().await?;
+    //    tokio::fs::write(file_path, bytes).await?;
         
-        Ok(())
-    }
+    //    Ok(())
+    //}
 
     pub async fn get_icon_with_hash(&self, app_id: u32) -> Result<Option<String>, Box<dyn std::error::Error>> {
 		for uid in self.userids {
@@ -218,55 +230,55 @@ impl SteamAssetsClient {
         let mut assets = self.get_game_assets(app_id).await?;
         
         // Get the real icon URL with hash
-        if let Some(real_icon) = self.get_icon_with_hash(app_id).await? {
-            assets.icon = real_icon;
-        }
+        //if let Some(real_icon) = self.get_icon_with_hash(app_id).await? {
+        //    assets.icon = real_icon;
+        //}
         
         Ok(assets)
     }
 }
 
 // Additional utility functions
-impl GameAssets {
-    pub fn get_all_image_urls(&self) -> Vec<String> {
-        let mut urls = Vec::new();
+//impl GameAssets {
+//    pub fn get_all_image_urls(&self) -> Vec<String> {
+//        let mut urls = Vec::new();
         
-        if let Some(header) = &self.header_image {
-            urls.push(header.clone());
-        }
-        if let Some(capsule) = &self.capsule_image {
-            urls.push(capsule.clone());
-        }
-        if let Some(bg) = &self.background {
-            urls.push(bg.clone());
-        }
-        if let Some(bg_raw) = &self.background_raw {
-            urls.push(bg_raw.clone());
-        }
+//        if let Some(header) = &self.header_image {
+//            urls.push(header.clone());
+//        }
+//        if let Some(capsule) = &self.capsule_image {
+//            urls.push(capsule.clone());
+//        }
+//        if let Some(bg) = &self.background {
+//            urls.push(bg.clone());
+//        }
+//        if let Some(bg_raw) = &self.background_raw {
+//            urls.push(bg_raw.clone());
+//        }
         
-        // Add screenshots
-        urls.extend(self.screenshots.iter().cloned());
+//        // Add screenshots
+//        urls.extend(self.screenshots.iter().cloned());
         
-        // Add CDN assets
-        urls.push(self.library_hero.clone());
-        urls.push(self.library_600x900.clone());
-        urls.push(self.library_capsule_231x87.clone());
-        urls.push(self.library_capsule_616x353.clone());
-        urls.push(self.icon.clone());
-        urls.push(self.logo.clone());
+//        // Add CDN assets
+//        urls.push(self.library_hero.clone());
+//        urls.push(self.library_600x900.clone());
+//        urls.push(self.library_capsule_231x87.clone());
+//        urls.push(self.library_capsule_616x353.clone());
+//        urls.push(self.icon.clone());
+//        urls.push(self.logo.clone());
         
-        urls
-    }
+//        urls
+//    }
 
-    pub fn get_video_urls(&self) -> Vec<String> {
-        let mut urls = Vec::new();
+//    pub fn get_video_urls(&self) -> Vec<String> {
+//        let mut urls = Vec::new();
         
-        for movie in &self.movies {
-            urls.push(movie.thumbnail.clone());
-            urls.extend(movie.mp4_urls.values().cloned());
-            urls.extend(movie.webm_urls.values().cloned());
-        }
+//        for movie in &self.movies {
+//            urls.push(movie.thumbnail.clone());
+//            urls.extend(movie.mp4_urls.values().cloned());
+//            urls.extend(movie.webm_urls.values().cloned());
+//        }
         
-        urls
-    }
-}
+//        urls
+//    }
+//}

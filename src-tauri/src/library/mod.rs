@@ -5,6 +5,7 @@ use anyhow::{anyhow, Result};
 use std::fmt::Write;
 
 mod steamdb;
+mod cache;
 use crate::library::steamdb::SteamAssetsClient;
 use crate::config::CONFIG;
 
@@ -171,6 +172,7 @@ async fn get_game_data(client: &SteamAssetsClient, meta: &mut GameMetadata, appi
         Ok(assets) => {
             meta.name = Some(assets.name);
             meta.description = assets.description;
+            meta.tags = Some(assets.genres);
             meta.short_description = assets.short_description;
             meta.logo = Some(assets.logo);
             meta.icon = Some(assets.icon);
