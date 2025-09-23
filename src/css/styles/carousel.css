@@ -1,0 +1,225 @@
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    /*max-width: 1200px;*/
+    height: 500px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    scroll-behavior: smooth;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.carousel-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.carousel-track {
+    display: flex;
+    height: 100%;
+    gap: 30px;
+    padding: 0 20px;
+    align-items: center;
+}
+
+.carousel-item {
+    flex-shrink: 0;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 15px;
+    background: #000;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, width 0.5s ease;
+}
+
+.carousel-item:first-child {
+    width: calc(66% - 15px);
+    margin-left: 0;
+}
+
+.carousel-item:not(:first-child) {
+    width: calc(26% - 15px);
+}
+
+.carousel-item:hover {
+    /*transform: translateY(-5px);*/
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.media-content {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.carousel-item:hover .media-content {
+    transform: scale(1.05);
+}
+
+.content-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 25px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    color: white;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.carousel-item:hover .content-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.category-tag {
+    display: inline-block;
+    background: #ff5733;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.carousel-item.video .category-tag {
+    background: #ff8500;
+}
+
+.carousel-item.news .category-tag {
+    background: #ff4757;
+}
+
+.carousel-item.adventure .category-tag {
+    background: #3742fa;
+}
+
+.item-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.carousel-item:first-child .item-title {
+    font-size: 24px;
+}
+
+.read-time {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.read-time::before {
+    content: '⏱';
+    margin-right: 6px;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.carousel-item.video:hover .video-overlay {
+    opacity: 1;
+}
+
+.video-overlay .play-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.play-button:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.play-icon {
+    width: 20px;
+    height: 20px;
+    fill: #333;
+    margin-left: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .carousel-container {
+	height: 350px;
+    }
+
+    .carousel-item:first-child {
+	width: calc(75% - 10px);
+    }
+
+    .carousel-item:not(:first-child) {
+	width: calc(25% - 10px);
+    }
+
+    .item-title {
+	font-size: 14px;
+    }
+
+    .carousel-item:first-child .item-title {
+	font-size: 18px;
+    }
+
+    .content-overlay {
+	padding: 15px;
+    }
+
+    .play-button {
+	width: 45px;
+	height: 45px;
+    }
+
+    .play-icon {
+	width: 16px;
+	height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-track {
+	gap: 15px;
+	padding: 0 15px;
+    }
+
+    .carousel-item:first-child {
+	width: calc(80% - 8px);
+    }
+
+    .carousel-item:not(:first-child) {
+	width: calc(20% - 8px);
+    }
+}

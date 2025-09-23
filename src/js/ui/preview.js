@@ -33,8 +33,7 @@ export function changeGamePreview(game) {
     updateGenres(game.tags);
   }
   updatePlayButton(game);
-  updateScreenshots(game.screenshots);
-  updateVideos(game.movies, game.movies_thumbnails);
+  updateMedias(game.screenshots, game.movies, game.movies_thumbnails);
 
   document.getElementById("description-section").innerHTML = game.description || "<p>No description available.</p>";
   const videos = document.querySelectorAll('#description-section video');
@@ -94,58 +93,47 @@ function updatePlayButton(game) {
   };
 }
 
-function updateScreenshots(screenshots) {
-  const screenshotsContainer = document.querySelector(".screenshots-container");
-  screenshotsContainer.innerHTML = "";
+function updateMedias(screenshots, videos, thumbnails) {
+	const container = document.querySelector(".carousel-track");
+	container.innerHTML = "";
 
-  if (screenshots && screenshots.length > 0) {
-    const screenshotsTitle = document.createElement("h3");
-    screenshotsTitle.textContent = "Screenshots";
-    screenshotsContainer.appendChild(screenshotsTitle);
+	let nbr_medias = screenshots.length + videos.length;
+	let videos_each = screenshots.length / videos.length;
+	let videos_i = 0;
 
-    const grid = document.createElement("div");
-    grid.className = "screenshots-grid";
+	for (let i = 0; i < nbr_medias; i++) {
+		let is_video = videos.length != 0 && i % videos_each == 0
 
-    screenshots.forEach(url => {
-      const img = document.createElement("img");
-      img.src = url;
-      img.className = "screenshot-thumbnail";
-      img.onclick = () => openFullscreen(url);
-      grid.appendChild(img);
-    });
+      		const e = document.createElement("div");
+		e.className = "carousel-item";
+		if (is_video) {
+			let source = videos[videos_i];
+			let thumb = thumbnails[videos_i];
+			e.className = e.className + " video";
+			e.innerHTML = `
+			<video class="media-content" muted loop ${i === 0 ? "autoplay" : ""}
+			       poster="${thumb}">
+			    <source src="${source}" type="video/mp4">
+			</video>
+			<div class="video-overlay">
+			    <button class="play-button" onclick="toggleVideo(this)">
+				<svg class="play-icon" viewBox="0 0 24 24">
+				    <polygon points="5,3 19,12 5,21"></polygon>
+				</svg>
+			    </button>
+			</div>
+			`;
+			videos_i++;
+		} else {
+			let source = screenshots[i - videos_i];
+			e.innerHTML = `
+			<img class="media-content" 
+			     src="${source}">
+			`;
+		}
 
-    screenshotsContainer.appendChild(grid);
-  }
-}
-
-function updateVideos(videos, thumbnails) {
-  const videosContainer = document.querySelector(".videos-container");
-  videosContainer.innerHTML = "";
-
-  if (videos && videos.length > 0) {
-    const videosTitle = document.createElement("h3");
-    videosTitle.textContent = "Videos";
-    videosContainer.appendChild(videosTitle);
-
-    const grid = document.createElement("div");
-    grid.className = "videos-carousel";
-
-    let i = 0;
-    videos.forEach(url => {
-      const video = document.createElement("video");
-      video.src = url;
-      video.className = "preview-video";
-      video.autoplay = (i === 0); // Autoplay only the first video
-      video.playsInline = true;
-      video.muted = true;
-      video.controls = true;
-      video.poster = thumbnails && thumbnails.length > 0 ? thumbnails[i] : '';
-      grid.appendChild(video);
-      i++;
-    });
-
-    videosContainer.appendChild(grid);
-  }
+		container.appendChild(e);
+	}
 }
 function openFullscreen(imageUrl) {
   console.log("Opening fullscreen:", imageUrl);

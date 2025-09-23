@@ -16,6 +16,7 @@ import { sortGames, setupSorting } from './ui/sorting.js';
 import { setupSearch } from './ui/search.js';
 import { debounce } from './utils/debounce.js';
 import { setupSmoothScroll } from './utils/helpers.js';
+import { init_carousel } from './ui/carousel.js';
 
 // Define gameClickHandler at module level so it's accessible everywhere
 function createGameClickHandler(library) {
@@ -49,6 +50,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Setup utilities
   debounce(setupSmoothScroll());
   setupSearch();
+  init_carousel();
   
   // Load game library
   const library = await fetchGameLibrary();
