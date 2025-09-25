@@ -16,7 +16,6 @@ import { sortGames, setupSorting } from './ui/sorting.js';
 import { setupSearch } from './ui/search.js';
 import { debounce } from './utils/debounce.js';
 import { setupSmoothScroll } from './utils/helpers.js';
-import { init_carousel } from './ui/carousel.js';
 
 // Define gameClickHandler at module level so it's accessible everywhere
 function createGameClickHandler(library) {
@@ -50,7 +49,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Setup utilities
   debounce(setupSmoothScroll());
   setupSearch();
-  init_carousel();
   
   // Load game library
   const library = await fetchGameLibrary();
@@ -98,6 +96,32 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Setup UI event listeners
   setupUIEventListeners(combined, gameClickHandler);
+
+    // Check game running
+    let lastGame = "";
+    setInterval(async () => {
+        let game = await invoke("get_running_game", {});
+       
+        if (game != "") {
+            document.querySelector(`#${game}`).className = "game-card running";
+            document.querySelector(`#item_${game}`).className = "game-list-item running";
+            if (document.querySelector(".game-preview").getAttribute("game") == game) {
+                document.querySelector(`#play`).className = "play-button kill-button";
+                document.querySelector(`#play`).innerHTML = "Kill the process";
+            }
+        } else if (lastGame != "") {
+            document.querySelector(`#${lastGame}`).className = "game-card";
+            document.querySelector(`#item_${lastGame}`).className = "game-list-item";
+            document.querySelector(`#play`).className = "play-button";
+            document.querySelector(`#play`).innerHTML = "Play";
+        }
+        if (game == "" || document.querySelector(".game-preview").getAttribute("game") != game) {
+            document.querySelector(`#play`).className = "play-button";
+            document.querySelector(`#play`).innerHTML = "Play";
+        }
+
+        lastGame = game;
+    }, 100)
 });
 
 function setupTagFiltering(combined) {

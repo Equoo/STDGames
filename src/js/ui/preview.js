@@ -14,7 +14,7 @@ export function changeGamePreview(game) {
 
   gameSection.querySelector(".game-preview").setAttribute("game", game.slug);
 
-  const artworkUrl = game.hero || game.screenshots?.[0] || game.cover || './resources/default-game.jpg';
+  const artworkUrl = game.hero || game.cover || game.screenshots?.[0] || './resources/default-game.jpg';
   document.querySelector(".game-preview-artwork").style.backgroundImage = `url('${artworkUrl}')`;
 
   document.querySelector(".title-overlay").textContent = game.name;
@@ -24,6 +24,8 @@ export function changeGamePreview(game) {
     hideGameInfo();
     document.getElementById("library-button").classList.add("active");
   });
+
+    document.querySelector(".button-overlay .play-button").className = "play-button kill-button";
 
   const descElement = document.querySelector(".game-description");
   descElement.textContent = game.short_description || "No description available";
@@ -93,6 +95,12 @@ function updatePlayButton(game) {
   };
 }
 
+import { init_carousel } from './carousel.js';
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function updateMedias(screenshots, videos, thumbnails) {
 	const container = document.querySelector(".carousel-track");
 	container.innerHTML = "";
@@ -134,6 +142,7 @@ function updateMedias(screenshots, videos, thumbnails) {
 
 		container.appendChild(e);
 	}
+	init_carousel(container.parentElement);
 }
 function openFullscreen(imageUrl) {
   console.log("Opening fullscreen:", imageUrl);

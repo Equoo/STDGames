@@ -1,15 +1,15 @@
-use std::{error::Error, sync::Mutex};
 use std::env;
+use std::{error::Error, sync::Mutex};
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use tauri::{App, Builder, Manager, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 use crate::{
-	execution::GameExecution,
-	library::Game,
-	utils::is_authorized,
-	window::{commands, splashscreen::setup_tools_wrapper}
+    execution::GameExecution,
+    library::Game,
+    utils::is_authorized,
+    window::{commands, splashscreen::setup_tools_wrapper},
 };
 
 fn center_window(window: &WebviewWindow) -> Result<()> {
@@ -49,28 +49,38 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
 
 fn init_env_for_codecs() -> Result<()> {
     Ok(unsafe {
-        env::set_var("LD_LIBRARY_PATH", format!("{}:/sgoinfre/stdgames/.resources/launcher_libs", env::var("LD_LIBRARY_PATH").unwrap_or_default()));
-        env::set_var("GST_PLUGIN_PATH", format!("{}:/sgoinfre/stdgames/.resources/launcher_libs/gstreamer-1.0", env::var("GST_PLUGIN_PATH").unwrap_or_default()));
+        env::set_var(
+            "LD_LIBRARY_PATH",
+            format!(
+                "{}:/sgoinfre/stdgames/.resources/launcher_libs",
+                env::var("LD_LIBRARY_PATH").unwrap_or_default()
+            ),
+        );
+        env::set_var(
+            "GST_PLUGIN_PATH",
+            format!(
+                "{}:/sgoinfre/stdgames/.resources/launcher_libs/gstreamer-1.0",
+                env::var("GST_PLUGIN_PATH").unwrap_or_default()
+            ),
+        );
         env::set_var("GST_REGISTRY_UPDATE", "yes");
     })
 }
 
-pub fn init_window(
-    library: Vec<Game>,
-    game_exec: GameExecution,
-) {
+pub fn init_window(library: Vec<Game>, game_exec: GameExecution) {
     init_env_for_codecs().expect("Failed to set environment variables for codecs");
-    
+
     Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(library)
-		.manage(Mutex::new(game_exec))
+        .manage(Mutex::new(game_exec))
         .invoke_handler(tauri::generate_handler![
-			commands::add_launcher_to_desktop,
+            commands::add_launcher_to_desktop,
             commands::get_game_library,
-            commands::launch_game
-		])
+            commands::launch_game,
+            commands::get_running_game
+        ])
         .setup(setup_app)
         .run(tauri::generate_context!())
         .expect("Erreur lors du lancement de Tauri");

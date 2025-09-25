@@ -34,16 +34,17 @@
     background: #000;
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease, width 0.5s ease;
-}
-
-.carousel-item:first-child {
-    width: calc(66% - 15px);
-    margin-left: 0;
-}
-
-.carousel-item:not(:first-child) {
     width: calc(26% - 15px);
 }
+
+/*.carousel-item:first-child {
+    width: calc(66% - 15px);
+    margin-left: 0;
+}*/
+
+/*.carousel-item:not(:first-child) {
+    width: calc(26% - 15px);
+}*/
 
 .carousel-item:hover {
     /*transform: translateY(-5px);*/
@@ -58,7 +59,7 @@
 }
 
 .carousel-item:hover .media-content {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 .content-overlay {
