@@ -1,0 +1,756 @@
+# Useful env variables:
+# $GAMES_DIR - path to the games directory
+# DRI_PRIME - set to 1 to use the discrete GPU on hybrid graphics systems
+# MANGOHUD - set to 1 to enable MangoHud
+# MANGOHUD_CONFIG - config string for MangoHud, see
+# WINEDLLOVERRIDES - set to e.g. "winhttp.dll=n,b" to override DLL loading in Proton/Wine
+#					- This exemple is usefull for unity games modding
+#					- "n" means native, "b" means builtin
+#					- Multiple overrides can be separated by semicolon, e.g. "winhttp.dll=n,b;d3d11.dll=n,b"
+# DXVK_HUD - set to e.g. "1,fps" to enable DXVK HUD
+# STORE - set to "steam" or "epic" to indicate the store used
+# GAMEID - set to the game's store ID (e.g. Steam AppID)
+# PROTON_USE_WINED3D - set to 1 to use WineD3D instead of DXVK in Proton
+# PROTON_NO_ESYNC - set to 1 to disable esync in Proton
+#
+#
+# Example:
+# [[games]]
+# slug = "mygame"
+# status = "working"
+
+# [games.metadata]
+# appid = 123456
+# OR
+# igdb = 123456
+# OR
+# name = "My Game"
+# icon = "mygame-icon.png"
+# logo = "mygame-logo.png"
+# hero = "mygame-hero.png"
+# cover = "mygame-cover.png"
+# description = "This is my game."
+# short_description = "Short description of my game."
+# screenshots = [ "screenshot1.png", "screenshot2.png" ]
+# movies = [ "movie1.mp4", "movie2.mp4" ]
+# movies_thumbnails = [ "movie1-thumb.png", "movie2-thumb.png" ]
+# tags = [ "Action", "Adventure", "Indie" ]
+
+# [games.launch]
+# proton = "ge9.23" # optional, use Proton version "ge9.23"
+# environ = { "STORE"= "steam", "GAMEID"= "123456", "DRI_PRIME"= "1", "MANGOHUD"= "1" } # optional, additional env variables
+# overlays = [ "$GAMES_DIR/mygame" ] # optional, paths to overlay directories
+# start = [ "mygame.sh", "-arg1", "value1" ] # command to start the game
+
+[[games]]
+slug = "turzu"
+status = "working"
+
+[games.metadata]
+name = "Yuzu"
+icon = "https://imgs.search.brave.com/F_9Av5om9D6iEfHBKiDaEHPORXuMY8YxfPNqCFWMztI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9lbXV5/dXp1LmNvbS93cC1j/b250ZW50L3VwbG9h/ZHMvMjAyNC8wNS9Z/dXp1LUVtdWxhdG9y/LWljb24tMzAweDMw/MC53ZWJw"
+hero = "https://upload.wikimedia.org/wikipedia/commons/a/a7/Nintendo_Switch_Logo.png"
+cover = "https://upload.wikimedia.org/wikipedia/commons/a/a7/Nintendo_Switch_Logo.png"
+description = "Yuzu is an open-source emulator for the Nintendo Switch from the creators of Citra. Yuzu is written in C++ with portability in mind, with builds actively maintained for Windows and Linux. Yuzu is capable of running many commercial games, and is actively being developed to increase compatibility and performance."
+short_description = "Yuzu is an open-source emulator for the Nintendo Switch from the creators of Citra."
+tags = [ "Emulator" ]
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/turzu" ]
+start = [ "start.sh" ]
+
+
+
+[[games]]
+slug = "balatro"
+status = "working"
+
+[games.metadata]
+idtype = "steam"
+appid = 2379780
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/balatro" ]
+start = [ "balatro" ]
+
+
+[[games]]
+slug = "portal2"
+status = "working"
+
+[games.metadata]
+idtype = "steam"
+appid = 620
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "620", "MANGOHUD"= "1" }
+overlays = [ "$GAMES_DIR/portal2" ]
+start = [ "portal2.exe", "+cc_lang", "french", "+sv_lan", "1" ]
+
+
+#[[games]]
+#slug = "supervive"
+#status = "working"
+
+#[games.metadata]
+#appid = 620
+
+#[games.launch]
+#environ = { "DRI_PRIME"= "1" }
+#overlays = [ "$GAMES_DIR/portal2" ]
+#start = [ "portal2.exe", "+cc_lang", "french", "+sv_lan", "1" ]
+
+
+[[games]]
+slug = "broforce"
+status = "working"
+
+[games.metadata]
+idtype = "steam"
+appid = 274190
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/broforce" ]
+start = [ "start.sh" ]
+
+
+[[games]]
+slug = "darkestdungeon"
+status = "working"
+
+[games.metadata]
+idtype = "steam"
+appid = 262060
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/darkestdungeon" ]
+start = [ "darkest.bin.x86_64" ]
+
+
+[[games]]
+slug = "borderlands2"
+status = "working"
+
+[games.metadata]
+idtype = "steam"
+appid = 49520
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "49520", "PROTON_USE_WINED3D"= "1" }
+overlays = [ "$GAMES_DIR/borderlands2" ]
+start = [ "Binaries/Win32/Borderlands2.exe" ]
+
+
+[[games]]
+slug = "lethalcompany"
+status = "working"
+
+[games.metadata]
+idtype = "steam"
+appid = 1966720
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "1966720", "PROTON_USE_WINED3D"= "1", "PROTON_NO_ESYNC"= "1", "WINEDLLOVERRIDES"= "winhttp.dll=n,b" }
+overlays = [ "$GAMES_DIR/lethalcompany" ]
+start = [ "Lethal Company.exe" ]
+
+
+[[games]]
+slug = "crabchampions"
+status = "working"
+
+[games.metadata]
+appid = 774801
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "774801" }
+overlays = [ "$GAMES_DIR/crabchampions" ]
+start = [ "CrabChampions/Binaries/Win64/CrabChampions-Win64-Shipping.exe" ]
+
+
+[[games]]
+slug = "katanazero"
+status = "working"
+
+[games.metadata]
+appid = 460950
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "460950", "PROTON_USE_WINED3D"= "1", "PROTON_NO_ESYNC"= "1", "WINEDLLOVERRIDES"= "winhttp.dll=n,b" }
+overlays = [ "$GAMES_DIR/katanazero" ]
+start = [ "KatanaZERO.exe", "-opengl" ]
+
+
+[[games]]
+slug = "counterstrike1.6"
+status = "working"
+
+[games.metadata]
+appid = 10
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/counterstrike1.6" ]
+start = [ "cstrike.sh" ]
+
+
+[[games]]
+slug = "stardewvalley"
+status = "working"
+
+[games.metadata]
+appid = 413150
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/stardewvalley" ]
+start = [ "start.sh" ]
+
+
+[[games]]
+slug = "factorio"
+status = "working"
+
+[games.metadata]
+appid = 427520
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/factorio" ]
+start = [ "bin/x64/factorio" ]
+
+
+[[games]]
+slug = "fez"
+status = "working"
+
+[games.metadata]
+appid = 224760
+
+[games.launch]
+noruntime = true
+environ = { "MANGOHUD_CONFIG"= "no_display,fps_limit=60", "LD_PRELOAD"= "/usr/$LIB/mangohud/libMangoHud_shim.so" }
+overlays = [ "$GAMES_DIR/fez" ]
+start = [ "/usr/bin/mangohud", "$GAMES_DIR/fez/FEZ" ]
+
+
+[[games]]
+slug = "forts"
+status = "working"
+
+[games.metadata]
+appid = 410900
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "410900", "PROTON_USE_WINED3D"= "0", "PROTON_NO_ESYNC"= "1" }
+winetricks = [ "ole32" ]
+overlays = [ "$GAMES_DIR/forts" ]
+start = [ "Forts.exe" ]
+
+
+[[games]]
+slug = "hotlinemiami2"
+status = "working"
+
+[games.metadata]
+appid = 274170
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/hotlinemiami2" ]
+start = [ "HotlineMiami2" ]
+
+
+[[games]]
+slug = "hyperlightdrifter"
+status = "working"
+
+[games.metadata]
+appid = 257850
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/hyperlightdrifter" ]
+start = [ "run.sh" ]
+
+
+[[games]]
+slug = "inscryption"
+status = "working"
+
+[games.metadata]
+appid = 1092790
+
+[games.launch]
+proton = "ge7.55"
+environ = { "STORE"= "steam", "GAMEID"= "1092790" }
+overlays = [ "$GAMES_DIR/inscryption" ]
+start = [ "Inscryption.exe", "-console", "-dev" ]
+
+
+[[games]]
+slug = "rainbowsixsiege"
+status = "working"
+
+[games.metadata]
+appid = 359550
+
+[games.launch]
+proton = "ge7.55"
+environ = { "STORE"= "steam", "GAMEID"= "359550", "PROTON_USE_WINE3D"= "1", "WINEDLLOVERRIDES"= "amd_ags_x64.dll=n,b" }
+overlays = [ "$GAMES_DIR/rainbowsixsiege" ]
+start = [ "RainbowSix.exe" ]
+
+
+[[games]]
+slug = "scourgebringer"
+status = "working"
+
+[games.metadata]
+appid = 1037020
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/scourgebringer" ]
+start = [ "start.sh" ]
+
+
+[[games]]
+slug = "snkfangame"
+status = "working"
+
+[games.metadata]
+idtype = "igdb"
+appid = 152751
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/snkfangame" ]
+start = [ "raot" ]
+
+
+[[games]]
+slug = "thebindingofisaac"
+status = "working"
+
+[games.metadata]
+appid = 1426300
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "113200", "PROTON_USE_WINE3D"= "1", "WINEDLLOVERRIDES"= "winhttp.dll=n,b" }
+overlays = [ "$GAMES_DIR/thebindingofisaac" ]
+start = [ "isaac-ng.exe" ]
+
+
+[[games]]
+slug = "ultimatechickenhorse"
+status = "working"
+
+[games.metadata]
+appid = 386940
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "386940" }
+overlays = [ "$GAMES_DIR/ultimatechickenhorse" ]
+start = [ "UltimateChickenHorse.exe", "-opengl" ]
+
+
+[[games]]
+slug = "valheim"
+status = "working"
+
+[games.metadata]
+appid = 892970
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/valheim" ]
+start = [ "start-vulkan.sh" ]
+
+
+[[games]]
+slug = "warcraft3"
+status = "working"
+
+[games.metadata]
+idtype = "igdb"
+appid = 132
+
+[games.launch]
+proton = "ge9.23"
+environ = { "GAMEID"= "0", "PROTON_USE_WINE3D"= "1" }
+overlays = [ "$GAMES_DIR/warcraft3" ]
+start = [ "Frozen Throne.exe" ]
+
+
+[[games]]
+slug = "darksoulsremastered"
+status = "working"
+
+[games.metadata]
+appid = 570940
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "570940", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/thebindingofisaac" ]
+start = [ "DarkSoulsRemastered.exe", "-offline" ]
+
+
+[[games]]
+slug = "wizardoflegend"
+status = "working"
+
+[games.metadata]
+appid = 445980
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/wizardoflegend" ]
+start = [ "start.sh" ]
+
+
+[[games]]
+slug = "lemnis_gate"
+status = "working"
+
+[games.metadata]
+appid = 950180
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "950180", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/thebindingofisaac" ]
+start = [ "LemnisGate.exe" ]
+
+
+[[games]]
+slug = "css"
+status = "working"
+
+[games.metadata]
+appid = 240
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "240" }
+overlays = [ "$GAMES_DIR/css" ]
+start = [ "hl2.exe", "-game", "cstrike" ]
+
+
+[[games]]
+slug = "csgo"
+status = "working"
+
+[games.metadata]
+idtype = "igdb"
+appid = 1372
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "730" }
+overlays = [ "$GAMES_DIR/csgo" ]
+start = [ "Loader.exe" ]
+
+
+[[games]]
+slug = "csgo2"
+status = "unable" # multiplayer is broken and possible crash solo
+
+[games.metadata]
+appid = 730
+
+[games.launch]
+noruntime = false # may be true
+environ = { "STORE"= "steam", "GAMEID"= "730", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/csgo2" ]
+start = [ "cs2_launcher.sh", "-vulkan_disable" ]
+
+
+[[games]]
+slug = "noita"
+status = "working"
+
+[games.metadata]
+appid = 881100
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "881100" }
+overlays = [ "$GAMES_DIR/noita" ]
+start = [ "noita.exe" ]
+
+
+[[games]]
+slug = "project_zomboid"
+status = "working"
+
+[games.metadata]
+appid = 3189
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "881100", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/project_zomboid" ]
+# "prestart": "prestart.sh",
+start = [ "ProjectZomboid64.exe" ]
+
+
+[[games]]
+slug = "thelastspell"
+status = "working"
+
+[games.metadata]
+appid = 1105670
+
+[games.launch]
+proton = "ge7.55"
+environ = { "STORE"= "steam", "GAMEID"= "1105670", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/thelastspell" ]
+start = [ "The Last Spell.exe" ]
+
+
+[[games]]
+slug = "dungeondrafters"
+status = "working"
+
+[games.metadata]
+appid = 1824580
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "1824580" }
+overlays = [ "$GAMES_DIR/dungeondrafters" ]
+start = [ "Dungeon Drafters.exe" ]
+
+
+[[games]]
+slug = "neonwhite"
+status = "working"
+
+[games.metadata]
+appid = 1533420
+
+[games.launch]
+proton = "ge7.55"
+environ = { "STORE"= "steam", "GAMEID"= "1533420" }
+overlays = [ "$GAMES_DIR/neonwhite" ]
+start = [ "neonwhite/Neon White.exe" ]
+
+
+[[games]]
+slug = "yousuckatparking"
+status = "onlinebreak"
+
+[games.metadata]
+appid = 837880
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "837880" }
+overlays = [ "$GAMES_DIR/yousuckatparking" ]
+start = [ "YSAP.exe" ]
+
+
+[[games]]
+slug = "clairobscur-expedition33"
+status = "working"
+
+[games.metadata]
+appid = 1903340
+
+[games.launch]
+proton = "experimental"
+environ = { "STORE"= "steam", "GAMEID"= "1903340", "DRI_PRIME"= "1", "PROTON_FSR4_UPGRADE"= "1", "WINEDLLOVERRIDES"= "dsound=n,b;dxgi=n,b", "PROTON_USE_NTSYNC"= "1", "ENABLE_HDR_WSI"= "1" }
+overlays = [ "$GAMES_DIR/clairobscur-expedition33" ]
+start = [ "/home/dderny/Downloads/VC_redist.x64.exe" ] 
+
+
+[[games]]
+slug = "vrising"
+status = "working"
+
+[games.metadata]
+appid = 1604030
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "1604030" }
+overlays = [ "$GAMES_DIR/vrising" ]
+start = [ "VRising.exe" ]
+
+
+[[games]]
+slug = "furi"
+status = "working"
+
+[games.metadata]
+appid = 423230
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "423230" }
+overlays = [ "$GAMES_DIR/furi" ]
+start = [ "Furi/Furi.exe" ]
+
+
+[[games]]
+slug = "voidtrain"
+status = "working"
+
+[games.metadata]
+appid = 1159690
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "1159690" }
+overlays = [ "$GAMES_DIR/voidtrain" ]
+start = [ "VoidTrain.exe" ]
+
+
+[[games]]
+slug = "echopointnova"
+status = "working"
+
+[games.metadata]
+appid = 1836730
+
+[games.launch]
+proton = "ge7.55"
+environ = { "STORE"= "steam", "GAMEID"= "1836730", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/echopointnova" ]
+start = [ "Greylock.exe" ]
+
+
+[[games]]
+slug = "deeprockgalactic"
+status = "working"
+
+[games.metadata]
+appid = 548430
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "548430" }
+overlays = [ "$GAMES_DIR/deeprockgalactic" ]
+start = [ "FSD.exe" ]
+
+
+[[games]]
+slug = "deeprockgalacticsurvivor"
+status = "working"
+
+[games.metadata]
+appid = 2321470
+
+[games.launch]
+proton = "ge7.55"
+environ = { "STORE"= "steam", "GAMEID"= "2321470", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/deeprockgalacticsurvivor" ]
+start = [ "Deep Rock Galactic Survivor.exe" ]
+
+
+[[games]]
+slug = "hollowknight"
+status = "working"
+
+[games.metadata]
+appid = 367520
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/hollowknight" ]
+start = [ "start.sh" ]
+
+
+[[games]]
+slug = "artofrally"
+status = "working"
+
+[games.metadata]
+appid = 550320
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/artofrally" ]
+start = [ "start.sh" ]
+
+
+[[games]]
+slug = "yomihustle"
+status = "working"
+
+[games.metadata]
+appid = 2212330
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/yomihustle" ]
+start = [ "YourOnlyMoveIsHUSTLE.x86_64" ]
+
+
+[[games]]
+slug = "alienswarmreactivedrop"
+status = "working"
+
+[games.metadata]
+appid = 563560
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "563560", "DRI_PRIME"= "1" }
+overlays = [ "$GAMES_DIR/alienswarmreactivedrop" ]
+start = [ "reactivedrop.exe" ]
+
+
+[[games]]
+slug = "freeways"
+status = "working"
+
+[games.metadata]
+appid = 780210
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "780210" }
+overlays = [ "$GAMES_DIR/freeways" ]
+start = [ "Freeways.exe" ]
+
+
+[[games]]
+slug = "hollowknightsilksong"
+status = "working"
+
+[games.metadata]
+appid = 1030300
+
+[games.launch]
+proton = "ge9.23"
+environ = { "STORE"= "steam", "GAMEID"= "1030300" }
+overlays = [ "$GAMES_DIR/hollowknightsilksong" ]
+start = [ "Hollow Knight Silksong.exe" ]
+
+
+[[games]]
+slug = "powdertoy"
+status = "working"
+
+[games.metadata]
+appid = 1148350
+
+[games.launch]
+noruntime = true
+overlays = [ "$GAMES_DIR/powdertoy" ]
+start = [ "powder" ]

@@ -42,6 +42,7 @@ impl Config {
             path
         } else {
             format!("{resources_dir}/games.toml").to_string()
+            // "/tmp/games.toml".to_string()
         };
 
         Ok(Config {

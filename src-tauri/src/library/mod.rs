@@ -6,8 +6,18 @@ use std::fmt::Write;
 
 mod steamdb;
 mod cache;
+mod igdb_client;
 use crate::library::steamdb::SteamAssetsClient;
 use crate::config::CONFIG;
+use crate::library::igdb_client::IgdbClient;
+
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum GameAppIdType {
+    Igdb,
+    Steam,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Games {
@@ -24,6 +34,7 @@ pub struct Game {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadata {
+    pub idtype: Option<GameAppIdType>,
     pub appid: Option<u32>,
     pub store_pages: Option<Vec<String>>,
 	pub name: Option<String>,
@@ -218,14 +229,18 @@ async fn get_game_data(client: &SteamAssetsClient, meta: &mut GameMetadata, appi
 }
 
 fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
-    let client = SteamAssetsClient::new(Some("19A33BB7E5367795078D0F3BFB663BD9".to_string()), "french".to_string());
+	let steam_client = SteamAssetsClient::new(Some("19A33BB7E5367795078D0F3BFB663BD9".to_string()), "french".to_string());
+	let mut igdb_client = IgdbClient::new("rggouo5m4dsiowf6upejcgzyskt2vj", "pr902t650n6wrs7vax0fyk9twjjbuk")?; // TODO: move this to config
 
-    for game in games {
-        if let Some(appid) = game.metadata.appid {
-            get_game_data(&client, &mut game.metadata, appid)?;
-        }
-    }
-    Ok(())
+	igdb_client.load_igdb_games(&games)?;
+
+	for game in games {
+		if let Some(appid) = game.metadata.appid {
+			get_game_data(&steam_client, &mut game.metadata, appid)?;
+			igdb_client.fill_game_metadata(&mut game.metadata);
+		}
+	}
+	Ok(())
 }
 
 pub fn load_library(path: String) -> Result<Vec<Game>> {
