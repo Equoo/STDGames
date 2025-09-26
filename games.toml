@@ -167,6 +167,7 @@ slug = "crabchampions"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 774801
 
 [games.launch]
@@ -181,6 +182,7 @@ slug = "katanazero"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 460950
 
 [games.launch]
@@ -195,6 +197,7 @@ slug = "counterstrike1.6"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 10
 
 [games.launch]
@@ -208,6 +211,7 @@ slug = "stardewvalley"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 413150
 
 [games.launch]
@@ -221,6 +225,7 @@ slug = "factorio"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 427520
 
 [games.launch]
@@ -234,6 +239,7 @@ slug = "fez"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 224760
 
 [games.launch]
@@ -248,6 +254,7 @@ slug = "forts"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 410900
 
 [games.launch]
@@ -263,6 +270,7 @@ slug = "hotlinemiami2"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 274170
 
 [games.launch]
@@ -276,6 +284,7 @@ slug = "hyperlightdrifter"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 257850
 
 [games.launch]
@@ -289,6 +298,7 @@ slug = "inscryption"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1092790
 
 [games.launch]
@@ -303,6 +313,7 @@ slug = "rainbowsixsiege"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 359550
 
 [games.launch]
@@ -317,6 +328,7 @@ slug = "scourgebringer"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1037020
 
 [games.launch]
@@ -344,7 +356,9 @@ slug = "thebindingofisaac"
 status = "working"
 
 [games.metadata]
-appid = 1426300
+idtype = "steam"
+# appid = 1426300 # id of repentance, but it's not working, maybe because it's a DLC
+appid = 250900
 
 [games.launch]
 proton = "ge9.23"
@@ -358,6 +372,7 @@ slug = "ultimatechickenhorse"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 386940
 
 [games.launch]
@@ -372,6 +387,7 @@ slug = "valheim"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 892970
 
 [games.launch]
@@ -400,6 +416,7 @@ slug = "darksoulsremastered"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 570940
 
 [games.launch]
@@ -414,6 +431,7 @@ slug = "wizardoflegend"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 445980
 
 [games.launch]
@@ -427,6 +445,7 @@ slug = "lemnis_gate"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 950180
 
 [games.launch]
@@ -441,6 +460,7 @@ slug = "css"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 240
 
 [games.launch]
@@ -470,6 +490,7 @@ slug = "csgo2"
 status = "unable" # multiplayer is broken and possible crash solo
 
 [games.metadata]
+idtype = "steam"
 appid = 730
 
 [games.launch]
@@ -484,6 +505,7 @@ slug = "noita"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 881100
 
 [games.launch]
@@ -498,7 +520,8 @@ slug = "project_zomboid"
 status = "working"
 
 [games.metadata]
-appid = 3189
+idtype = "steam"
+appid = 108600
 
 [games.launch]
 proton = "ge9.23"
@@ -513,6 +536,7 @@ slug = "thelastspell"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1105670
 
 [games.launch]
@@ -527,6 +551,7 @@ slug = "dungeondrafters"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1824580
 
 [games.launch]
@@ -541,6 +566,7 @@ slug = "neonwhite"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1533420
 
 [games.launch]
@@ -555,6 +581,7 @@ slug = "yousuckatparking"
 status = "onlinebreak"
 
 [games.metadata]
+idtype = "steam"
 appid = 837880
 
 [games.launch]
@@ -569,6 +596,7 @@ slug = "clairobscur-expedition33"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1903340
 
 [games.launch]
@@ -583,6 +611,7 @@ slug = "vrising"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1604030
 
 [games.launch]
@@ -597,6 +626,7 @@ slug = "furi"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 423230
 
 [games.launch]
@@ -611,6 +641,7 @@ slug = "voidtrain"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1159690
 
 [games.launch]
@@ -625,6 +656,7 @@ slug = "echopointnova"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1836730
 
 [games.launch]
@@ -639,6 +671,7 @@ slug = "deeprockgalactic"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 548430
 
 [games.launch]
@@ -653,6 +686,7 @@ slug = "deeprockgalacticsurvivor"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 2321470
 
 [games.launch]
@@ -667,6 +701,7 @@ slug = "hollowknight"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 367520
 
 [games.launch]
@@ -680,6 +715,7 @@ slug = "artofrally"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 550320
 
 [games.launch]
@@ -693,6 +729,7 @@ slug = "yomihustle"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 2212330
 
 [games.launch]
@@ -706,6 +743,7 @@ slug = "alienswarmreactivedrop"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 563560
 
 [games.launch]
@@ -720,6 +758,7 @@ slug = "freeways"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 780210
 
 [games.launch]
@@ -734,6 +773,7 @@ slug = "hollowknightsilksong"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1030300
 
 [games.launch]
@@ -748,6 +788,7 @@ slug = "powdertoy"
 status = "working"
 
 [games.metadata]
+idtype = "steam"
 appid = 1148350
 
 [games.launch]

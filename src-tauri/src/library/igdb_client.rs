@@ -93,11 +93,15 @@ impl IgdbClient {
 	where
 		T: serde::de::DeserializeOwned + Clone,
 	{
+		if games.is_empty() {
+			return Ok(vec![]);
+		}
 		let query = format!(
 			"query games \"Get Games Infos\" {{ fields {}; where id = ({}); limit 500; }};",
 			fields.join(", "),
 			games.into_iter().map(|game| game.to_string()).collect::<Vec<_>>().join(", "),
 		);
+		println!("query: {query}");
 		let res = self.reqwest_client.post("https://api.igdb.com/v4/multiquery")
 			.header("Accept", "application/json")
 			.header("Client-ID", &self.client_id)
