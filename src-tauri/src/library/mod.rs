@@ -12,12 +12,12 @@ use crate::config::CONFIG;
 use crate::library::igdb_client::IgdbClient;
 
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-#[serde(rename_all = "snake_case")]
-pub enum GameAppIdType {
-    Igdb,
-    Steam,
-}
+// #[derive(Debug, Deserialize, Serialize, Clone)]
+// #[serde(rename_all = "snake_case")]
+// pub enum GameAppIdType {
+//     Igdb,
+//     Steam,
+// }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Games {
@@ -34,8 +34,8 @@ pub struct Game {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadata {
-    pub idtype: Option<GameAppIdType>,
     pub appid: Option<u32>,
+    pub igdbid: Option<u32>,
     pub store_pages: Option<Vec<String>>,
 	pub name: Option<String>,
 	pub icon: Option<String>,
@@ -235,9 +235,9 @@ fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
 	igdb_client.load_igdb_games(&games)?;
 
 	for game in games {
+		igdb_client.fill_game_metadata(&mut game.metadata);
 		if let Some(appid) = game.metadata.appid {
 			get_game_data(&steam_client, &mut game.metadata, appid)?;
-			igdb_client.fill_game_metadata(&mut game.metadata);
 		}
 	}
 	Ok(())

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use anyhow::Result;
 use serde::Deserialize;
-use crate::library::{Game, GameMetadata, GameAppIdType};
+use crate::library::{Game, GameMetadata};
 
 #[derive(Deserialize)]
 struct IgdbApiAuthResponse {
@@ -114,12 +114,7 @@ impl IgdbClient {
 
 	pub fn load_igdb_games(&mut self, games: &Vec<Game>) -> Result<()> {
 		let igdb_ids: Vec<u32> = games.iter()
-			.filter_map(|game|
-				match game.metadata.idtype {
-					Some(GameAppIdType::Igdb) => game.metadata.appid,
-					_ => None
-				}
-			).collect();
+			.filter_map(|game| game.metadata.igdbid).collect();
 		let fields = [
 			"slug", "name", "summary", "genres.slug", "genres.name",
 			"cover.image_id", "artworks.image_id", "screenshots.image_id",
@@ -136,8 +131,8 @@ impl IgdbClient {
 	}
 
 	pub fn fill_game_metadata(&self, meta: &mut GameMetadata) {
-		if let Some(appid) = meta.appid {
-			if let Some(game_info) = self.cache.get(&appid) {
+		if let Some(igdbid) = meta.igdbid {
+			if let Some(game_info) = self.cache.get(&igdbid) {
 				let data = game_info.clone();
 
 				meta.name = Some(data.name);
