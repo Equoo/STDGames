@@ -152,13 +152,11 @@ impl IgdbClient {
         }
         Ok(())
     }
-
-    pub fn fill_game_metadata(&self, meta: &mut GameMetadata, igdbid: u32) {
-        if let Some(game_info) = self.cache.get(&igdbid) {
-            let data = game_info.clone();
-
-            meta.name = Some(data.name);
-            meta.description = Some(data.summary);
+    
+	pub fn fill_game_metadata(&self, meta: &mut GameMetadata) {
+		if let Some(igdbid) = meta.igdbid {
+			if let Some(game_info) = self.cache.get(&igdbid) {
+				let data = game_info.clone();
 
             meta.cover = data.cover.map(|cover| {
                 format!(
