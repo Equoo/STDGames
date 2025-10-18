@@ -259,7 +259,7 @@ pub async fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
             steam_game_data(&steam_client, &mut game.metadata, id).await?;
         }
         if let Some(id) = game.metadata.igdbid {
-            igdb_client.fill_game_metadata(&mut game.metadata, id);
+            igdb_client.fill_game_metadata(&mut game.metadata);
         }
     }
     Ok(())

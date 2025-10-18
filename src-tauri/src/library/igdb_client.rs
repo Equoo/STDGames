@@ -152,59 +152,61 @@ impl IgdbClient {
         }
         Ok(())
     }
-    
+
 	pub fn fill_game_metadata(&self, meta: &mut GameMetadata) {
 		if let Some(igdbid) = meta.igdbid {
 			if let Some(game_info) = self.cache.get(&igdbid) {
 				let data = game_info.clone();
+                
 
-            meta.cover = data.cover.map(|cover| {
-                format!(
-                    "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
-                    "cover_big_2x", cover.image_id
-                )
-            });
-
-            meta.hero = data
-                .artworks
-                .and_then(|mut artworks| {
-                    if !artworks.is_empty() {
-                        Some(artworks.remove(0))
-                    } else {
-                        None
-                    }
-                })
-                .map(|artwork| artwork.clone())
-                .map(|artwork| {
+                meta.cover = data.cover.map(|cover| {
                     format!(
                         "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
-                        "1080p_2x", artwork.image_id
+                        "cover_big_2x", cover.image_id
                     )
                 });
 
-            meta.screenshots = data.screenshots.map(|screenshots| {
-                screenshots
-                    .into_iter()
-                    .map(|screenshot| {
+                meta.hero = data
+                    .artworks
+                    .and_then(|mut artworks| {
+                        if !artworks.is_empty() {
+                            Some(artworks.remove(0))
+                        } else {
+                            None
+                        }
+                    })
+                    .map(|artwork| artwork.clone())
+                    .map(|artwork| {
                         format!(
                             "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
-                            "1080p_2x", screenshot.image_id
+                            "1080p_2x", artwork.image_id
                         )
-                    })
-                    .collect()
-            });
+                    });
 
-            meta.movies = data
-                .videos
-                .map(|videos| videos.into_iter().map(|video| video.video_id).collect());
+                meta.screenshots = data.screenshots.map(|screenshots| {
+                    screenshots
+                        .into_iter()
+                        .map(|screenshot| {
+                            format!(
+                                "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
+                                "1080p_2x", screenshot.image_id
+                            )
+                        })
+                        .collect()
+                });
 
-            meta.store_pages = None; // dont know what this should be
+                meta.movies = data
+                    .videos
+                    .map(|videos| videos.into_iter().map(|video| video.video_id).collect());
 
-            meta.icon = None;
-            meta.logo = None;
-            meta.short_description = None;
-            meta.movies_thumbnails = None;
-            meta.tags = None;
+                meta.store_pages = None; // dont know what this should be
+
+                meta.icon = None;
+                meta.logo = None;
+                meta.short_description = None;
+                meta.movies_thumbnails = None;
+                meta.tags = None;
+            }
         }
     }
 }
