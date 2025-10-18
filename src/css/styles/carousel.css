@@ -161,10 +161,10 @@
     backdrop-filter: blur(10px);
 }
 
-.play-button:hover {
+/*.play-button:hover {
     transform: scale(1.1);
     background: rgba(255, 255, 255, 1);
-}
+}*/
 
 .play-icon {
     width: 20px;

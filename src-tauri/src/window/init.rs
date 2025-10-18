@@ -2,7 +2,7 @@ use std::env;
 use std::{error::Error, sync::Mutex};
 
 use anyhow::{Result, anyhow};
-use tauri::{App, Builder, Manager, WebviewWindow};
+use tauri::{App, Builder, Manager, State, WebviewWindow};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 use crate::{
@@ -11,6 +11,12 @@ use crate::{
     utils::is_authorized,
     window::{commands, splashscreen::setup_tools_wrapper},
 };
+
+pub struct AppState {
+    pub games: Mutex<Vec<Game>>,
+    pub setup_finished: Mutex<bool>,
+    pub exec: Mutex<GameExecution>,
+}
 
 fn center_window(window: &WebviewWindow) -> Result<()> {
     let monitor = window
@@ -73,8 +79,11 @@ pub fn init_window(library: Vec<Game>, game_exec: GameExecution) {
     Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .manage(library)
-        .manage(Mutex::new(game_exec))
+        .manage(AppState {
+            games: Mutex::new(library),
+            setup_finished: Mutex::new(false),
+            exec: Mutex::new(game_exec),
+        })
         .invoke_handler(tauri::generate_handler![
             commands::add_launcher_to_desktop,
             commands::get_game_library,

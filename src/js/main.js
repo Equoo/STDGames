@@ -52,7 +52,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Load game library
   const library = await fetchGameLibrary();
-  if (!library) {
+  console.log(library);
+	if (!library) {
     console.error("Failed to load game library or library structure is invalid");
     return;
   }
@@ -91,37 +92,59 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll(".game-list-item").forEach(gameClickHandler);
 
     // Invoke the backend to set client loaded
-    invoke("set_client_loaded", {});
+	//invoke("set_client_loaded", {});
   }, 0);
 
   // Setup UI event listeners
   setupUIEventListeners(combined, gameClickHandler);
 
-    // Check game running
-    let lastGame = "";
-    setInterval(async () => {
-        let game = await invoke("get_running_game", {});
-       
-        if (game != "") {
-            document.querySelector(`#${game}`).className = "game-card running";
-            document.querySelector(`#item_${game}`).className = "game-list-item running";
-            if (document.querySelector(".game-preview").getAttribute("game") == game) {
-                document.querySelector(`#play`).className = "play-button kill-button";
-                document.querySelector(`#play`).innerHTML = "Kill the process";
-            }
-        } else if (lastGame != "") {
-            document.querySelector(`#${lastGame}`).className = "game-card";
-            document.querySelector(`#item_${lastGame}`).className = "game-list-item";
-            document.querySelector(`#play`).className = "play-button";
-            document.querySelector(`#play`).innerHTML = "Play";
-        }
-        if (game == "" || document.querySelector(".game-preview").getAttribute("game") != game) {
-            document.querySelector(`#play`).className = "play-button";
-            document.querySelector(`#play`).innerHTML = "Play";
-        }
 
-        lastGame = game;
-    }, 100)
+  // Check game running
+  let lastGame = "";
+  
+  const playButton = document.querySelector(".play-button");
+  playButton.onclick = async () => {
+    const gameSlug = document.querySelector(".game-preview").getAttribute("game");
+    console.log(`Play button clicked for game: ${gameSlug}`);
+
+    if (lastGame === gameSlug) {
+      console.log(`Killing running game: ${gameSlug}`);
+      await invoke("kill_running_game", {});
+        playButton.className = "play-button";
+      playButton.textContent = "Play";
+    } else if (lastGame === "") {
+      const success = await launchGame(gameSlug);
+      if (success) {
+        playButton.className = "play-button kill-button";
+        playButton.textContent = "Kill the process";
+      }
+    }
+  };
+
+  setInterval(async () => {
+      let game = await invoke("get_running_game", {});
+      const button = document.querySelector(`#play`);
+      
+      if (game != "" && button.textContent != "Kill the process") {
+          document.querySelector(`#${game}`).className = "game-card running";
+          document.querySelector(`#item_${game}`).className = "game-list-item running";
+          if (document.querySelector(".game-preview").getAttribute("game") == game) {
+              button.className = "play-button kill-button";
+              button.textContent = "Kill the process";
+          }
+      } else if (game == "" && lastGame != "" && button.textContent != "Play") {
+          document.querySelector(`#${lastGame}`).className = "game-card";
+          document.querySelector(`#item_${lastGame}`).className = "game-list-item";
+          button.className = "play-button";
+          button.textContent = "Play";
+      }
+      if ((game == "" || document.querySelector(".game-preview").getAttribute("game") != game) && button.textContent != "Play") {
+          button.className = "play-button";
+          button.textContent = "Play";
+      }
+
+      lastGame = game;
+  }, 100)
 });
 
 function setupTagFiltering(combined) {

@@ -1,8 +1,10 @@
 const { invoke } = window.__TAURI__.core;
 
 export async function launchGame(game) {
+  console.log(`Attempting to launch game: ${game}`);
   try {
     const result = await invoke("launch_game", { game: game });
+    console.log(`Game launched successfully: ${result}`);
     return true;
   } catch (err) {
     alert("Erreur lors du lancement : " + err);

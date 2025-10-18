@@ -25,8 +25,6 @@ export function changeGamePreview(game) {
     document.getElementById("library-button").classList.add("active");
   });
 
-    document.querySelector(".button-overlay .play-button").className = "play-button kill-button";
-
   const descElement = document.querySelector(".game-description");
   descElement.textContent = game.short_description || "No description available";
   descElement.style.display = game.short_description ? "block" : "none";
@@ -34,7 +32,6 @@ export function changeGamePreview(game) {
   if (game.tags) {
     updateGenres(game.tags);
   }
-  updatePlayButton(game);
   updateMedias(game.screenshots, game.movies, game.movies_thumbnails);
 
   document.getElementById("description-section").innerHTML = game.description || "<p>No description available.</p>";
@@ -82,17 +79,6 @@ function updateGenres(genres) {
       genresContainer.appendChild(genreElement);
     });
   }
-}
-
-function updatePlayButton(game) {
-  const playButton = document.querySelector(".play-button");
-  playButton.setAttribute("data-game", game.slug);
-  playButton.onclick = () => {
-    if (launchGame(game.slug)) {
-      playButton.textContent = "Running...";
-      playButton.disabled = true;
-    }
-  };
 }
 
 import { init_carousel } from './carousel.js';
