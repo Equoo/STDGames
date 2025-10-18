@@ -10,7 +10,7 @@ release:
 dev:
 	@xhost +local:docker
 	@docker build -t stddev:latest -f Dockerfile.dev .
-	@docker run --cap-add=SYS_ADMIN --cap-add=SYS_CHROOT --privileged -it --rm \
+	@docker run -it --rm \
 		--ipc=host \
 		-v $(PWD)/:/app \
 		-v /sgoinfre:/sgoinfre \
