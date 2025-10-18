@@ -1,7 +1,7 @@
 // Import all modules
 const { invoke } = window.__TAURI__.core;
 import { addIcon, openUrl } from './api/system.js';
-import { launchGame, fetchGameLibrary, monitorGameProcess } from './api/games.js';
+import { launchGame, fetchGameLibrary } from './api/games.js';
 import { 
   hideGameCards, 
   showGameCards, 
@@ -28,17 +28,15 @@ function createGameClickHandler(library) {
       document.getElementById("library-button").classList.remove("active");
 
       let data = null;
-      let gamedata = null;
-      for (let i = 0; i < library.gamesdata.length; i++) {
-        if (library.games[i].name === game) {
-          data = library.gamesdata[i];
-          gamedata = library.games[i];
+      for (let i = 0; i < library.length; i++) {
+        if (library[i].slug === game) {
+          data = library[i];
           break;
         }
       }
       
       if (data) {
-        changeGamePreview(gamedata, data);
+        changeGamePreview(data);
       } else {
         console.error("Game data not found for:", game);
       }
@@ -54,7 +52,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Load game library
   const library = await fetchGameLibrary();
-  if (!library || !library.games || !library.gamesdata) {
+  console.log(library);
+	if (!library) {
     console.error("Failed to load game library or library structure is invalid");
     return;
   }
@@ -63,13 +62,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   displayGamePreview(null, null);
 
   // Combine games and gamesdata
-  const combined = library.games.map((game, i) => ({
-    game: game,
-    data: library.gamesdata[i],
-  }));
+  const combined = library.map((game, i) => {
+    let data = game.metadata;
+    data.slug = game.slug;
+    return (data) 
+  });
 
   // Create the game click handler with access to library
-  const gameClickHandler = createGameClickHandler(library);
+  const gameClickHandler = createGameClickHandler(combined);
 
   // Initial sort
   sortGames(combined, "descending");
@@ -82,9 +82,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Initial display - wait for next tick to ensure DOM is ready
   setTimeout(() => {
-    combined.forEach(({ game, data }) => {
-      displayLibrary(game, data, running);
-      displayGameList(game, data, running);
+    combined.forEach((game) => {
+      displayLibrary(game, running);
+      displayGameList(game, running);
     });
 
     // Attach click handlers after elements are created
@@ -92,14 +92,59 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.querySelectorAll(".game-list-item").forEach(gameClickHandler);
 
     // Invoke the backend to set client loaded
-    invoke("set_client_loaded", {});
+	//invoke("set_client_loaded", {});
   }, 0);
 
   // Setup UI event listeners
-  setupUIEventListeners(combined, library, gameClickHandler);
+  setupUIEventListeners(combined, gameClickHandler);
 
-  // Start process monitoring
-  monitorGameProcess();
+
+  // Check game running
+  let lastGame = "";
+  
+  const playButton = document.querySelector(".play-button");
+  playButton.onclick = async () => {
+    const gameSlug = document.querySelector(".game-preview").getAttribute("game");
+    console.log(`Play button clicked for game: ${gameSlug}`);
+
+    if (lastGame === gameSlug) {
+      console.log(`Killing running game: ${gameSlug}`);
+      await invoke("kill_running_game", {});
+        playButton.className = "play-button";
+      playButton.textContent = "Play";
+    } else if (lastGame === "") {
+      const success = await launchGame(gameSlug);
+      if (success) {
+        playButton.className = "play-button kill-button";
+        playButton.textContent = "Kill the process";
+      }
+    }
+  };
+
+  setInterval(async () => {
+      let game = await invoke("get_running_game", {});
+      const button = document.querySelector(`#play`);
+      
+      if (game != "" && button.textContent != "Kill the process") {
+          document.querySelector(`#${game}`).className = "game-card running";
+          document.querySelector(`#item_${game}`).className = "game-list-item running";
+          if (document.querySelector(".game-preview").getAttribute("game") == game) {
+              button.className = "play-button kill-button";
+              button.textContent = "Kill the process";
+          }
+      } else if (game == "" && lastGame != "" && button.textContent != "Play") {
+          document.querySelector(`#${lastGame}`).className = "game-card";
+          document.querySelector(`#item_${lastGame}`).className = "game-list-item";
+          button.className = "play-button";
+          button.textContent = "Play";
+      }
+      if ((game == "" || document.querySelector(".game-preview").getAttribute("game") != game) && button.textContent != "Play") {
+          button.className = "play-button";
+          button.textContent = "Play";
+      }
+
+      lastGame = game;
+  }, 100)
 });
 
 function setupTagFiltering(combined) {
@@ -129,7 +174,7 @@ function setupTagFiltering(combined) {
 
       gameCards.forEach(card => {
         const gameName = card.getAttribute("game");
-        const gameData = combined.find(item => item.game.name === gameName);
+        const gameData = combined.find(item => item.slug === gameName);
 
         if (!gameData) {
           card.classList.add("hidden");
@@ -137,8 +182,8 @@ function setupTagFiltering(combined) {
         }
 
 		let hasTag = false;
-		if (gameData.game.tags)
-        	hasTag = gameData.game.tags.includes(tag);
+		if (gameData.tags)
+        	hasTag = gameData.tags.includes(tag);
 		console.log(gameName, hasTag)
         card.classList.toggle("hidden", !hasTag);
       });
@@ -147,7 +192,7 @@ function setupTagFiltering(combined) {
   });
 }
 
-function setupUIEventListeners(combined, library, gameClickHandler) {
+function setupUIEventListeners(combined, gameClickHandler) {
   // Library button
   const libButton = document.getElementById("library-button");
   if (libButton) {

@@ -230,8 +230,8 @@
 .image-crop-container {
 	position: relative;
 	width: 100%;
-	height: 90vh;
-	min-height: 90vh;
+	height: calc(-105px + 100vh);
+	min-height: calc(-105px + 100vh);
 	aspect-ratio: 16 / 9;
 	overflow: hidden;
 }
@@ -281,8 +281,8 @@
 
 /* Game details section */
 .game-details {
-	padding: 30px;
-	max-width: 1200px;
+	padding-top: 30px;
+	/*max-width: 1200px;*/
 	margin: 0 auto;
 }
 
@@ -324,6 +324,30 @@
 	border: 1px solid rgba(255, 255, 255, 0.651);
 }
 
+
+/* Videos carousel */
+.videos-container {
+	margin-top: 40px;
+}
+
+.videos-carousel {
+	display: flex;
+	overflow-x: auto;
+	gap: 15px;
+	margin-top: 20px;
+	padding-bottom: 10px;
+}
+
+.preview-video {
+	width: 300px;
+	height: 180px;
+	border-radius: 10px;
+	object-fit: cover;
+	cursor: pointer;
+	transition: transform 0.3s ease;
+}
+
+
 /* Screenshots carousel */
 .screenshots-container {
 	margin-top: 40px;
@@ -338,11 +362,30 @@
 
 .screenshot-thumbnail {
 	width: 100%;
-	height: 150px;
+	height: 180px;
 	border-radius: 10px;
 	object-fit: cover;
 	cursor: pointer;
 	transition: transform 0.3s ease;
+}
+
+#description-section {
+	margin-left: 50%;
+	transform: translateX(-50%);
+	color: #ffffff;
+	text-align: left;
+	line-height: 1.5em;
+    font-size: 14px;
+    margin-top: 30px;
+    overflow: hidden;
+    width: 616px;
+    max-width: 100%;
+    font-weight: normal;
+}
+
+.bb_img_ctn {
+    position: relative;
+    display: inline-block;
 }
 
 

@@ -24,21 +24,21 @@ export function extractImageUrls(imageString) {
   return urls[0];
 }
 
-export function displayLibrary(game, data, running, containerId = "games") {
+export function displayLibrary(game, running, containerId = "games") {
   document.querySelector(`#${containerId}`).insertAdjacentHTML(
     "afterbegin",
-    `<button class="game-card ${running}" id="${game.name}" game="${game.name}">
-      <div style="background-image: url('${data.cover}');"></div>
+    `<button class="game-card ${running}" id="${game.slug}" game="${game.slug}">
+      <div style="background-image: url('${game.cover}');"></div>
     </button>`
   );
 }
 
-export function displayGameList(game, data, running, containerId = "game-list") {
+export function displayGameList(game, running, containerId = "game-list") {
   document.querySelector(`#${containerId}`).insertAdjacentHTML(
     "afterbegin",
-    `<li class="game-list-item ${running}" id="item_${game.name}" game="${game.name}">
-      <div class="icon-container"><img src="${data.icon}" alt="${game.name} icon" class="game-list-icon"></img></div>
-      <h5>${data.name}</h5>
+    `<li class="game-list-item ${running}" id="item_${game.slug}" game="${game.slug}">
+      <div class="icon-container"><img src="${game.icon}" alt="${game.slug} icon" class="game-list-icon"></img></div>
+      <span>${game.name}</span>
     </li>`
   );
 }
@@ -47,9 +47,9 @@ export function refreshDisplay(combined, running, gameClickHandler) {
   document.getElementById("games").innerHTML = "";
   document.getElementById("game-list").innerHTML = "";
 
-  combined.forEach(({ game, data }) => {
-    displayLibrary(game, data, running);
-    displayGameList(game, data, running);
+  combined.forEach((game) => {
+    displayLibrary(game, running);
+    displayGameList(game, running);
   });
 
   document.querySelectorAll(".game-card").forEach(gameClickHandler);
