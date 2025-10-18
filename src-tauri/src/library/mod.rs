@@ -4,9 +4,6 @@ use std::fmt::Write;
 use std::{collections::HashMap, fs, path::Path};
 use toml;
 
-mod cache;
-mod igdb_client;
-mod steamdb;
 use crate::config::CONFIG;
 use crate::library::igdb_client::IgdbClient;
 use crate::library::steamdb::SteamAssetsClient;
@@ -25,9 +22,14 @@ pub struct Game {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct ApiClient {
+    pub id: u32,
+    pub client: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadata {
-    pub appid: Option<u32>,
-    pub igdbid: Option<u32>,
+    pub api: ApiClient,
     pub store_pages: Option<Vec<String>>,
     pub name: Option<String>,
     pub icon: Option<String>,
@@ -223,15 +225,6 @@ async fn steam_game_data(
             } else {
                 None
             };
-
-            //// Example: Download an asset
-            //if let Some(header_image) = &assets.header_image {
-            //	println!("\nDownloading header image...");
-            //	match client.download_asset(header_image, "header_image.jpg").await {
-            //		Ok(_) => println!("Header image downloaded successfully!"),
-            //		Err(e) => println!("Failed to download header image: {}", e),
-            //	}
-            //}
         }
         Err(e) => {
             println!("Error fetching assets with icons: {}", e);
