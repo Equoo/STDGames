@@ -47,6 +47,10 @@
 const { invoke } = window.__TAURI__.core;
 const { shell } = window.__TAURI__;
 
+// import { listen } from '@tauri-apps/api/event';
+const { listen } = window.__TAURI__.event;
+
+
 async function setup_progressbar() {
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const progressBar = document.getElementById("progress-bar");
@@ -55,21 +59,27 @@ async function setup_progressbar() {
   progressBar.style.display = "block";
   progressBar.style.transition = "width 0.5s ease-in-out";
 
-  console.log("Setting up progress bar...");
-  let percent = 0;
-  let fake_percent = 0;
-  while (percent < 100) {
-    await sleep(50);
-    let state = await invoke("get_setup_state", {});
-	console.log("Current setup state:", state);
-    fake_percent =
-      Math.min(fake_percent + Math.random() * 0.3, 100 - 5) /
-      (state.progress || 50);
-    percent = state.progress + fake_percent;
-    progressBar.style.width = `${percent}%`;
-  }
-  percent = 100;
-  progressBar.style.width = `${percent}%`;
+	console.log("Setting up progress bar...");
+
+	listen("progressbar_update", (event) => {
+		console.log("progressbar update", event.payload);
+		progressBar.style.width = `${event.payload}%`;
+	});
+
+	// let percent = 0;
+	// let fake_percent = 0;
+  // while (percent < 100) {
+  //   await sleep(50);
+  //   let state = await invoke("get_setup_state", {});
+	// // console.log("Current setup state:", state);
+  //   fake_percent =
+  //     Math.min(fake_percent + Math.random() * 0.3, 100 - 5) /
+  //     (state.progress || 50);
+  //   percent = state.progress + fake_percent;
+  //   progressBar.style.width = `${percent}%`;
+  // }
+  // percent = 100;
+  // progressBar.style.width = `${percent}%`;
   //for (let i = 0; i <= 100; i++) {
   //	await sleep(50);
   //	progressBar.style.width = `${i}%`;

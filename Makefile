@@ -5,8 +5,6 @@ release:
 	@docker run -it --rm \
 		-v $(PWD)/:/app \
 		-v $(PWD)/src-tauri/target:/app/src-tauri/target \
-		-v $(HOME)/.cargo:/usr/local/cargo \
-		-v $(HOME)/.rustup:/usr/local/rustup \
 		stdbuild
 
 dev:
@@ -18,7 +16,7 @@ dev:
 		-v /sgoinfre:/sgoinfre \
 		-v /goinfre:/goinfre \
 		-v /tmp:/tmp \
-		-v $(PWD)/src-tauri/docker_target:/app/src-tauri/target \
+		-v $(PWD)/src-tauri/target_docker:/app/src-tauri/target \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v /dev/dri:/dev/dri \
 		-v /run/user/$(shell id -u)/at-spi/bus_0:/run/user/0/at-spi/bus_0 \

@@ -15,9 +15,9 @@ use crate::utils::copy_recursively;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct UserData {
-  username: String,
-  language: String,
-  steamid: Number
+	username: String,
+	language: String,
+	steamid: Number
 }
 
 pub struct Launcher {
@@ -56,7 +56,7 @@ async fn copy_config_files(config: &Option<Vec<ConfigPath>>, game: &str) -> Resu
 	if config.is_none() {
 		return Ok(());
 	}
-	
+
 	let user = env::var("USER").unwrap_or("".to_string());
 
 	for conf in config.as_ref().unwrap().clone() {
@@ -112,7 +112,7 @@ async fn copy_rconfig_files(launcher: &Launcher, config: &Option<Vec<Rconf>>, ga
 	if config.is_none() {
 		return Ok(());
 	}
-	
+
 	let user = env::var("USER").unwrap_or("".to_string());
 
 	for conf in config.as_ref().unwrap().clone() {
@@ -140,9 +140,9 @@ async fn copy_rconfig_files(launcher: &Launcher, config: &Option<Vec<Rconf>>, ga
 }
 
 fn resolve_symlink(path_str: String) -> Result<String, std::io::Error> {
-    let path = Path::new(&path_str);
-    let canonical = fs::canonicalize(path)?;
-    Ok(canonical.to_string_lossy().into_owned())
+	let path = Path::new(&path_str);
+	let canonical = fs::canonicalize(path)?;
+	Ok(canonical.to_string_lossy().into_owned())
 }
 
 impl Launcher {
@@ -161,7 +161,7 @@ impl Launcher {
 			println!("JUNEST_ENV is set to 1, skipping JUNEST launch.");
 			return Ok(());
 		}
-		
+
 		let running_process = self.running_process.lock().unwrap();
 		if running_process.is_some() {
 			drop(running_process);
@@ -177,14 +177,14 @@ impl Launcher {
 			return Ok(());
 		}
 		drop(running_process);
-		
+
 		let	data: &GameInfo = match self.library.get_game(game) {
-            Some(data) => data,
-            None => {
-                println!("Game '{}' not found!", game);
-                return Ok(());
-            },
-        };
+			Some(data) => data,
+			None => {
+				println!("Game '{}' not found!", game);
+				return Ok(());
+			},
+		};
 
 		let gamename = &data.name;
 
@@ -204,7 +204,7 @@ impl Launcher {
 		let user = env::var("USER").unwrap_or("".to_string());
 		let original_junest_home = format!("/sgoinfre/stdgames/.ressources/junest");
 		let junest_home = format!("/tmp/{user}/.stdgames/junest_home");
-		
+
 		let mut binds: HashMap<String, String> = HashMap::new();
 		let mut env_vars: HashMap<String, String> = data.env.clone();
 		env_vars.insert("JUNEST_HOME".to_string(), junest_home.to_string());
@@ -234,12 +234,12 @@ impl Launcher {
 
 		const PYTHONPATH: &str = "/usr/lib/python3/dist-packages";
 		env_vars.extend(HashMap::from([
-			(String::from("PYTHONPATH"), PYTHONPATH.to_string()),
-			(String::from("PROTONPATH"), protonpath.clone()),
-			(String::from("STEAM_COMPAT_DATA_PATH"), prefix.clone()),
-			(String::from("WINEPREFIX"), prefix),
-			(String::from("DXVK_ASYNC"), String::from("1")) ,
-			(String::from("LD_LIBRARY_PATH"), String::from("/usr/lib:/usr/lib32"))
+				(String::from("PYTHONPATH"), PYTHONPATH.to_string()),
+				(String::from("PROTONPATH"), protonpath.clone()),
+				(String::from("STEAM_COMPAT_DATA_PATH"), prefix.clone()),
+				(String::from("WINEPREFIX"), prefix),
+				(String::from("DXVK_ASYNC"), String::from("1")) ,
+				(String::from("LD_LIBRARY_PATH"), String::from("/usr/lib:/usr/lib32"))
 		]));
 
 		let game_command = match data.launch_type.as_str() {
@@ -319,7 +319,7 @@ impl Launcher {
 
 		println!("Launching game: {}", final_command);
 		let process = Command::new("sh")
-        	.arg("-c")
+			.arg("-c")
 			.arg(final_command)
 			.envs(&env_vars)
 			.spawn()
