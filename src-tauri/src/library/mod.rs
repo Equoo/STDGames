@@ -5,8 +5,6 @@ use std::{collections::HashMap, fs, path::Path};
 use toml;
 
 use crate::config::CONFIG;
-use crate::library::igdb_client::IgdbClient;
-use crate::library::steamdb::SteamAssetsClient;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Games {
@@ -29,7 +27,7 @@ pub struct ApiClient {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadata {
-    pub api: ApiClient,
+    pub api: Option<ApiClient>,
     pub store_pages: Option<Vec<String>>,
     pub name: Option<String>,
     pub icon: Option<String>,
@@ -181,80 +179,58 @@ fn format_toml_error(content: &str, error: &toml::de::Error, file_path: Option<&
     output
 }
 
-async fn steam_game_data(
-    client: &SteamAssetsClient,
-    meta: &mut GameMetadata,
-    appid: u32,
-) -> Result<()> {
-    match client.get_game_assets_with_icons(appid).await {
-        Ok(assets) => {
-            meta.name = Some(assets.name);
-            meta.description = assets.description;
-            meta.tags = Some(assets.genres);
-            meta.short_description = assets.short_description;
-            meta.logo = Some(assets.logo);
-            meta.icon = Some(assets.icon);
-            meta.hero = Some(assets.library_hero);
-            meta.cover = Some(assets.library_600x900);
-            meta.screenshots = if !assets.screenshots.is_empty() {
-                Some(assets.screenshots)
-            } else {
-                None
-            };
-            meta.movies_thumbnails = if !assets.movies.is_empty() {
-                Some(assets.movies.iter().map(|m| m.thumbnail.clone()).collect())
-            } else {
-                None
-            };
-            meta.movies = if !assets.movies.is_empty() {
-                Some(
-                    assets
-                        .movies
-                        .iter()
-                        .map(|m| {
-                            m.webm_urls
-                                .get("max")
-                                .or_else(|| m.mp4_urls.get("max"))
-                                .or_else(|| m.webm_urls.get("480"))
-                                .or_else(|| m.mp4_urls.get("480"))
-                                .cloned()
-                                .unwrap_or_default()
-                        })
-                        .collect(),
-                )
-            } else {
-                None
-            };
-        }
-        Err(e) => {
-            println!("Error fetching assets with icons: {}", e);
-        }
-    }
-
-    Ok(())
-}
-
 pub async fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
-    let steam_client = SteamAssetsClient::new(
-        Some("19A33BB7E5367795078D0F3BFB663BD9".to_string()),
-        "french".to_string(),
-    );
-    let mut igdb_client = IgdbClient::new(
-        "rggouo5m4dsiowf6upejcgzyskt2vj",
-        "pr902t650n6wrs7vax0fyk9twjjbuk",
-    )
-    .await?; // TODO: move this to config
+    let client = reqwest::Client::new();
 
-    igdb_client.load_igdb_games(&games).await?;
+    println!("Sending API request...");
+    let res = client
+        .post("http://localhost:3000/api/data")
+        .json(
+            &games
+                .iter()
+                .filter_map(|g| {
+                    g.metadata
+                        .api
+                        .as_ref()
+                        .map(|api| (g.slug.clone(), api).into())
+                })
+                .collect::<HashMap<String, &ApiClient>>(),
+        )
+        .send()
+        .await?;
 
-    for game in games {
-        if let Some(id) = game.metadata.appid {
-            steam_game_data(&steam_client, &mut game.metadata, id).await?;
-        }
-        if let Some(id) = game.metadata.igdbid {
-            igdb_client.fill_game_metadata(&mut game.metadata);
+    println!("API response status: {}", res.status());
+
+    let api_data: HashMap<String, GameMetadata> = res.json().await?;
+
+    for game in games.iter_mut() {
+        if let Some(data) = api_data.get(&game.slug) {
+            game.metadata.name = data.name.clone().or(game.metadata.name.clone());
+            game.metadata.description = data
+                .description
+                .clone()
+                .or(game.metadata.description.clone());
+            game.metadata.short_description = data
+                .short_description
+                .clone()
+                .or(game.metadata.short_description.clone());
+            game.metadata.icon = data.icon.clone().or(game.metadata.icon.clone());
+            game.metadata.logo = data.logo.clone().or(game.metadata.logo.clone());
+            game.metadata.hero = data.hero.clone().or(game.metadata.hero.clone());
+            game.metadata.cover = data.cover.clone().or(game.metadata.cover.clone());
+            game.metadata.screenshots = data
+                .screenshots
+                .clone()
+                .or(game.metadata.screenshots.clone());
+            game.metadata.movies = data.movies.clone().or(game.metadata.movies.clone());
+            game.metadata.movies_thumbnails = data
+                .movies_thumbnails
+                .clone()
+                .or(game.metadata.movies_thumbnails.clone());
+            game.metadata.tags = data.tags.clone().or(game.metadata.tags.clone());
         }
     }
+
     Ok(())
 }
 

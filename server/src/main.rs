@@ -10,6 +10,7 @@ use tower_http::services::ServeDir;
 use tokio::sync::Mutex;
 use std::sync::Arc;
 use std::collections::HashMap;
+use tracing::{Level, error};
 
 mod clients;
 use crate::clients::{ApiClient, GameMetadata};
@@ -21,6 +22,10 @@ struct AppState {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(Level::DEBUG)
+        .init();
+    
 	let clients = Arc::new(Mutex::new(clients::ApiClients::new("resources").await.expect("Failed to initialize API clients")));
 	let app_state = AppState { clients };
 
@@ -38,6 +43,8 @@ async fn main() {
 }
 
 async fn api_data(State(state): State<AppState>, Json(body): Json<HashMap<String, ApiClient>>) -> Json<HashMap<String, GameMetadata>> {
+    println!("Received API data request with {} clients", body.len());
+    
     let mut metadata = HashMap::new();
 
     for (name, client) in body {

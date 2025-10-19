@@ -12,6 +12,7 @@ dev:
 	@docker build -t stddev:latest -f Dockerfile.dev .
 	@docker run -it --rm \
 		--ipc=host \
+		--add-host=host.docker.internal:host-gateway \
 		-v $(PWD)/:/app \
 		-v /sgoinfre:/sgoinfre \
 		-v /goinfre:/goinfre \
