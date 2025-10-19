@@ -39,7 +39,7 @@ pub async fn setup_tools(app: AppHandle) -> Result<()> {
             .map_err(|e| anyhow!(e.to_string()))?
             .to_vec();
     }
-    library::load_api_data(&mut games).await;
+    println!("API DATA RESULT: {:?}", library::load_api_data(&mut games).await);
     {
         let mut games_mutex = app_state.games.lock().map_err(|e| anyhow!(e.to_string()))?;
         *games_mutex = games;

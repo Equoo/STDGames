@@ -41,7 +41,7 @@ impl Config {
         let libdir = if let Some(path) = cli.config {
             path
         } else {
-            format!("{resources_dir}/games.toml").to_string()
+            format!("{resources_dir}/games_dev.toml").to_string()
             // "/tmp/games.toml".to_string()
         };
 
