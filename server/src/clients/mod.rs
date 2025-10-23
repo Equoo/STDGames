@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 use tokio::fs;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Serialize};
+use tokio::task::JoinHandle;
+use tracing::{debug, info};
 
 mod igdb;
 mod steam;
@@ -14,35 +16,95 @@ pub struct ApiClient {
     pub client: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct GameMetadata {
-    pub api: ApiClient,
-    pub store_pages: Option<Vec<String>>,
-    pub name: Option<String>,
-    pub icon: Option<String>,
-    pub logo: Option<String>,
-    pub hero: Option<String>,
-    pub cover: Option<String>,
-    pub description: Option<String>,
-    pub short_description: Option<String>,
-    pub screenshots: Option<Vec<String>>,
-    pub movies: Option<Vec<String>>,
-    pub movies_thumbnails: Option<Vec<String>>,
-    pub tags: Option<Vec<String>>,
+#[derive(Debug, Clone)]
+pub struct GameAsset {
+	pub url: String,
+	pub file_path: PathBuf,
 }
 
-pub async fn download_asset(url: &String, file_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-	let response = reqwest::get(url.as_str()).await?;
-
-	if !response.status().is_success() {
-		return Err(format!("Failed to download asset: HTTP {}", response.status()).into());
+impl GameAsset {
+	pub fn new(url: String, file_path: PathBuf) -> Self {
+		Self { url, file_path }
 	}
 
-	let bytes = response.bytes().await?;
-	fs::create_dir_all(file_path.parent().unwrap()).await?;
-	tokio::fs::write(file_path, bytes).await?;
+	pub async fn download(&self) -> Result<(), Box<dyn std::error::Error>> {
+		debug!("Downloading asset from {}", self.url);
+		let response = reqwest::get(self.url.as_str()).await?;
 
-	Ok(())
+		if !response.status().is_success() {
+			debug!("Failed to download asset: HTTP {}", response.status());
+			return Err(format!("Failed to download asset: HTTP {}", response.status()).into());
+		}
+
+		let bytes = response.bytes().await?;
+		fs::create_dir_all(self.file_path.parent().unwrap()).await?;
+		tokio::fs::write(&self.file_path, bytes).await?;
+
+		Ok(())
+	}
+}
+
+#[derive(Debug, Clone)]
+pub struct GameAssetList {
+	pub assets: Vec<GameAsset>,
+}
+
+impl GameAssetList {
+	pub fn new() -> Self {
+		Self { assets: Vec::new() }
+	}
+
+	pub fn add_some_asset(&mut self, url: String, file_path: PathBuf) -> Option<usize> {
+		self.assets.push(GameAsset::new(url, file_path));
+		Some(self.assets.len() - 1)
+	}
+
+	pub fn add_asset(&mut self, url: String, file_path: PathBuf) -> usize {
+		self.assets.push(GameAsset::new(url, file_path));
+		self.assets.len() - 1
+	}
+
+	pub async fn download_all(&self) -> Result<(), Box<dyn std::error::Error>> {
+		let mut handles: Vec<JoinHandle<()>> = Vec::new();
+		
+		for asset in &self.assets {
+			let asset_cloned = asset.clone();
+			let handle = tokio::spawn(async move {
+				if let Err(e) = asset_cloned.download().await {
+					eprintln!("Error downloading asset {}: {}", asset_cloned.url, e);
+				}
+			});
+			handles.push(handle);
+		}
+
+		for handle in handles {
+			debug!("Waiting for asset download to complete");
+			handle.await?;
+		}
+
+		Ok(())
+	}
+
+	pub fn get_asset_paths(&self) -> Vec<String> {
+		self.assets.iter().map(|asset| asset.file_path.to_string_lossy().into_owned()).collect()
+	}
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct GameMetadata {
+    pub store_pages: Option<Vec<String>>,
+    pub name: Option<String>,
+    pub icon: Option<usize>,
+    pub logo: Option<usize>,
+    pub hero: Option<usize>,
+    pub cover: Option<usize>,
+    pub description: Option<String>,
+    pub short_description: Option<String>,
+    pub screenshots: Option<Vec<usize>>,
+    pub movies: Option<Vec<usize>>,
+    pub movies_thumbnails: Option<Vec<usize>>,
+    pub tags: Option<Vec<String>>,
+	pub assets: Vec<String>,
 }
 
 pub struct ApiClients {
@@ -67,12 +129,16 @@ impl ApiClients {
 	pub async fn fetch_game_metadata(&self, api: ApiClient, lang: &str) -> Option<GameMetadata> {
 		let resources_path = PathBuf::from(self.resources_path.clone()).join(api.client.as_str()).join(api.id.to_string());
 
+		info!("Fetching metadata for {} (ID: {})", api.client, api.id);
+		
 		let data_json_path = resources_path.join("data.json");
 		if data_json_path.exists() {
 			let data = fs::read_to_string(data_json_path).await.ok()?;
+			debug!("Loaded metadata from cache for {} (ID: {})", api.client, api.id);
 			let metadata: GameMetadata = serde_json::from_str(&data).ok()?;
 			Some(metadata)
 		} else {
+			debug!("Fetching metadata from API for {} (ID: {})", api.client, api.id);
 			match api.client.to_lowercase().as_str() {
 				"igdb" => self.igdb.fetch_download_data(&resources_path, api.id, lang).await,
 				"steam" => self.steam.fetch_download_data(&resources_path, api.id, lang).await,
