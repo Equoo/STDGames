@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 
-use crate::clients::{download_asset, GameMetadata};
+use crate::clients::{GameMetadata};
 
 #[derive(Deserialize)]
 struct IgdbApiAuthResponse {
