@@ -20,7 +20,7 @@ pub struct GameMetadataAPI {
     pub movies: Option<Vec<usize>>,
     pub movies_thumbnails: Option<Vec<usize>>,
     pub tags: Option<Vec<String>>,
-	pub assets: Vec<String>,
+    pub assets: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -208,12 +208,15 @@ pub async fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
 
     println!("Sending API request...");
     let res = client
-        .post("http://localhost:3000/api/data")
+        .post("http://37.59.106.4:2356/api/data")
         .json(
             &games
                 .iter()
                 .filter_map(|g| {
-                    g.metadata.api.as_ref().map(|api| (g.slug.clone(), api).into())
+                    g.metadata
+                        .api
+                        .as_ref()
+                        .map(|api| (g.slug.clone(), api).into())
                 })
                 .collect::<HashMap<String, &ApiClient>>(),
         )
@@ -227,55 +230,70 @@ pub async fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
     for game in games.iter_mut() {
         if let Some(data) = api_data.get_mut(&game.slug) {
             data.assets.iter_mut().for_each(|asset| {
-                *asset = asset.replace("resources/", "http://localhost:3000/cdn/");
+                *asset = asset.replace("resources/", "http://37.59.106.4:2356/cdn/");
             });
 
             game.metadata.name = game.metadata.name.clone().or(data.name.clone());
-            game.metadata.description = game.metadata
+            game.metadata.description = game
+                .metadata
                 .description
                 .clone()
                 .or(data.description.clone());
-            game.metadata.short_description = game.metadata
+            game.metadata.short_description = game
+                .metadata
                 .short_description
                 .clone()
                 .or(data.short_description.clone());
-            game.metadata.icon = game.metadata.icon.clone().or(get_asset(data.icon, &data.assets));
-            game.metadata.logo = game.metadata.logo.clone().or(get_asset(data.logo, &data.assets));
-            game.metadata.hero = game.metadata.hero.clone().or(get_asset(data.hero, &data.assets));
-            game.metadata.cover = game.metadata.cover.clone().or(get_asset(data.cover, &data.assets));
-            game.metadata.screenshots = game.metadata
-                .screenshots
+            game.metadata.icon = game
+                .metadata
+                .icon
                 .clone()
-                .or(match &data.screenshots {
-                    Some(screenshots) => Some(
-                        screenshots
-                            .iter()
-                            .map(|id| data.assets[*id].clone())
-                            .collect(),
-                    ),
-                    _ => None,
-                });
+                .or(get_asset(data.icon, &data.assets));
+            game.metadata.logo = game
+                .metadata
+                .logo
+                .clone()
+                .or(get_asset(data.logo, &data.assets));
+            game.metadata.hero = game
+                .metadata
+                .hero
+                .clone()
+                .or(get_asset(data.hero, &data.assets));
+            game.metadata.cover = game
+                .metadata
+                .cover
+                .clone()
+                .or(get_asset(data.cover, &data.assets));
+            game.metadata.screenshots =
+                game.metadata
+                    .screenshots
+                    .clone()
+                    .or(match &data.screenshots {
+                        Some(screenshots) => Some(
+                            screenshots
+                                .iter()
+                                .map(|id| data.assets[*id].clone())
+                                .collect(),
+                        ),
+                        _ => None,
+                    });
             game.metadata.movies = game.metadata.movies.clone().or(match &data.movies {
-                Some(movies) => Some(
-                    movies
-                        .iter()
-                        .map(|id| data.assets[*id].clone())
-                        .collect(),
-                ),
+                Some(movies) => Some(movies.iter().map(|id| data.assets[*id].clone()).collect()),
                 _ => None,
             });
-            game.metadata.movies_thumbnails = game.metadata
-                .movies_thumbnails
-                .clone()
-                .or(match &data.movies_thumbnails {
-                    Some(thumbnails) => Some(
-                        thumbnails
-                            .iter()
-                            .map(|id| data.assets[*id].clone())
-                            .collect(),
-                    ),
-                    _ => None,
-                });
+            game.metadata.movies_thumbnails =
+                game.metadata
+                    .movies_thumbnails
+                    .clone()
+                    .or(match &data.movies_thumbnails {
+                        Some(thumbnails) => Some(
+                            thumbnails
+                                .iter()
+                                .map(|id| data.assets[*id].clone())
+                                .collect(),
+                        ),
+                        _ => None,
+                    });
             game.metadata.tags = game.metadata.tags.clone().or(data.tags.clone());
         }
     }

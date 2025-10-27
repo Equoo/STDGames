@@ -55,7 +55,7 @@ async fn api_data(
     let mut metadata = HashMap::new();
 
     for (name, client) in body {
-        let clients = state.clients.lock().await;
+        let mut clients = state.clients.lock().await;
         if let Some(data) = clients.fetch_game_metadata(client, "french").await {
             metadata.insert(name, data);
         }
