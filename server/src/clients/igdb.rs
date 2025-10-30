@@ -1,9 +1,12 @@
-use crate::library::{Game, GameMetadata};
 use anyhow::Result;
 use reqwest::Client as ReqwestClient;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::error::Error;
+use std::path::PathBuf;
+use tracing::{debug, info};
+
+use crate::clients::{ApiClient, GameAssetList, GameMetadata};
 
 #[derive(Deserialize)]
 struct IgdbApiAuthResponse {
@@ -26,6 +29,7 @@ struct IgdbCover {
 #[derive(Deserialize, Clone)]
 struct IgdbGenres {
     slug: String,
+    name: String,
 }
 
 #[derive(Deserialize, Clone)]
@@ -91,23 +95,15 @@ impl IgdbClient {
         })
     }
 
-    async fn multiquery<T>(&self, fields: &[&str], games: &[u32]) -> Result<Vec<T>>
+    async fn multiquery<T>(&self, fields: &[&str], game: u32) -> Result<Vec<T>>
     where
         T: serde::de::DeserializeOwned + Clone,
     {
-        if games.is_empty() {
-            return Ok(vec![]);
-        }
         let query = format!(
-            "query games \"Get Games Infos\" {{ fields {}; where id = ({}); limit 500; }};",
+            "query games \"Get Games Infos\" {{ fields {}; where id = ({game}); limit 500; }};",
             fields.join(", "),
-            games
-                .into_iter()
-                .map(|game| game.to_string())
-                .collect::<Vec<_>>()
-                .join(", "),
         );
-        println!("query: {query}");
+        debug!("query: {query}");
         let res = self
             .reqwest_client
             .post("https://api.igdb.com/v4/multiquery")
@@ -122,14 +118,7 @@ impl IgdbClient {
         return Ok(data[0].result.clone());
     }
 
-    pub async fn load_igdb_games(&mut self, games: &Vec<Game>) -> Result<()> {
-        let igdb_ids: Vec<u32> = games
-            .iter()
-            .filter_map(|game| match game.metadata.igdbid {
-                Some(id) => game.metadata.igdbid,
-                _ => None,
-            })
-            .collect();
+    pub async fn load_igdb_game(&mut self, game: u32) -> Result<IgdbGameInfos> {
         let fields = [
             "slug",
             "name",
@@ -146,67 +135,96 @@ impl IgdbClient {
             // "artworks.width", "artworks.height",
             // "screenshots.width", "screenshots.height",
         ];
-        let igdb_games: Vec<IgdbGameInfos> = self.multiquery(&fields, &igdb_ids).await?;
-        for igdb_game in igdb_games {
-            self.cache.insert(igdb_game.id, igdb_game);
-        }
-        Ok(())
+        let igdb_games: Vec<IgdbGameInfos> = self.multiquery(&fields, game).await?;
+        Ok(igdb_games[0].clone())
     }
 
-	pub fn fill_game_metadata(&self, meta: &mut GameMetadata) {
-		if let Some(igdbid) = meta.igdbid {
-			if let Some(game_info) = self.cache.get(&igdbid) {
-				let data = game_info.clone();
-                
+    pub async fn fetch_download_data(
+        &mut self,
+        resources_path: &PathBuf,
+        app_id: u32,
+        lang: &str,
+    ) -> Option<GameMetadata> {
+        let mut assets = GameAssetList::new();
+        let data = self.load_igdb_game(app_id).await.ok()?;
 
-                meta.cover = data.cover.map(|cover| {
+        let cover = data.cover.map(|cover| {
+            assets.add_asset(
+                format!(
+                    "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
+                    "cover_big_2x", cover.image_id
+                ),
+                resources_path.join("cover.jpg"),
+            )
+        });
+
+        let hero = data.artworks.and_then(|artworks| {
+            artworks.get(0).map(|artwork| {
+                assets.add_asset(
                     format!(
                         "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
-                        "cover_big_2x", cover.image_id
-                    )
-                });
+                        "1080p_2x", artwork.image_id
+                    ),
+                    resources_path.join("library_hero.jpg"),
+                )
+            })
+        });
 
-                meta.hero = data
-                    .artworks
-                    .and_then(|mut artworks| {
-                        if !artworks.is_empty() {
-                            Some(artworks.remove(0))
-                        } else {
-                            None
-                        }
-                    })
-                    .map(|artwork| artwork.clone())
-                    .map(|artwork| {
+        let screenshots = data.screenshots.map(|screenshots| {
+            screenshots
+                .iter()
+                .map(|screenshot| {
+                    assets.add_asset(
                         format!(
                             "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
-                            "1080p_2x", artwork.image_id
-                        )
-                    });
+                            "1080p_2x", screenshot.image_id
+                        ),
+                        resources_path.join(format!("{}.jpg", screenshot.image_id)),
+                    )
+                })
+                .collect()
+        });
 
-                meta.screenshots = data.screenshots.map(|screenshots| {
-                    screenshots
-                        .into_iter()
-                        .map(|screenshot| {
-                            format!(
-                                "https://images.igdb.com/igdb/image/upload/t_{}/{}.jpg",
-                                "1080p_2x", screenshot.image_id
-                            )
-                        })
-                        .collect()
-                });
+        let movies = data.videos.map(|videos| {
+            videos
+                .iter()
+                .map(|video| {
+                    assets.add_asset(
+                        format!("https://www.youtube.com/watch?v={}", video.video_id),
+                        resources_path.join(format!("{}.mp4", video.video_id)),
+                    )
+                })
+                .collect()
+        });
 
-                meta.movies = data
-                    .videos
-                    .map(|videos| videos.into_iter().map(|video| video.video_id).collect());
+        let tags = data
+            .genres
+            .map(|genres| genres.iter().map(|v| v.name.clone()).collect());
 
-                meta.store_pages = None; // dont know what this should be
+        let metadata = GameMetadata {
+            store_pages: data
+                .websites
+                .map(|wbsts| wbsts.iter().map(|v| v.url.clone()).collect()),
+            name: Some(data.name.clone()),
+            icon: None,
+            logo: None,
+            hero: hero,
+            cover: cover,
+            description: Some(data.summary.clone()),
+            short_description: None,
+            screenshots: screenshots,
+            movies: movies,
+            movies_thumbnails: None,
+            tags: tags,
+            assets: assets.get_asset_paths(),
+        };
 
-                meta.icon = None;
-                meta.logo = None;
-                meta.short_description = None;
-                meta.movies_thumbnails = None;
-                meta.tags = None;
-            }
-        }
+        assets.download_all().await.ok()?;
+
+        let metadata_path = resources_path.join("data.json");
+        let metadata_json = serde_json::to_string_pretty(&metadata).ok()?;
+        tokio::fs::write(metadata_path, metadata_json).await.ok()?;
+
+        Some(metadata)
     }
 }
