@@ -14,10 +14,14 @@ pub fn add_launcher_to_desktop() -> Result<(), String> {
         "{}/.local/share/applications/stdgames.desktop",
         CONFIG.user_home
     );
+    println!("adding symlink '{}' -> '{}'", dest, CONFIG.desktop_file);
     if Path::new(&dest).exists() {
         fs_extra::remove_items(&[&dest]).map_err(|e| e.to_string())?;
     }
-    std::os::unix::fs::symlink(&CONFIG.desktop_file, &dest).map_err(|e| e.to_string())?;
+    match std::os::unix::fs::symlink(&CONFIG.desktop_file, &dest) {
+        Err(err) => eprintln!("error: {:#?}", err),
+        _ => {},
+    }
     Ok(())
 }
 
