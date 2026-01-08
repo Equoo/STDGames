@@ -1,1 +1,100 @@
 @import 'tailwindcss';
+
+/* ========================= BASICS ========================= */
+*,
+html,
+body {
+	user-select: none !important;
+	-webkit-user-select: none !important;
+	-moz-user-select: none !important;
+	-ms-user-select: none !important;
+	scroll-behavior: smooth;
+}
+
+body,
+html {
+	margin: 0;
+	padding: 0;
+	font-family: 'Inter', sans-serif;
+	color: white;
+	min-height: 100vh;
+	z-index: 1;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	color: #fff;
+	text-align: center;
+	margin: 0;
+	overflow: hidden;
+}
+
+/* background: */
+/* 		radial-gradient(circle at bottom left, rgba(255, 0, 204, 0.3), transparent 50%), */
+/* 		radial-gradient(circle at bottom right, rgba(0, 102, 255, 0.3), transparent 50%), */
+/* 		linear-gradient(to bottom, #000000, #000000); */
+/**/
+
+/* For video transparency (if supported by video format) */
+video {
+    background: transparent;
+}
+
+/* ========================= TOPBAR ========================= */
+
+.topbar {
+	position: sticky;
+	top: 0;
+	display: flex;
+	padding-top: 5px;
+	padding-right: 10px;
+	padding-bottom: 5px;
+	padding-left: 10px;
+
+	background: rgba(0, 0, 0, 0.8);
+	align-items: center;
+	justify-content: space-between;
+	z-index: 100;
+}
+
+.topbar img.logo {
+	width: 10%;
+	height: 10%;
+	margin-bottom: 0px;
+	object-fit: contain;
+}
+
+.topbar-content {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.left-group,
+.middle-group {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	margin-right: 10px;
+
+}
+
+.right-group {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	margin-left: auto;
+}
+
+.right-group img {
+	padding: 0;
+	width: 60%;
+	height: 60%;
+	object-fit: contain;
+	transition: all 0.2s ease-out;
+}
+
+
+
