@@ -4019,6 +4019,7 @@ dependencies = [
  "toml 0.9.5",
  "uzers",
  "walkdir",
+ "x11",
  "zip-extensions",
 ]
 
