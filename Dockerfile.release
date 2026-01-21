@@ -35,6 +35,7 @@ RUN apt update -y && \
     gstreamer1.0-libav \
     gstreamer1.0-vaapi \
     libvpx-dev \
+	libx11-dev \
   build-essential \
   curl \
   wget \

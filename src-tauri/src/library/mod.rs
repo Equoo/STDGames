@@ -67,6 +67,7 @@ pub struct GameLaunchData {
     pub epicgame: Option<bool>,
     pub environs: Option<HashMap<String, String>>,
     pub overlays: Vec<String>,
+    pub before: Option<Vec<String>>,
     pub start: Vec<String>,
     pub prestart: Option<Vec<String>>,
 }

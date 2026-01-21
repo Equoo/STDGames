@@ -35,10 +35,14 @@ impl GameExecution {
 			&overlay,
 		);
 
+        if data.before.is_some() {
+            cmd.args(data.before.clone().unwrap());
+        }
+
 		if data.proton.is_some() {
 			let proton = data.proton.as_ref().unwrap();
 			let prefix = format!("{}/{proton}", CONFIG.user_save_dir);
-			
+
 			cmd.env("STEAM_COMPAT_DATA_PATH", prefix.clone())
 			.env("WINEPREFIX", prefix)
 			.env("PROTONPATH", format!("{}/{}", CONFIG.protons_dir, proton));
@@ -52,14 +56,13 @@ impl GameExecution {
 			cmd.arg(CONFIG.umu_run.clone());
 		}
 
-		if data.winetricks.is_some() {
-			let mut trick_cmd = command_clone(&cmd);
-			trick_cmd.arg("winetricks")
-				.args(data.winetricks.as_ref().unwrap())
+		if data.prestart.is_some() {
+			let mut prestart_cmd = command_clone(&cmd);
+			prestart_cmd.args(data.prestart.as_ref().unwrap())
 				.spawn()
-				.with_context(|| format!("Failed to run winetricks for {}", name))?
+				.with_context(|| format!("Failed to run prestart for {}", name))?
 				.wait()
-				.with_context(|| format!("Failed to wait for winetricks to finish for {}", name))?;
+				.with_context(|| format!("Failed to wait for prestart to finish for {}", name))?;
 		}
 
 		cmd.args(&data.start)
