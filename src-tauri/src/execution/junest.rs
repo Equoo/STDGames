@@ -4,15 +4,17 @@ use uzers::get_current_uid;
 use crate::{
     config::CONFIG,
     execution::{GameExecution, Overlay},
+    utils::copy_savedata,
 };
 
 impl GameExecution {
     pub fn junest_cmd(environ: HashMap<String, String>, overlay: &Option<Overlay>) -> Command {
         let mut cmd = Command::new(CONFIG.junest_bin.clone());
 
-        let work_dir = if overlay.is_some() {
+        let work_dir = if let Some(overlay) = overlay {
+            overlay.src.iter().for_each(|src| { copy_savedata(src, &overlay.dst); });
             PathBuf::from(format!("/tmp/{}/stdgames/work", CONFIG.username))
-        } else {
+      } else {
             PathBuf::from(&CONFIG.user_home)
         };
 
