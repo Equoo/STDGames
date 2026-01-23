@@ -27,7 +27,7 @@ impl GameExecution {
 		] {
 			fs::create_dir_all(directory)?;
 		}
-		
+
 		copy_directory(
 			Path::new(&CONFIG.junest_home_dir),
 			Path::new(&CONFIG.temp_junest_home_dir),
