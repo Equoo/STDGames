@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+
+/* ========================= FONTS ========================= */
+@font-face {
+	font-family: 'Brunson';
+	src: url('$lib/assets/fonts/brunson/Brunson.ttf') format('truetype');
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Brunson Rough';
+	src: url('$lib/assets/fonts/brunson/Brunson Rough.ttf') format('truetype');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+/* ========================= RESPONSIVE SCALING ========================= */
+/* Base: 16px at 1920px viewport width */
+/* This makes 1rem = 16px at 1920px, and scales proportionally */
+:root {
+	font-size: calc(100vw / 120);
+}
+
+/* Clamp font size for very small/large screens */
+/* @media (max-width: 800px) { */
+/* 	:root { */
+/* 		font-size: calc(16px * (100vw / 800)); */
+/* 	} */
+/* } */
+
+/* ========================= BASICS ========================= */
+*,
+html,
+body {
+	user-select: none !important;
+	-webkit-user-select: none !important;
+	-moz-user-select: none !important;
+	-ms-user-select: none !important;
+	scroll-behavior: smooth;
+}
+
+body,
+html {
+	margin: 0;
+	padding: 0;
+	font-family: 'Inter', Arial, sans-serif;
+	color: white;
+	min-height: 100vh;
+	z-index: 1;
+}
+
+body {
+	text-align: center;
+	overflow: hidden;
+	background: #000;
+}
+
+/* For video transparency (if supported by video format) */
+video {
+	background: transparent;
+}
+
+/* ========================= SCROLLBAR ========================= */
+::-webkit-scrollbar {
+	width: 0.5rem;
+	height: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+	background: rgba(0, 0, 0, 0.2);
+	border-radius: 0.625rem;
+}
+
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(to bottom, rgba(39, 24, 36, 0.19), rgba(0, 102, 255, 0.66));
+	border-radius: 0.25rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(to bottom, #5a7ef0, #4a6bd7);
+}
+
+/* Firefox scrollbar */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: rgba(0, 102, 255, 0.66) rgba(0, 0, 0, 0.2);
+}
+
+/* ========================= UTILITIES ========================= */
+.hidden {
+	display: none !important;
+}
+
+/* ========================= SELECTION ========================= */
+::selection {
+	background: rgba(0, 102, 255, 0.3);
+	color: white;
+}
+
+/* ========================= FOCUS STYLES ========================= */
+:focus-visible {
+	outline: 0.125rem solid rgba(0, 102, 255, 0.6);
+	outline-offset: 0.125rem;
+}
+
+button:focus-visible {
+	outline: 0.125rem solid rgba(121, 250, 0, 0.6);
+}
