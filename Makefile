@@ -1,6 +1,9 @@
 .PHONY: release dev
 
-dev:	
+frontdev:
+	docker run --rm -it -p 5173:5173 -v $(shell pwd):/app -w /app node:20 npm run dev -- --host 0.0.0.0
+
+dev:
 	@xhost +local:docker
 	@docker build -t stddev:latest -f Dockerfile.dev .
 	@docker run -it --rm \
