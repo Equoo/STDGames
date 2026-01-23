@@ -4,7 +4,10 @@
   "version": "0.1.5",
   "identifier": "com.stdgames.launcher",
   "build": {
-    "frontendDist": "../src"
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../build"
   },
   "app": {
     "withGlobalTauri": true,
@@ -26,7 +29,7 @@
         "minimizable": true
       },
       {
-		    "maximized": true,
+		"maximized": true,
         "label": "main",
         "title": "std::Games",
         "visible": false,
