@@ -8,6 +8,14 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+
+	interface Window {
+		__TAURI__: {
+			core: {
+				invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
+			};
+		};
+	}
 }
 
 export {};

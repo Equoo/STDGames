@@ -28,12 +28,10 @@
 declare module '$env/static/private' {
 	export const TAURI_ENV_PLATFORM: string;
 	export const LANGUAGE: string;
-	export const NVIM: string;
 	export const USER: string;
 	export const npm_config_user_agent: string;
 	export const TAURI_CLI_VERBOSITY: string;
 	export const HOSTNAME: string;
-	export const NVIM_LOG_FILE: string;
 	export const XDG_SESSION_TYPE: string;
 	export const npm_node_execpath: string;
 	export const LD_LIBRARY_PATH: string;
@@ -105,7 +103,6 @@ declare module '$env/static/private' {
 	export const npm_lifecycle_event: string;
 	export const npm_package_version: string;
 	export const GDMSESSION: string;
-	export const MYVIMRC: string;
 	export const NO_AT_BRIDGE: string;
 	export const QT_ACCESSIBILITY: string;
 	export const RUSTUP_INIT_SKIP_PATH_CHECK: string;
@@ -160,12 +157,10 @@ declare module '$env/dynamic/private' {
 	export const env: {
 		TAURI_ENV_PLATFORM: string;
 		LANGUAGE: string;
-		NVIM: string;
 		USER: string;
 		npm_config_user_agent: string;
 		TAURI_CLI_VERBOSITY: string;
 		HOSTNAME: string;
-		NVIM_LOG_FILE: string;
 		XDG_SESSION_TYPE: string;
 		npm_node_execpath: string;
 		LD_LIBRARY_PATH: string;
@@ -237,7 +232,6 @@ declare module '$env/dynamic/private' {
 		npm_lifecycle_event: string;
 		npm_package_version: string;
 		GDMSESSION: string;
-		MYVIMRC: string;
 		NO_AT_BRIDGE: string;
 		QT_ACCESSIBILITY: string;
 		RUSTUP_INIT_SKIP_PATH_CHECK: string;
