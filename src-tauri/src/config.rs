@@ -31,9 +31,10 @@ pub struct Config {
 impl Config {
     pub fn default() -> Result<Config, Box<dyn Error>> {
         let username = env::var("USER")?;
-        let games_dir = "/sgoinfre/stdgames".to_string();
-        let resources_dir = format!("{games_dir}/.resources").to_string();
+        let std_dir = "/sgoinfre/stdgames".to_string();
+        let resources_dir = format!("{std_dir}/.resources").to_string();
         let temp_dir = format!("/tmp/{username}/stdgames").to_string();
+        let games_dir = format!("{temp_dir}/stdgames_files").to_string();
         let user_save_dir = format!("/sgoinfre/{username}/.stdgames_saves").to_string();
 
         let cli = Cli::parse();
