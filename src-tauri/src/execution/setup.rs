@@ -6,11 +6,14 @@ use zip_extensions::zip_extract;
 use std::{path::Path};
 use std::fs::{self, copy};
 use anyhow::Result;
+use std::process::Command;
+use std::os::unix::fs::PermissionsExt;
+use std::env;
 
 use crate::{
 	config::CONFIG,
 	execution::GameExecution,
-	utils::{copy_directory, is_authorized},
+	utils::{copy_directory, is_authorized, is_mounted},
 };
 
 impl GameExecution {
@@ -21,12 +24,40 @@ impl GameExecution {
 			))?;
 		}
 
-		for directory in [
+        for directory in [
 			CONFIG.junest_home_dir.clone(),
 			CONFIG.temp_junest_home_dir.clone(),
+            CONFIG.games_dir.clone()
 		] {
 			fs::create_dir_all(directory)?;
 		}
+
+        // Command::new("fusermount").args(vec!["-u", &CONFIG.games_dir]).spawn()?;
+
+        if !is_mounted("std@82.67.99.87:/shared") {
+            let home = env::var("HOME").expect("HOME not set");
+            let mut dest = PathBuf::from(home);
+            dest.push(".ssh/stdgame");
+
+            // Ensure .ssh directory exists
+            let ssh_dir = dest.parent().unwrap();
+            fs::create_dir_all(ssh_dir)?;
+
+            // Copy the file
+            fs::copy(&format!("{}/ssh_key", CONFIG.resources_dir), &dest)?;
+
+            // Set permissions to 600 (rw-------)
+            let permissions = fs::Permissions::from_mode(0o600);
+            fs::set_permissions(&dest, permissions)?; 
+
+            Command::new(format!("{}/sshfs", CONFIG.resources_dir)).args(vec![
+                "-p", "44424",
+                "-o", &format!("ssh_command=ssh -i {}", dest.to_str().unwrap()),
+                "std@82.67.99.87:/shared",
+                &CONFIG.games_dir,
+                "-o", "StrictHostKeyChecking=no,UserKnownHostsFile=/dev/null,compression=no,cache=yes,kernel_cache,max_read=131072,max_write=131072,Ciphers=aes128-gcm@openssh.com,auto_cache,attr_timeout=600,entry_timeout=600,negative_timeout=120,ServerAliveInterval=15,reconnect"
+            ]).spawn()?;
+        }
 
 		copy_directory(
 			Path::new(&CONFIG.junest_home_dir),
