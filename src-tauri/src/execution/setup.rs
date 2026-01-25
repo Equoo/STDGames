@@ -25,21 +25,22 @@ impl GameExecution {
 		}
 
         for directory in [
-			CONFIG.junest_home_dir.clone(),
-			CONFIG.temp_junest_home_dir.clone(),
-            CONFIG.games_dir.clone()
+			&CONFIG.junest_home_dir,
+			&CONFIG.temp_junest_home_dir,
 		] {
 			fs::create_dir_all(directory)?;
 		}
 
-        // Command::new("fusermount").args(vec!["-u", &CONFIG.games_dir]).spawn()?;
+        if  fs::read_dir(&CONFIG.games_dir).is_err() {
+            Command::new("fusermount").args(vec!["-u", &CONFIG.games_dir]).spawn()?;
+        }
 
         if !is_mounted("std@82.67.99.87:/shared") {
             let home = env::var("HOME").expect("HOME not set");
             let mut dest = PathBuf::from(home);
             dest.push(".ssh/stdgame");
 
-            // Ensure .ssh directory exists
+        // Ensure .ssh directory exists
             let ssh_dir = dest.parent().unwrap();
             fs::create_dir_all(ssh_dir)?;
 
