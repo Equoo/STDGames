@@ -50,11 +50,11 @@
 		flex: 0 0 20%;
 		flex-direction: column;
 		padding: 0 0.625rem;
-		color: #fff;
+		color: var(--text-primary);
 	}
 
 	.search-container {
-		background: rgba(0, 0, 0, 1);
+		background: transparent;
 		display: flex;
 		position: relative;
 		height: 3.125rem;
@@ -68,10 +68,10 @@
 		height: 80%;
 		width: 100%;
 		align-items: center;
-		background: rgba(20, 20, 30, 0.7);
-		border: 0.0625rem solid rgba(0, 102, 255, 0.3);
+		background: var(--bg-input);
+		border: 0.0625rem solid var(--border-subtle);
 		border-radius: 0.625rem;
-		backdrop-filter: blur(0.3125rem);
+		backdrop-filter: blur(0.5rem);
 		transition: all 0.2s ease;
 	}
 
@@ -81,7 +81,7 @@
 
 	.search-bar:focus-within {
 		border-color: rgba(121, 250, 0, 0.4);
-		background: rgba(0, 102, 255, 0.1);
+		background: var(--bg-card);
 	}
 
 	.search-icon {
@@ -90,7 +90,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--text-secondary);
 		font-size: 1.5rem;
 	}
 
@@ -99,14 +99,14 @@
 		min-width: 0;
 		padding: 0.25rem 0.5rem;
 		background: transparent;
-		color: white;
+		color: var(--text-primary);
 		font-size: 0.9rem;
 		border: none;
 		outline: none;
 	}
 
 	.search-bar input::placeholder {
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--text-secondary);
 	}
 
 	.sidebar-content {
@@ -133,7 +133,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		background-color: rgba(37, 66, 94, 0.48);
+		background-color: var(--bg-item);
 		border-radius: 0.3125rem;
 		margin: 0.125rem 0;
 		padding: 0.3125rem;
@@ -141,12 +141,12 @@
 		cursor: pointer;
 		transition: background-color 0.3s;
 		border: none;
-		color: white;
+		color: var(--text-primary);
 		text-align: left;
 	}
 
 	.game-list-item:hover {
-		background-color: rgba(50, 50, 50, 0.33);
+		background-color: var(--bg-card);
 	}
 
 	.game-list-item.running {

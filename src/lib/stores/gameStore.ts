@@ -10,8 +10,24 @@ export const runningGame = writable<string>('');
 // Currently selected game for preview
 export const selectedGame = writable<GameDisplay | null>(null);
 
-// Current view: 'library' or 'preview'
-export const currentView = writable<'library' | 'preview'>('library');
+// Current view: 'library', 'preview', or 'settings'
+export const currentView = writable<'library' | 'preview' | 'settings'>('library');
+
+// Theme store with localStorage persistence
+export type Theme = 'dark' | 'light';
+function createThemeStore() {
+	const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null) as Theme | null;
+	const { subscribe, set } = writable<Theme>(stored ?? 'dark');
+	return {
+		subscribe,
+		set: (value: Theme) => {
+			if (typeof localStorage !== 'undefined') localStorage.setItem('theme', value);
+			if (typeof document !== 'undefined') document.documentElement.setAttribute('data-theme', value);
+			set(value);
+		}
+	};
+}
+export const theme = createThemeStore();
 
 // Search query
 export const searchQuery = writable<string>('');

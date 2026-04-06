@@ -22,6 +22,7 @@
 	let items: HTMLElement[] = $state([]);
 	let scrollDir = $state<1 | -1>(1);
 	let lastScrollTime = 0;
+	let activeVideoIndex = $state<number | null>(null);
 	const SCROLL_DELAY_MS = 50;
 
 	function layoutItems() {
@@ -123,9 +124,8 @@
 
 		layoutItems();
 
-		// video handling
-		items[oldActive]?.querySelector('video')?.pause();
-		items[activeIndex]?.querySelector('video')?.play();
+		// reset active video when scrolling away
+		if (activeVideoIndex === oldActive) activeVideoIndex = null;
 		
 		// Update last scroll time
 		lastScrollTime = now;
@@ -216,28 +216,37 @@
 			{#each mediaItems as item, i}
 				<div class="carousel-item" class:video={item.type === 'video'}>
 					{#if item.type === 'video'}
-						<video
-							class="media-content"
-							muted
-							loop
-							autoplay={i === 0}
-							poster={item.thumbnail}
-						>
-							<source src={item.src} type="video/mp4" />
-							<track kind="captions" />
-						</video>
-						<div class="video-overlay">
-							<button
-								type="button"
-								class="play-btn"
-								aria-label="Play or pause video"
-								onclick={(e) => toggleVideo(e.currentTarget as HTMLButtonElement)}
+						{#if activeVideoIndex === i}
+							<video
+								class="media-content"
+								muted
+								loop
+								autoplay
+								preload="auto"
+								poster={item.thumbnail}
 							>
-								<svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
-									<polygon points="5,3 19,12 5,21"></polygon>
-								</svg>
-							</button>
-						</div>
+								<source src={item.src} type="video/mp4" />
+								<track kind="captions" />
+							</video>
+						{:else}
+							<img
+								class="media-content"
+								src={item.thumbnail || item.src}
+								alt="Video thumbnail"
+							/>
+							<div class="video-overlay" style="opacity: 1;">
+								<button
+									type="button"
+									class="play-btn"
+									aria-label="Play video"
+									onclick={() => { activeVideoIndex = i; }}
+								>
+									<svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
+										<polygon points="5,3 19,12 5,21"></polygon>
+									</svg>
+								</button>
+							</div>
+						{/if}
 					{:else}
 						<img class="media-content" src={item.src} alt="Screenshot {i + 1}" />
 					{/if}

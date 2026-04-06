@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { currentView } from '$lib/stores/gameStore';
+	import { currentView, theme } from '$lib/stores/gameStore';
 	import { addDesktopIcon, openUrl } from '$lib/api/system';
 	import logo from '$lib/assets/icons/stdgames.png';
 	import discordLogo from '$lib/assets/icons/discord_100x100.png';
-	import settingsIcon from '$lib/assets/icons/settings_white.png';
+	import settingsIconWhite from '$lib/assets/icons/settings_white.png';
+	import settingsIconBlack from '$lib/assets/icons/settings_black.png';
 
 	function handleLibraryClick() {
 		currentView.set('library');
@@ -14,7 +15,7 @@
 	}
 
 	function handleSettingsClick() {
-		console.log('Settings functionality to be implemented');
+		currentView.set('settings');
 	}
 </script>
 
@@ -37,7 +38,7 @@
 				<img src={discordLogo} alt="Discord" />
 			</button>
 			<button class="topbar-btn icon-btn" onclick={handleSettingsClick}>
-				<img src={settingsIcon} alt="Settings" />
+				<img src={$theme === 'light' ? settingsIconBlack : settingsIconWhite} alt="Settings" />
 			</button>
 		</div>
 	</div>
@@ -49,7 +50,8 @@
 		top: 0;
 		display: flex;
 		padding: 0.3125rem 0.625rem;
-		background: rgba(0, 0, 0, 0.8);
+		background: var(--bg-topbar);
+		backdrop-filter: blur(1rem);
 		align-items: center;
 		justify-content: space-between;
 		z-index: 100;
@@ -83,12 +85,12 @@
 		height: 2.5rem;
 		padding: 0.5rem 1rem;
 		border-radius: 0.625rem;
-		background: rgba(24, 24, 56, 0.5);
-		border: 0.125rem solid rgba(0, 102, 255, 0.212);
+		background: var(--bg-card);
+		border: 0.125rem solid var(--border-color);
 		font-family: 'Brunson', sans-serif;
 		font-size: 1rem;
 		letter-spacing: 0.125rem;
-		color: white;
+		color: var(--text-primary);
 		cursor: pointer;
 		transition: all 0.2s;
 	}

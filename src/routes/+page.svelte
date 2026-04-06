@@ -4,6 +4,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import Library from '$lib/components/Library.svelte';
 	import GamePreview from '$lib/components/GamePreview.svelte';
+	import Settings from '$lib/components/Settings.svelte';
 	import { gameLibrary, runningGame, currentView } from '$lib/stores/gameStore';
 	import { fetchGameLibrary, getRunningGame } from '$lib/api/games';
 
@@ -21,7 +22,7 @@
 		pollingInterval = setInterval(async () => {
 			const running = await getRunningGame();
 			runningGame.set(running);
-		}, 100);
+		}, 1000);
 	});
 
 	onDestroy(() => {
@@ -39,6 +40,8 @@
 
 		{#if $currentView === 'library'}
 			<Library />
+		{:else if $currentView === 'settings'}
+			<Settings />
 		{:else}
 			<GamePreview />
 		{/if}
@@ -52,8 +55,8 @@
 		left: 0;
 		height: calc(100% - 3.125rem);
 		width: 100%;
-		background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(46, 46, 46, 0.34));
-		backdrop-filter: blur(6.25rem);
+		background: var(--bg-frosted);
+		backdrop-filter: blur(var(--frosted-blur));
 	}
 
 	.big-container {

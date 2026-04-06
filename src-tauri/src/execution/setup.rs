@@ -31,11 +31,12 @@ impl GameExecution {
 			fs::create_dir_all(directory)?;
 		}
 
-        if  fs::read_dir(&CONFIG.games_dir).is_err() {
-            Command::new("fusermount").args(vec!["-u", &CONFIG.games_dir]).spawn()?;
+        if fs::read_dir(&CONFIG.games_dir).is_err() {
+            let _ = Command::new("fusermount").args(vec!["-u", &CONFIG.games_dir]).spawn();
         }
 
-        if !is_mounted("std@82.67.99.87:/shared") {
+        let ssh_key = format!("{}/ssh_key", CONFIG.resources_dir);
+        if !is_mounted("std@82.67.99.87:/shared") && Path::new(&ssh_key).exists() {
             let home = env::var("HOME").expect("HOME not set");
             let mut dest = PathBuf::from(home);
             dest.push(".ssh/stdgame");
@@ -45,11 +46,11 @@ impl GameExecution {
             fs::create_dir_all(ssh_dir)?;
 
             // Copy the file
-            fs::copy(&format!("{}/ssh_key", CONFIG.resources_dir), &dest)?;
+            fs::copy(&ssh_key, &dest)?;
 
             // Set permissions to 600 (rw-------)
             let permissions = fs::Permissions::from_mode(0o600);
-            fs::set_permissions(&dest, permissions)?; 
+            fs::set_permissions(&dest, permissions)?;
 
             Command::new(format!("{}/sshfs", CONFIG.resources_dir)).args(vec![
                 "-p", "44424",
@@ -68,7 +69,7 @@ impl GameExecution {
 			},
 		)?;
 
-		if !Path::new(&CONFIG.temp_umu_dir).exists() {
+		if !Path::new(&CONFIG.temp_umu_dir).exists() && Path::new(&CONFIG.archive_file).exists() {
 			let zip_file = format!("{}/{}", CONFIG.temp_dir, "umu.zip");
 			copy(CONFIG.archive_file.clone(), zip_file.clone())?;
 
