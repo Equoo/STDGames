@@ -35,6 +35,8 @@ impl GameExecution {
 			&overlay,
 		);
 
+        cmd.env("DRI_PRIME", "1");
+
         if data.before.is_some() {
             cmd.args(data.before.clone().unwrap());
         }
