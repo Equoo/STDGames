@@ -193,11 +193,18 @@
 	/* ── Scrollable list ── */
 	.sidebar-content {
 		display: flex;
+		flex: 1;
+		min-height: 0;
 		width: 100%;
-		height: auto;
-		overflow-y: auto;
+		overflow-y: scroll;
 		overflow-x: hidden;
 		direction: rtl;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(120, 50, 200, 0.25) transparent;
+	}
+
+	.sidebar-content:hover {
+		scrollbar-color: rgba(160, 80, 220, 0.65) transparent;
 	}
 
 	.game-list {
@@ -209,29 +216,6 @@
 		direction: ltr;
 	}
 
-	/* ── Scrollbar on the left — transparent until hover/scroll ── */
-	:global(.sidebar-content::-webkit-scrollbar) {
-		width: 0.3rem;
-	}
-
-	:global(.sidebar-content::-webkit-scrollbar-track) {
-		background: transparent;
-	}
-
-	:global(.sidebar-content::-webkit-scrollbar-thumb) {
-		background: transparent;
-		border-radius: 0.25rem;
-	}
-
-	:global([data-theme="dark"] .sidebar-content:hover::-webkit-scrollbar-thumb),
-	:global([data-theme="dark"] .sidebar-content.is-scrolling::-webkit-scrollbar-thumb) {
-		background: linear-gradient(to bottom, rgba(160, 80, 220, 0.5), rgba(120, 50, 200, 0.75));
-	}
-
-	:global([data-theme="light"] .sidebar-content:hover::-webkit-scrollbar-thumb),
-	:global([data-theme="light"] .sidebar-content.is-scrolling::-webkit-scrollbar-thumb) {
-		background: linear-gradient(to bottom, rgba(160, 110, 210, 0.5), rgba(130, 90, 200, 0.65));
-	}
 
 	/* ── List items ── */
 	.game-list-item {
@@ -283,10 +267,11 @@
 
 	/* Collapsed item layout */
 	.sidebar.collapsed .game-list-item {
-		justify-content: center;
-		padding: 0.4rem 0;
+		justify-content: flex-start;
+		padding: 0.4rem 0.3rem;
 		border-left-color: transparent !important;
 		transform: none !important;
+		background: none;
 	}
 
 	.sidebar.collapsed .item-name {

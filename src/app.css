@@ -139,48 +139,11 @@ video {
 }
 
 /* ========================= SCROLLBAR ========================= */
-::-webkit-scrollbar {
-	width: 0.4rem;
-	height: 0.4rem;
-}
-
-::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-/* Transparent by default, transition on hover */
-::-webkit-scrollbar-thumb {
-	background: transparent;
-	border-radius: 0.25rem;
-	transition: background 0.4s ease;
-}
-
-/* Dark — show while scrolling or on thumb hover */
-[data-theme="dark"] .is-scrolling::-webkit-scrollbar-thumb {
-	background: linear-gradient(to bottom, rgba(160, 80, 220, 0.5), rgba(120, 50, 200, 0.75));
-}
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-	background: linear-gradient(to bottom, rgba(180, 100, 240, 0.8), rgba(140, 70, 220, 0.95));
-}
-
-/* Light — show while scrolling or on thumb hover */
-[data-theme="light"] .is-scrolling::-webkit-scrollbar-thumb {
-	background: linear-gradient(to bottom, rgba(160, 110, 210, 0.4), rgba(130, 90, 200, 0.65));
-}
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-	background: linear-gradient(to bottom, rgba(160, 110, 210, 0.75), rgba(110, 70, 180, 0.9));
-}
-
-/* Firefox */
+/* scrollbar-width/color are the standard CSS properties — these work on WebKitGTK/Linux.
+   ::-webkit-scrollbar pseudo-elements are not supported on WebKitGTK and are removed. */
 * {
 	scrollbar-width: thin;
 	scrollbar-color: transparent transparent;
-}
-[data-theme="dark"] .is-scrolling {
-	scrollbar-color: rgba(140, 70, 220, 0.65) transparent;
-}
-[data-theme="light"] .is-scrolling {
-	scrollbar-color: rgba(130, 90, 200, 0.6) transparent;
 }
 
 /* ========================= UTILITIES ========================= */

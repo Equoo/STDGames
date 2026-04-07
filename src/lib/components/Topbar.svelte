@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { currentView } from '$lib/stores/gameStore';
-	import lettersLogo from '$lib/assets/icons/stdgames_letters_only.png';
+	import { currentView } from "$lib/stores/gameStore";
+	import lettersLogo from "$lib/assets/icons/stdgames_letters_only.png";
 
 	let mx = $state(0);
 	let my = $state(0);
@@ -11,14 +11,13 @@
 		my = e.clientY - rect.top;
 	}
 
-	function go(view: 'home' | 'library' | 'settings') {
+	function go(view: "home" | "library" | "settings") {
 		currentView.set(view);
 	}
 </script>
 
 <div class="topbar">
 	<div class="topbar-content">
-
 		<!-- Logo with mouse-tracking glow -->
 		<div
 			class="logo-wrapper"
@@ -34,19 +33,19 @@
 		<nav class="nav">
 			<button
 				class="nav-btn"
-				class:active={$currentView === 'home'}
-				onclick={() => go('home')}
-			>Home</button>
+				class:active={$currentView === "home"}
+				onclick={() => go("home")}>Home</button
+			>
 			<button
 				class="nav-btn"
-				class:active={$currentView === 'library'}
-				onclick={() => go('library')}
-			>Library</button>
+				class:active={$currentView === "library"}
+				onclick={() => go("library")}>Library</button
+			>
 			<button
 				class="nav-btn"
-				class:active={$currentView === 'settings'}
-				onclick={() => go('settings')}
-			>Settings</button>
+				class:active={$currentView === "settings"}
+				onclick={() => go("settings")}>Settings</button
+			>
 		</nav>
 	</div>
 </div>
@@ -58,8 +57,9 @@
 		display: flex;
 		height: 3.125rem;
 		padding: 0 1rem;
-		background: var(--bg-topbar);
-		backdrop-filter: blur(1rem);
+		background: var(--bg-panel);
+		backdrop-filter: blur(1.5rem) saturate(1.6);
+		-webkit-backdrop-filter: blur(1.5rem) saturate(1.6);
 		align-items: center;
 		z-index: 100;
 	}
@@ -98,8 +98,8 @@
 		transition: opacity 0.25s ease;
 
 		background: radial-gradient(
-			circle 1.8rem at var(--mx) var(--my),
-			rgba(255, 255, 255, 0.95) 0%,
+			circle 1rem at var(--mx) var(--my),
+			rgba(255, 255, 255, 0.8) 0%,
 			rgba(255, 0, 180, 0.85) 35%,
 			rgba(0, 180, 255, 0.5) 65%,
 			transparent 100%
@@ -118,6 +118,24 @@
 		mix-blend-mode: color-dodge;
 	}
 
+	:global([data-theme="dark"] .glow-layer) {
+		background: radial-gradient(
+			circle 1.2rem at var(--mx) var(--my),
+			rgba(255, 255, 255, 0.8) 0%,
+			rgba(47, 255, 0, 0.5) 35%,
+			rgba(255, 255, 255, 1) 65%,
+			transparent 100%
+		);
+	}
+	:global([data-theme="light"] .glow-layer) {
+		background: radial-gradient(
+			circle 1.2rem at var(--mx) var(--my),
+			rgba(255, 255, 255, 0.8) 0%,
+			rgba(255, 0, 180, 0.5) 35%,
+			rgba(0, 180, 255, 0.5) 65%,
+			transparent 100%
+		);
+	}
 	.logo-wrapper:hover .glow-layer {
 		opacity: 1;
 	}
@@ -137,12 +155,14 @@
 		background: transparent;
 		border: none;
 		border-radius: 0.3rem;
-		font-family: 'Brunson', sans-serif;
+		font-family: "Brunson", sans-serif;
 		font-size: 1rem;
 		letter-spacing: 0.125rem;
 		color: var(--text-secondary);
 		cursor: pointer;
-		transition: color 0.2s ease, background 0.2s ease;
+		transition:
+			color 0.2s ease,
+			background 0.2s ease;
 	}
 
 	.nav-btn:hover {
@@ -156,7 +176,7 @@
 
 	/* Animated underline indicator */
 	.nav-btn::after {
-		content: '';
+		content: "";
 		position: absolute;
 		bottom: 0.3rem;
 		left: 50%;
@@ -164,9 +184,15 @@
 		width: calc(100% - 1rem);
 		height: 0.15rem;
 		border-radius: 0.1rem;
-		background: linear-gradient(to right, rgba(0, 102, 255, 0.9), rgba(255, 0, 204, 0.9));
+		background: linear-gradient(
+			to right,
+			rgba(0, 102, 255, 0.9),
+			rgba(255, 0, 204, 0.9)
+		);
 		opacity: 0;
-		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+		transition:
+			transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 0.25s ease;
 	}
 
 	.nav-btn:hover::after {

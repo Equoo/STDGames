@@ -85,8 +85,14 @@
 <style>
 	.page {
 		flex: 1;
-		height: auto;
-		overflow-y: auto;
+		min-height: 0;
+		overflow-y: scroll;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(120, 50, 200, 0.25) transparent;
+	}
+
+	.page:hover {
+		scrollbar-color: rgba(160, 80, 220, 0.65) transparent;
 	}
 
 	.library-header {
