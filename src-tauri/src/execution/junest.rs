@@ -4,7 +4,6 @@ use uzers::get_current_uid;
 use crate::{
     config::CONFIG,
     execution::{GameExecution, Overlay},
-    utils::copy_savedata,
 };
 
 impl GameExecution {
@@ -12,12 +11,12 @@ impl GameExecution {
         let mut cmd = Command::new(CONFIG.junest_bin.clone());
 
         let work_dir = if let Some(overlay) = overlay {
-            overlay.src.iter().for_each(|src| { copy_savedata(src, &overlay.dst); });
             PathBuf::from(format!("/tmp/{}/stdgames/work", CONFIG.username))
       } else {
             PathBuf::from(&CONFIG.user_home)
         };
 
+        cmd.env_remove("LD_LIBRARY_PATH");
         cmd.env("JUNEST_HOME", CONFIG.temp_junest_home_dir.clone());
         cmd.env("PYTHONPATH", "/usr/lib/python3/dist-packages");
         cmd.envs(environ).current_dir(work_dir);
