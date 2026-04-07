@@ -8,6 +8,8 @@
 
 	let { game }: Props = $props();
 
+	let bgImage = $derived(game.hero || game.cover || game.screenshots?.[0] || '');
+
 	function handleClick() {
 		selectedGame.set(game);
 		currentView.set('preview');
@@ -19,64 +21,117 @@
 	class="game-card"
 	class:running={$runningGame === game.slug}
 	onclick={handleClick}
-	aria-label="Open {game.name || game.slug}"
+	title={game.name || game.slug}
 >
-	<div class="game-cover" style="background-image: url('{game.cover}');"></div>
+	<div class="card-bg" style="background-image: url('{bgImage}');"></div>
+	<div class="card-overlay"></div>
+	<div class="card-info">
+		{#if game.tags && game.tags.length > 0}
+			<div class="card-tags">
+				{#each game.tags.slice(0, 3) as tag}
+					<span class="card-tag">{tag}</span>
+				{/each}
+			</div>
+		{/if}
+		<p class="card-name">{game.name ?? game.slug}</p>
+	</div>
+	{#if $runningGame === game.slug}
+		<div class="running-badge">Running</div>
+	{/if}
 </button>
 
 <style>
 	.game-card {
-		display: flex;
-		flex-direction: column;
-		width: 12rem;
-		height: 17rem;
-		margin: 0.3125rem;
-		padding: 0.5rem;
-		border-radius: 0.625rem;
-		background: rgba(30, 30, 45, 0.6);
-		justify-content: center;
-		align-items: center;
-		text-align: center;
-		color: #fff;
-		backdrop-filter: blur(0.625rem);
-		border: 0.0625rem solid rgba(255, 255, 255, 0.1);
-		transition: all 0.3s ease;
+		display: block;
+		width: 100%;
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border-radius: 0.75rem;
+		overflow: hidden;
 		cursor: pointer;
+		border: 0.0625rem solid var(--border-color);
+		background: var(--bg-card);
+		padding: 0;
+		transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 	}
 
 	.game-card:hover {
-		transform: translateY(-0.3125rem);
-		box-shadow: 0 0.625rem 1.25rem rgba(0, 102, 255, 0.3);
+		transform: scale(1.025);
+		box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.45);
+		border-color: var(--border-subtle);
 	}
 
-	.game-cover {
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(145deg, #1e2a3a, #2a3a4a);
-		border-radius: 0.625rem;
+	.card-bg {
+		position: absolute;
+		inset: 0;
 		background-size: cover;
 		background-position: center;
+		background-color: var(--bg-input);
 		transition: transform 0.3s ease;
 	}
 
-	.game-card:hover .game-cover {
-		transform: scale(1.02);
+	.game-card:hover .card-bg {
+		transform: scale(1.06);
 	}
 
-	.game-card.running .game-cover {
-		padding-top: 50%;
+	.card-overlay {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 55%, transparent 100%);
 	}
 
-	.game-card.running .game-cover::after {
-		content: 'Running';
-		width: 100%;
-		height: 100%;
-		background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+	.card-info {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 0.8rem 0.9rem;
 		display: flex;
-		justify-content: center;
-		align-items: center;
+		flex-direction: column;
+		gap: 0.35rem;
+		text-align: left;
+	}
+
+	.card-name {
+		margin: 0;
+		font-family: 'Brunson', sans-serif;
+		font-size: 1rem;
+		letter-spacing: 0.05rem;
 		color: #fff;
-		border-radius: 0.625rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.card-tags {
+		display: flex;
+		gap: 0.3rem;
+		flex-wrap: wrap;
+	}
+
+	.card-tag {
+		font-size: 0.62rem;
+		padding: 0.15rem 0.45rem;
+		background: rgba(255,255,255,0.15);
+		border: 0.0625rem solid rgba(255,255,255,0.25);
+		border-radius: 0.25rem;
+		color: rgba(255,255,255,0.85);
+		text-transform: uppercase;
+		letter-spacing: 0.05rem;
+	}
+
+	.running-badge {
+		position: absolute;
+		top: 0.6rem;
+		right: 0.6rem;
+		padding: 0.2rem 0.6rem;
+		background: rgba(2, 122, 128, 0.85);
+		border: 0.0625rem solid rgba(105, 205, 4, 0.6);
+		border-radius: 0.3rem;
+		font-size: 0.65rem;
 		font-weight: bold;
+		color: rgba(105, 205, 4, 0.95);
+		text-transform: uppercase;
+		letter-spacing: 0.05rem;
 	}
 </style>

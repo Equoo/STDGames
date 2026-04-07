@@ -5,6 +5,7 @@
 	import Library from '$lib/components/Library.svelte';
 	import GamePreview from '$lib/components/GamePreview.svelte';
 	import Settings from '$lib/components/Settings.svelte';
+	import Recommendations from '$lib/components/Recommendations.svelte';
 	import { gameLibrary, runningGame, currentView } from '$lib/stores/gameStore';
 	import { fetchGameLibrary, getRunningGame } from '$lib/api/games';
 
@@ -38,7 +39,9 @@
 	<div class="big-container">
 		<Sidebar />
 
-		{#if $currentView === 'library'}
+		{#if $currentView === 'home'}
+			<Recommendations />
+		{:else if $currentView === 'library'}
 			<Library />
 		{:else if $currentView === 'settings'}
 			<Settings />

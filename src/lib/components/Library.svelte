@@ -92,21 +92,22 @@
 	.library-header {
 		position: sticky;
 		display: flex;
-		background: rgba(0, 0, 0, 0.6);
 		top: 0;
-		height: 3.75rem;
+		height: 4rem;
 		align-items: center;
 		justify-content: space-between;
-		backdrop-filter: blur(0.625rem);
-		z-index: 100;
-		padding: 0 0.625rem;
+		background: var(--bg-panel);
+		backdrop-filter: blur(1.5rem) saturate(1.6);
+		-webkit-backdrop-filter: blur(1.5rem) saturate(1.6);
+		border-bottom: 0.0625rem solid var(--border-color);
+		z-index: 2;
+		padding: 0 1rem;
 	}
 
 	.title {
 		margin: 0;
 		padding-left: 0.3125rem;
-		margin-left: 1%;
-		color: rgba(245, 245, 245, 0.9);
+		color: var(--text-primary);
 		font-family: 'Brunson', sans-serif;
 		font-size: 1.5rem;
 		letter-spacing: 0.3125rem;
@@ -117,25 +118,30 @@
 		display: flex;
 		height: 100%;
 		align-items: center;
-		gap: 0.625rem;
+		gap: 0.5rem;
 	}
 
 	.tag-button {
-		padding: 0.5rem 0.625rem;
-		border-radius: 0.625rem;
-		background: rgba(20, 20, 30, 0.7);
-		border: 0.0625rem solid rgba(0, 102, 255, 0.3);
-		color: white;
+		padding: 0.4rem 0.75rem;
+		border-radius: 0.5rem;
+		background: var(--bg-card);
+		border: 0.0625rem solid var(--border-color);
+		color: var(--text-secondary);
 		font-size: 0.8rem;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: color 0.2s, background-color 0.2s;
 		white-space: nowrap;
 	}
 
-	.tag-button:hover,
+	.tag-button:hover {
+		color: var(--text-primary);
+		background-color: var(--bg-input);
+	}
+
 	.tag-button.active {
-		background: rgba(0, 102, 255, 0.3);
-		border-color: rgba(121, 250, 0, 0.92);
+		background: rgba(0, 102, 255, 0.2);
+		border-color: rgba(121, 250, 0, 0.7);
+		color: var(--text-primary);
 	}
 
 	.custom-dropdown {
@@ -145,11 +151,11 @@
 	}
 
 	.dropdown-button {
-		background: rgba(20, 20, 30, 0.7);
-		padding: 0.5rem 0.625rem;
-		color: white;
-		font-size: 0.75rem;
-		border: 0.0625rem solid rgba(0, 102, 255, 0.3);
+		background: var(--bg-card);
+		padding: 0.4rem 0.75rem;
+		color: var(--text-secondary);
+		font-size: 0.8rem;
+		border: 0.0625rem solid var(--border-color);
 		border-radius: 0.5rem;
 		cursor: pointer;
 		transition: all 0.2s;
@@ -157,47 +163,52 @@
 
 	.dropdown-button:hover,
 	.dropdown-button.active {
-		background: rgba(0, 102, 255, 0.3);
-		border-color: rgba(121, 250, 0, 0.92);
+		color: var(--text-primary);
+		border-color: var(--border-subtle);
+		background: rgba(0, 102, 255, 0.15);
 	}
 
 	.dropdown-menu {
 		position: absolute;
 		top: 100%;
 		right: 0;
-		background: rgba(10, 10, 20, 0.95);
+		background: var(--bg-dropdown);
 		min-width: 11.25rem;
 		border-radius: 0.5rem;
-		box-shadow: 0 0.25rem 0.9375rem rgba(0, 0, 0, 0.3);
-		padding: 0;
-		margin: 0.3125rem 0 0 0;
+		border: 0.0625rem solid var(--border-subtle);
+		box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+		padding: 0.25rem;
+		margin: 0.25rem 0 0 0;
 		z-index: 200;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		gap: 0.125rem;
 	}
 
 	.dropdown-menu button {
-		padding: 0.625rem 0.9375rem;
-		color: white;
+		padding: 0.5rem 0.75rem;
+		color: var(--text-secondary);
 		cursor: pointer;
-		transition: background 0.2s;
+		transition: all 0.15s;
 		background: transparent;
 		border: none;
+		border-radius: 0.35rem;
 		text-align: left;
 		font-size: 0.85rem;
 		width: 100%;
 	}
 
 	.dropdown-menu button:hover {
-		background: rgba(255, 0, 204, 0.1);
+		background: var(--bg-card);
+		color: var(--text-primary);
 	}
 
 	.games-container {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		padding: 0.625rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+		gap: 1rem;
+		padding: 1.5rem;
 	}
 
 	.games-container.has-running :global(.game-card:not(.running)) {

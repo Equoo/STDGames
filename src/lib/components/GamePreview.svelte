@@ -1,20 +1,31 @@
 <script lang="ts">
-	import { selectedGame, currentView, runningGame } from '$lib/stores/gameStore';
-	import { launchGame, killRunningGame } from '$lib/api/games';
-	import Carousel from './Carousel.svelte';
+	import {
+		selectedGame,
+		currentView,
+		runningGame,
+		favorites,
+	} from "$lib/stores/gameStore";
+	import { launchGame, killRunningGame } from "$lib/api/games";
+	import Carousel from "./Carousel.svelte";
 
 	let isLaunching = $state(false);
 	let scrollY = $state(0);
 	let containerEl: HTMLElement | undefined = $state(undefined);
 
 	let artworkUrl = $derived(
-		$selectedGame?.hero || $selectedGame?.cover || $selectedGame?.screenshots?.[0] || ''
+		$selectedGame?.hero ||
+			$selectedGame?.cover ||
+			$selectedGame?.screenshots?.[0] ||
+			"",
 	);
 
 	let isRunning = $derived($runningGame === $selectedGame?.slug);
+	let isFavorite = $derived(
+		$selectedGame ? $favorites.includes($selectedGame.slug) : false,
+	);
 
 	function handleBackClick() {
-		currentView.set('library');
+		currentView.set("library");
 	}
 
 	async function handlePlayClick() {
@@ -34,49 +45,98 @@
 </script>
 
 {#if $selectedGame}
-	<div class="preview-container" bind:this={containerEl} onscroll={handleScroll}>
-
+	<div
+		class="preview-container"
+		bind:this={containerEl}
+		onscroll={handleScroll}
+	>
 		<!-- Hero -->
 		<div class="hero">
+			<button
+				class="fav-btn"
+				class:active={isFavorite}
+				onclick={() =>
+					$selectedGame && favorites.toggle($selectedGame.slug)}
+				title={isFavorite
+					? "Remove from favorites"
+					: "Add to favorites"}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path
+						d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+					/>
+				</svg>
+			</button>
 			<div
 				class="hero-bg"
-				style="background-image: url('{artworkUrl}'); transform: translateY({scrollY * 0.35}px) scale(1.15);"
+				style="background-image: url('{artworkUrl}');
+           transform: translateY({scrollY * 0.4}px);"
 			></div>
-			<div class="hero-fade"></div>
-
-			<div class="hero-content">
-				{#if $selectedGame.tags && $selectedGame.tags.length > 0}
-					<div class="tags">
-						{#each $selectedGame.tags as tag}
-							<span class="tag">{tag}</span>
-						{/each}
-					</div>
-				{/if}
-				<h1 class="game-title">{$selectedGame.name || $selectedGame.slug}</h1>
-
-				<div class="hero-actions">
-					<button
-						class="play-button"
-						class:kill={isRunning}
-						onclick={handlePlayClick}
-						disabled={isLaunching}
-					>
-						{isRunning ? 'Kill' : isLaunching ? 'Launching...' : 'Play'}
-					</button>
-					<button class="back-button" onclick={handleBackClick}>← Library</button>
+			{#if $selectedGame.tags && $selectedGame.tags.length > 0}
+				<div class="tags">
+					{#each $selectedGame.tags as tag}
+						<span class="tag">{tag}</span>
+					{/each}
 				</div>
-			</div>
+			{/if}
+			<div class="hero-fade"></div>
+			<div class="glass-transition"></div>
 		</div>
 
+		<!-- Scroll hint outside .hero so it stacks above hero-content (z:10) -->
+		<div class="scroll-hint" class:hidden={scrollY > 80}>
+			<span class="scroll-label">scroll</span>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="4"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<polyline points="6 9 12 15 18 9" />
+			</svg>
+		</div>
+
+		<div class="hero-content">
+			<h1 class="game-title">
+				{$selectedGame.name || $selectedGame.slug}
+			</h1>
+
+			<div class="hero-actions">
+				<button
+					class="play-button"
+					class:kill={isRunning}
+					onclick={handlePlayClick}
+					disabled={isLaunching}
+				>
+					{isRunning ? "Kill" : isLaunching ? "Launching..." : "Play"}
+				</button>
+				<button class="back-button" onclick={handleBackClick}
+					>← Library</button
+				>
+			</div>
+		</div>
 		<!-- Content: progressive frosted glass from transparent → solid -->
 		<div class="content">
 			{#if $selectedGame.description || $selectedGame.short_description}
 				<div class="description-section">
 					{#if $selectedGame.short_description}
-						<p class="short-desc">{$selectedGame.short_description}</p>
+						<p class="short-desc">
+							{$selectedGame.short_description}
+						</p>
 					{/if}
 					{#if $selectedGame.description}
-						<div class="long-desc">{@html $selectedGame.description}</div>
+						<div class="long-desc">
+							{@html $selectedGame.description}
+						</div>
 					{/if}
 				</div>
 			{/if}
@@ -89,7 +149,6 @@
 				/>
 			</div>
 		</div>
-
 	</div>
 {/if}
 
@@ -105,18 +164,20 @@
 
 	/* ── Hero ── */
 	.hero {
-		position: relative;
+		position: absolute;
+		top: 0;
+		left: 0;
 		width: 100%;
-		height: 48vh;
+		height: 100vh;
+		z-index: 0;
 		overflow: hidden;
-		flex-shrink: 0;
 	}
 
 	.hero-bg {
 		position: absolute;
-		inset: -15% 0 -15%;
+		inset: -10% 0 -10%;
 		background-size: cover;
-		background-position: center top;
+		background-position: center 35%;
 		background-repeat: no-repeat;
 		will-change: transform;
 	}
@@ -124,29 +185,13 @@
 	.hero-fade {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			to bottom,
-			rgba(0, 0, 0, 0) 0%,
-			rgba(0, 0, 0, 0.15) 45%,
-			rgba(0, 0, 0, 0.72) 80%,
-			rgba(0, 0, 0, 0.88) 100%
-		);
 		pointer-events: none;
-	}
-
-	.hero-content {
-		position: absolute;
-		bottom: 1.25rem;
-		left: 1.75rem;
-		z-index: 5;
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
 	}
 
 	.tags {
 		display: flex;
-		gap: 0.4rem;
+		margin: 1rem;
+		gap: 1rem;
 		flex-wrap: wrap;
 	}
 
@@ -162,11 +207,31 @@
 		letter-spacing: 0.05rem;
 	}
 
+	:global([data-theme="dark"] .tag  ){
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	:global([data-theme="light"] .tag ){
+		color: rgba(0, 0, 0, 0.9);
+	}
+	.hero-content {
+		position: sticky;
+		margin-top: 80vh;
+		top: 2rem; 
+		left: 1.75rem;
+		z-index: 10;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		width: fit-content;
+	}
+
 	.game-title {
 		margin: 0;
-		font-family: 'Brunson', sans-serif;
+		font-family: "Brunson", sans-serif;
 		font-size: 2.8rem;
 		color: #fff;
+		text-align: left;
 		text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.8);
 		letter-spacing: 0.1rem;
 		line-height: 1;
@@ -192,9 +257,19 @@
 		transition: all 0.2s ease;
 	}
 
-	.play-button:hover { transform: translateY(-0.1rem); box-shadow: 0 0.4rem 1.2rem rgba(0, 102, 255, 0.7); }
-	.play-button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-	.play-button.kill { background: linear-gradient(135deg, #e00, #ff4500); box-shadow: 0 0.25rem 0.9rem rgba(220, 0, 0, 0.45); }
+	.play-button:hover {
+		transform: translateY(-0.1rem);
+		box-shadow: 0 0.4rem 1.2rem rgba(0, 102, 255, 0.7);
+	}
+	.play-button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
+	}
+	.play-button.kill {
+		background: linear-gradient(135deg, #e00, #ff4500);
+		box-shadow: 0 0.25rem 0.9rem rgba(220, 0, 0, 0.45);
+	}
 
 	.back-button {
 		padding: 0.55rem 1.1rem;
@@ -208,22 +283,165 @@
 		transition: all 0.2s;
 	}
 
-	.back-button:hover { background: rgba(255, 255, 255, 0.22); }
+	:global([data-theme="dark"] .back-button ){
+		color: rgba(255, 255, 255, 0.9);
+	}
 
-	/* ── Content: transparent at top → solid at bottom ── */
+	:global([data-theme="light"] .back-button ){
+		color: rgba(0, 0, 0, 0.9);
+	}
+	.back-button:hover {
+		background: rgba(255, 255, 255, 0.22);
+	}
+
 	.content {
 		position: relative;
 		z-index: 3;
-		background: linear-gradient(to bottom,
-			var(--content-fade-start) 0%,
-			var(--content-fade-mid) 20%,
-			var(--content-fade-end) 42%
+		top: 0vh;
+		width: 100%;
+		height: 200vh;
+		background: linear-gradient(
+			to bottom,
+			var(--content-fade-start) 100%,
+			var(--content-fade-mid) 100%,
+			var(--content-fade-end) 100%
 		);
+	}
+
+	.glass-transition {
+		position: absolute;
+		bottom: 0;
+		top: auto;
+		left: 0;
+		right: 0;
+		height: 30vh;
+		pointer-events: none;
+		z-index: 1;
+		backdrop-filter: blur(1.8rem) saturate(1.5);
+		-webkit-backdrop-filter: blur(1.8rem) saturate(1.5);
+		background: linear-gradient(
+			to bottom,
+			transparent 0%,
+			var(--content-fade-mid) 55%,
+			var(--content-fade-end) 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0%,
+			rgba(0, 0, 0, 0.5) 25%,
+			rgba(0, 0, 0, 0.85) 60%,
+			black 100%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0%,
+			rgba(0, 0, 0, 0.5) 25%,
+			rgba(0, 0, 0, 0.85) 60%,
+			black 100%
+		);
+	}
+
+	/* ── Favorite button ── */
+	.fav-btn {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		z-index: 5;
+		width: 2.4rem;
+		height: 2.4rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+		border: 0.0625rem solid rgba(255, 255, 255, 0.25);
+		background: rgba(0, 0, 0, 0.35);
+		backdrop-filter: blur(0.5rem);
+		cursor: pointer;
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease,
+			transform 0.15s ease;
+	}
+
+	.fav-btn:hover {
+		background: rgba(0, 0, 0, 0.55);
+		border-color: rgba(255, 80, 120, 0.6);
+		transform: scale(1.1);
+	}
+
+	.fav-btn svg {
+		width: 1.1rem;
+		height: 1.1rem;
+		fill: none;
+		stroke: rgba(255, 255, 255, 0.7);
+		transition:
+			fill 0.2s ease,
+			stroke 0.2s ease;
+	}
+
+	.fav-btn.active svg {
+		fill: rgba(255, 60, 100, 0.9);
+		stroke: rgba(255, 60, 100, 0.9);
+	}
+
+	.fav-btn:hover svg {
+		stroke: rgba(255, 100, 130, 0.9);
+	}
+
+	/* ── Scroll hint ── */
+	.scroll-hint {
+		position: absolute;
+		top: 89vh;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 5;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		color: rgba(255, 255, 255, 0.7);
+		opacity: 1;
+		transition: opacity 1s ease;
+		pointer-events: none;
+	}
+	:global([data-theme="dark"] .scroll-hint ){
+		color: rgba(255, 255, 255, 0.7);
+	}
+	:global([data-theme="light"] .scroll-hint ){
+		color: rgba(0, 0, 0, 0.7);
+	}
+	.scroll-hint.hidden {
+		transition: opacity 2s ease-in-out;
+		opacity: 0;
+	}
+
+	.scroll-label {
+		font-size: 1rem;
+		letter-spacing: 0.15rem;
+		opacity: 1;
+		transition: opacity 1s ease;
+		text-transform: uppercase;
+	}
+
+	.scroll-hint svg {
+		width: 1.3rem;
+		height: 1.3rem;
+		animation: bounce-down 1.8s ease-in-out infinite;
+	}
+
+	@keyframes bounce-down {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(0.35rem);
+		}
 	}
 
 	/* ── Description ── */
 	.description-section {
-		padding: 1.5rem 1.75rem 1.25rem;
+		padding: 0.3rem 1.75rem 1.25rem;
 		max-width: 75%;
 		display: flex;
 		flex-direction: column;
@@ -235,7 +453,7 @@
 
 	.short-desc {
 		margin: 0;
-		font-size: 0.95rem;
+		font-size: 1rem;
 		line-height: 1.65;
 		color: var(--text-secondary);
 	}
@@ -246,8 +464,13 @@
 		color: var(--text-primary);
 	}
 
-	.long-desc :global(img) { max-width: 100%; height: auto; }
-	.long-desc :global(video) { max-width: 100%; }
+	.long-desc :global(img) {
+		max-width: 100%;
+		height: auto;
+	}
+	.long-desc :global(video) {
+		max-width: 100%;
+	}
 
 	/* ── Carousel ── */
 	.carousel-section {

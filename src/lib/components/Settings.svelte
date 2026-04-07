@@ -1,19 +1,15 @@
 <script lang="ts">
-	import { theme, currentView } from '$lib/stores/gameStore';
-	import type { Theme } from '$lib/stores/gameStore';
+	import { theme } from "$lib/stores/gameStore";
+	import type { Theme } from "$lib/stores/gameStore";
+	import { addDesktopIcon, openUrl } from "$lib/api/system";
 
 	function setTheme(value: Theme) {
 		theme.set(value);
-	}
-
-	function handleBack() {
-		currentView.set('library');
 	}
 </script>
 
 <div class="settings page">
 	<div class="settings-header">
-		<button class="back-btn" onclick={handleBack}>← Back</button>
 		<h1 class="title">Settings</h1>
 	</div>
 
@@ -25,19 +21,48 @@
 				<div class="theme-toggle">
 					<button
 						class="theme-option"
-						class:active={$theme === 'dark'}
-						onclick={() => setTheme('dark')}
+						class:active={$theme === "dark"}
+						onclick={() => setTheme("dark")}>Dark</button
 					>
-						Dark
-					</button>
 					<button
 						class="theme-option"
-						class:active={$theme === 'light'}
-						onclick={() => setTheme('light')}
+						class:active={$theme === "light"}
+						onclick={() => setTheme("light")}>Light</button
 					>
-						Light
-					</button>
 				</div>
+			</div>
+		</section>
+
+		<section class="settings-section">
+			<h2 class="section-title">System</h2>
+			<div class="community-row">
+				<span class="setting-label">Add a shortcut to your desktop</span
+				>
+				<button class="action-btn community-btn" onclick={addDesktopIcon}
+					>Add to desktop</button
+				>
+			</div>
+		</section>
+
+		<section class="settings-section">
+			<h2 class="section-title">Community</h2>
+			<div class="community-row">
+				<span class="community-label">Join us on Discord</span>
+				<button
+					class="action-btn community-btn"
+					onclick={() => openUrl("https://discord.gg/YR7fwGy5D7")}
+				>
+					Discord
+				</button>
+			</div>
+			<div class="community-row">
+				<span class="community-label">Give us a star on Github</span>
+				<button
+					class="action-btn community-btn"
+					onclick={() => openUrl("https://github.com/Equoo/STDGames")}
+				>
+					Github
+				</button>
 			</div>
 		</section>
 	</div>
@@ -46,66 +71,51 @@
 <style>
 	.page {
 		flex: 1;
-		height: auto;
-		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 		color: var(--text-primary);
 	}
 
 	.settings-header {
-		position: sticky;
-		top: 0;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
-		gap: 1rem;
 		height: 3.75rem;
 		padding: 0 1.25rem;
 		background: var(--bg-panel);
 		backdrop-filter: blur(0.625rem);
-		z-index: 100;
+		border-bottom: 0.0625rem solid var(--border-color);
 	}
 
 	.title {
 		margin: 0;
-		font-family: 'Brunson', sans-serif;
+		font-family: "Brunson", sans-serif;
 		font-size: 1.5rem;
 		letter-spacing: 0.3125rem;
-		color: var(--text-primary);
 	}
 
-	.back-btn {
-		background: var(--bg-card);
-		border: 0.0625rem solid var(--border-subtle);
-		border-radius: 0.5rem;
-		color: var(--text-primary);
-		padding: 0.4rem 0.8rem;
-		font-size: 0.85rem;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.back-btn:hover {
-		background: rgba(0, 102, 255, 0.2);
-		border-color: rgba(255, 0, 204, 0.5);
-	}
-
+	/* ── 3-column body ── */
 	.settings-body {
+		flex: 1;
+		overflow-y: auto;
 		padding: 2rem;
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-		max-width: 40rem;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1.5rem;
+		align-content: start;
 	}
 
 	.settings-section {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.75rem;
 	}
 
 	.section-title {
 		margin: 0;
-		font-family: 'Brunson', sans-serif;
-		font-size: 1rem;
+		font-family: "Brunson", sans-serif;
+		font-size: 0.9rem;
 		letter-spacing: 0.2rem;
 		color: var(--text-secondary);
 		text-transform: uppercase;
@@ -115,16 +125,33 @@
 
 	.setting-row {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.75rem 1rem;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 0.85rem 1rem;
 		background: var(--bg-card);
 		border: 0.0625rem solid var(--border-color);
 		border-radius: 0.625rem;
 	}
 
 	.setting-label {
-		font-size: 0.95rem;
+		font-size: 0.88rem;
+		color: var(--text-secondary);
+	}
+
+	.community-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.85rem 1rem;
+		background: var(--bg-card);
+		border: 0.0625rem solid var(--border-color);
+		border-radius: 0.625rem;
+	}
+
+	.community-label {
+		font-size: 0.88rem;
+		color: var(--text-secondary);
 	}
 
 	.theme-toggle {
@@ -136,14 +163,15 @@
 	}
 
 	.theme-option {
-		padding: 0.35rem 1rem;
+		flex: 1;
+		padding: 0.35rem 0.5rem;
 		border-radius: 0.35rem;
 		border: none;
 		background: transparent;
 		color: var(--text-secondary);
-		font-size: 0.85rem;
+		font-size: 0.82rem;
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.18s;
 	}
 
 	.theme-option.active {
@@ -155,4 +183,32 @@
 	.theme-option:not(.active):hover {
 		color: var(--text-primary);
 	}
+
+	.action-btn {
+		padding: 0.4rem 0.9rem;
+		border-radius: 0.5rem;
+		border: 0.0625rem solid var(--border-subtle);
+		background: var(--bg-input);
+		color: var(--text-primary);
+		font-size: 0.82rem;
+		cursor: pointer;
+		transition: all 0.18s;
+		align-self: flex-start;
+	}
+
+	.action-btn:hover {
+		background: rgba(0, 102, 255, 0.2);
+		border-color: rgba(255, 0, 204, 0.5);
+	}
+
+	.community-btn {
+		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	.community-btn:hover {
+		background: rgba(88, 101, 242, 0.35);
+		border-color: rgba(88, 101, 242, 0.85);
+	}
+
 </style>

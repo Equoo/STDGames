@@ -10,8 +10,8 @@ export const runningGame = writable<string>('');
 // Currently selected game for preview
 export const selectedGame = writable<GameDisplay | null>(null);
 
-// Current view: 'library', 'preview', or 'settings'
-export const currentView = writable<'library' | 'preview' | 'settings'>('library');
+// Current view
+export const currentView = writable<'home' | 'library' | 'preview' | 'settings'>('home');
 
 // Theme store with localStorage persistence
 export type Theme = 'dark' | 'light';
@@ -28,6 +28,23 @@ function createThemeStore() {
 	};
 }
 export const theme = createThemeStore();
+
+// Favorites store with localStorage persistence
+function createFavoritesStore() {
+	const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('favorites') : null);
+	const initial: string[] = stored ? JSON.parse(stored) : [];
+	const { subscribe, update } = writable<string[]>(initial);
+	return {
+		subscribe,
+		toggle: (slug: string) => update(slugs => {
+			const next = slugs.includes(slug) ? slugs.filter(s => s !== slug) : [...slugs, slug];
+			if (typeof localStorage !== 'undefined') localStorage.setItem('favorites', JSON.stringify(next));
+			return next;
+		}),
+		isFavorite: (slugs: string[], slug: string) => slugs.includes(slug),
+	};
+}
+export const favorites = createFavoritesStore();
 
 // Search query
 export const searchQuery = writable<string>('');
