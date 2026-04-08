@@ -8,6 +8,7 @@
 	import { launchGame, killRunningGame } from "$lib/api/games";
 	import Carousel from "./Carousel.svelte";
 
+	let heroContentHeight = $state();
 	let isLaunching = $state(false);
 	let scrollY = $state(0);
 	let containerEl: HTMLElement | undefined = $state(undefined);
@@ -99,10 +100,19 @@
 					<polyline points="6 9 12 15 18 9" />
 				</svg>
 			</div>
+		</div>
 
-			<div class="hero-content">
+		<div
+		  class="hero-content-wrapper"
+		  style="margin-top: calc(100vh - 5.125em - {heroContentHeight}px)"
+		>
+			<div class="hero-content" bind:clientHeight={heroContentHeight}>
 				<h1 class="game-title">
-					{$selectedGame.name || $selectedGame.slug}
+					{#if $selectedGame.logo}
+						<img src="{$selectedGame.logo}" width="30%"/>
+					{:else}
+						{$selectedGame.name || $selectedGame.slug}
+					{/if}
 				</h1>
 
 				<div class="hero-actions">
@@ -216,15 +226,20 @@
 	:global([data-theme="light"] .tag ){
 		color: rgba(0, 0, 0, 0.9);
 	}
-	.hero-content {
+	.hero-content-wrapper {
 		position: -webkit-sticky;
-		margin-top: auto;
+		margin-left: 1.75rem;
 		top: 2rem;
 		left: 1.75rem;
+		z-index: 10;
+	}
+	.hero-content {
+		position: relative;
 		z-index: 10;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		height: fit-content;
 		width: fit-content;
 	}
 
