@@ -12,7 +12,7 @@ frontbuild:
 dev:
 	@mkdir -p /tmp/stdgame_target
 	@docker build -t stddev:latest -f Dockerfile.dev .
-	@env > .env.docker
+	@env | grep -v PATH > .env.docker
 	@docker run -it --rm \
 		--ipc=host \
 		--network host \
