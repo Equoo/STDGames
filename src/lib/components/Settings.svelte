@@ -2,7 +2,10 @@
 	import { theme } from "$lib/stores/gameStore";
 	import type { Theme } from "$lib/stores/gameStore";
 	import { addDesktopIcon, openUrl } from "$lib/api/system";
-	import BlurIn from "./Anim.svelte";
+	import BlurIn from "./anim/BlurIn.svelte";
+	import SlideIn from "./anim/SlideIn.svelte";
+	import FlyIn from "./anim/FlyIn.svelte";
+	import FadeIn from "./anim/FadeIn.svelte";
 
 	function setTheme(value: Theme) {
 		theme.set(value);
@@ -11,71 +14,73 @@
 
 <div class="settings page">
 	<div class="page-body scrollable">
-	<div class="settings-header page-headers">
-	<BlurIn>
-		<h1 class="page-title">Settings</h1>
-	</BlurIn>
-	</div>
+		<div class="settings-header page-headers">
+			<FlyIn>
+				<h1 class="page-title">Settings</h1>
+			</FlyIn>
+		</div>
 
-	<div class="settings-body">
-		<section class="settings-section">
-			<h2 class="section-title">Appearance</h2>
-			<div class="setting-row">
-				<span class="setting-label">Theme</span>
-				<div class="theme-toggle">
-					<button
-						class="theme-option"
-						class:active={$theme === "dark"}
-						onclick={() => setTheme("dark")}>Dark</button
+		<div class="settings-body">
+			<section class="settings-section">
+				<h2 class="section-title">Appearance</h2>
+				<div class="setting-row">
+					<span class="setting-label">Theme</span>
+					<div class="theme-toggle">
+						<button
+							class="theme-option"
+							class:active={$theme === "dark"}
+							onclick={() => setTheme("dark")}>Dark</button
+						>
+						<button
+							class="theme-option"
+							class:active={$theme === "light"}
+							onclick={() => setTheme("light")}>Light</button
+						>
+					</div>
+				</div>
+			</section>
+
+			<section class="settings-section">
+				<h2 class="section-title">System</h2>
+				<div class="community-row">
+					<span class="setting-label"
+						>Add a shortcut to your desktop</span
 					>
 					<button
-						class="theme-option"
-						class:active={$theme === "light"}
-						onclick={() => setTheme("light")}>Light</button
+						class="action-btn community-btn"
+						onclick={addDesktopIcon}>Add to desktop</button
 					>
 				</div>
-			</div>
-		</section>
+			</section>
 
-		<section class="settings-section">
-			<h2 class="section-title">System</h2>
-			<div class="community-row">
-				<span class="setting-label">Add a shortcut to your desktop</span
-				>
-				<button class="action-btn community-btn" onclick={addDesktopIcon}
-					>Add to desktop</button
-				>
-			</div>
-		</section>
-
-		<section class="settings-section">
-			<h2 class="section-title">Community</h2>
-			<div class="community-row">
-				<span class="community-label">Join us on Discord</span>
-				<button
-					class="action-btn community-btn"
-					onclick={() => openUrl("https://discord.gg/YR7fwGy5D7")}
-				>
-					Discord
-				</button>
-			</div>
-			<div class="community-row">
-				<span class="community-label">Give us a star on Github</span>
-				<button
-					class="action-btn community-btn"
-					onclick={() => openUrl("https://github.com/Equoo/STDGames")}
-				>
-					Github
-				</button>
-			</div>
-		</section>
-	</div>
+			<section class="settings-section">
+				<h2 class="section-title">Community</h2>
+				<div class="community-row">
+					<span class="community-label">Join us on Discord</span>
+					<button
+						class="action-btn community-btn"
+						onclick={() => openUrl("https://discord.gg/YR7fwGy5D7")}
+					>
+						Discord
+					</button>
+				</div>
+				<div class="community-row">
+					<span class="community-label">Give us a star on Github</span
+					>
+					<button
+						class="action-btn community-btn"
+						onclick={() =>
+							openUrl("https://github.com/Equoo/STDGames")}
+					>
+						Github
+					</button>
+				</div>
+			</section>
+		</div>
 	</div>
 </div>
 
 <style>
-
-
 	/* ── 3-column body ── */
 	.settings-body {
 		padding: 2rem;
@@ -163,23 +168,6 @@
 		color: var(--text-primary);
 	}
 
-	.action-btn {
-		padding: 0.4rem 0.9rem;
-		border-radius: 0.5rem;
-		border: 0.0625rem solid var(--border-subtle);
-		background: var(--bg-input);
-		color: var(--text-primary);
-		font-size: 0.82rem;
-		cursor: pointer;
-		transition: all 0.18s;
-		align-self: flex-start;
-	}
-
-	.action-btn:hover {
-		background: rgba(0, 102, 255, 0.2);
-		border-color: rgba(255, 0, 204, 0.5);
-	}
-
 	.community-btn {
 		margin-left: auto;
 		flex-shrink: 0;
@@ -189,5 +177,4 @@
 		background: rgba(88, 101, 242, 0.35);
 		border-color: rgba(88, 101, 242, 0.85);
 	}
-
 </style>

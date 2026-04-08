@@ -1,9 +1,11 @@
 <script lang="ts">
-	import GameCard from './GameCard.svelte';
-	import { gameLibrary, favorites } from '$lib/stores/gameStore';
-	import type { GameDisplay } from '$lib/types/game';
-	import BlurIn from "./Anim.svelte";
-
+	import GameCard from "./GameCard.svelte";
+	import { gameLibrary, favorites } from "$lib/stores/gameStore";
+	import type { GameDisplay } from "$lib/types/game";
+	import BlurIn from "./anim/BlurIn.svelte";
+	import SlideIn from "./anim/SlideIn.svelte";
+	import FlyIn from "./anim/FlyIn.svelte";
+	import FadeIn from "./anim/FadeIn.svelte";
 	let picks: GameDisplay[] = $state([]);
 	let initialized = false;
 
@@ -22,61 +24,74 @@
 		}
 		picks = copy.slice(0, 6);
 	}
-
 </script>
 
 <div class="page">
 	<div class="page-body scrollable">
-	<div class="rec-header page-headers">
-	<BlurIn>
-		<h1 class="page-title">Discover</h1>
-	</BlurIn>
-	</div>
+		<div class="rec-header page-headers">
+			<FlyIn>
+				<h1 class="page-title">Home</h1>
+			</FlyIn>
+		</div>
 
-	<div class="rec-body">
-		{#if $gameLibrary.length === 0}
-			<div class="empty">Loading your library…</div>
-		{:else}
-			<!-- Random -->
-			<div class="section">
-				<div class="section-header">
-					<h2 class="section-title">Random picks</h2>
-					<button class="reshuffle-btn" onclick={shuffle}>↺ Reshuffle</button>
-				</div>
-				<div class="rec-grid">
-					{#each picks as game (game.slug)}
-						<GameCard {game} />
-					{/each}
-				</div>
-			</div>
-
-			<!-- favorites -->
-			<div class="section">
-				<div class="section-header">
-					<h2 class="section-title">For you</h2>
-				</div>
-				{#if $favorites.length === 0}
-					<div class="placeholder">
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-						</svg>
-						<p>Heart a game in its preview to pin it here.</p>
+		<div class="rec-body">
+			{#if $gameLibrary.length === 0}
+				<div class="empty">Loading your library…</div>
+			{:else}
+				<!-- Random -->
+				<div class="section">
+					<div class="section-header">
+						<h2 class="section-title">Random picks</h2>
+						<button
+							class="action-btn reshuffle-btn"
+							onclick={shuffle}>↺ Reshuffle</button
+						>
 					</div>
-				{:else}
 					<div class="rec-grid">
-						{#each $gameLibrary.filter(g => $favorites.includes(g.slug)) as game (game.slug)}
-							<GameCard {game} />
+						{#each picks as game (game.slug)}
+							<FadeIn>
+								<GameCard {game} />
+							</FadeIn>
 						{/each}
 					</div>
-				{/if}
-			</div>
-		{/if}
-	</div>
+				</div>
+
+				<!-- favorites -->
+				<div class="section">
+					<div class="section-header">
+						<h2 class="section-title">For you</h2>
+					</div>
+					{#if $favorites.length === 0}
+						<div class="placeholder">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path
+									d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+								/>
+							</svg>
+							<p>Heart a game in its preview to pin it here.</p>
+						</div>
+					{:else}
+						<div class="rec-grid">
+							{#each $gameLibrary.filter( (g) => $favorites.includes(g.slug), ) as game (game.slug)}
+								<GameCard {game} />
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
 	</div>
 </div>
 
 <style>
-
 	/* ── Body ── */
 	.rec-body {
 		padding: 1.5rem;
@@ -105,7 +120,7 @@
 
 	.section-title {
 		margin: 0;
-		font-family: 'Brunson', sans-serif;
+		font-family: "Brunson", sans-serif;
 		font-size: 1rem;
 		letter-spacing: 0.2rem;
 		color: var(--text-secondary);
@@ -113,14 +128,14 @@
 	}
 
 	.reshuffle-btn {
-		background: transparent;
-		border: none;
 		color: var(--text-secondary);
 		font-size: 0.8rem;
 		cursor: pointer;
 		padding: 0.2rem 0.5rem;
 		border-radius: 0.3rem;
-		transition: color 0.2s, background 0.2s;
+		transition:
+			color 0.2s,
+			background 0.2s;
 	}
 
 	.reshuffle-btn:hover {

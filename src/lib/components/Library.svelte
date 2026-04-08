@@ -1,8 +1,16 @@
 <script lang="ts">
-	import GameCard from './GameCard.svelte';
-	import { filteredGames, sortOrder, activeTag, runningGame } from '$lib/stores/gameStore';
-	import type { SortOrder } from '$lib/types/game';
-	import BlurIn from "./Anim.svelte";
+	import GameCard from "./GameCard.svelte";
+	import {
+		filteredGames,
+		sortOrder,
+		activeTag,
+		runningGame,
+	} from "$lib/stores/gameStore";
+	import type { SortOrder } from "$lib/types/game";
+	import BlurIn from "./anim/BlurIn.svelte";
+	import SlideIn from "./anim/SlideIn.svelte";
+	import FlyIn from "./anim/FlyIn.svelte";
+	import FadeIn from "./anim/FadeIn.svelte";
 
 	let dropdownOpen = $state(false);
 
@@ -25,7 +33,7 @@
 
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
-		if (!target.closest('.custom-dropdown')) {
+		if (!target.closest(".custom-dropdown")) {
 			dropdownOpen = false;
 		}
 	}
@@ -36,59 +44,73 @@
 <div class="library page">
 	<div class="page-body scrollable">
 		<div class="library-header page-headers">
-		<BlurIn>
-			<h1 class="page-title">Library</h1>
-		</BlurIn>
-			<div class="right">
-				<button
-					type="button"
-					class="tag-button"
-					class:active={$activeTag === 'multiplayer'}
-					onclick={() => toggleTag('multiplayer')}
-				>
-					Multiplayer
-				</button>
-				<button
-					type="button"
-					class="tag-button"
-					class:active={$activeTag === 'solo'}
-					onclick={() => toggleTag('solo')}
-				>
-					Solo
-				</button>
-
-				<div class="custom-dropdown">
+			<FlyIn>
+				<h1 class="page-title">Library</h1>
+			</FlyIn>
+			<FadeIn>
+				<div class="right">
 					<button
 						type="button"
-						class="dropdown-button"
-						class:active={dropdownOpen}
-						onclick={toggleDropdown}
+						class="tag-button"
+						class:active={$activeTag === "multiplayer"}
+						onclick={() => toggleTag("multiplayer")}
 					>
-						Sort by ▼
+						Multiplayer
 					</button>
-					{#if dropdownOpen}
-						<div class="dropdown-menu" role="menu">
-							<button type="button" role="menuitem" onclick={() => setSortOrder('descending')}>
-								Name A → Z
-							</button>
-							<button type="button" role="menuitem" onclick={() => setSortOrder('ascending')}>
-								Name Z → A
-							</button>
-						</div>
-					{/if}
+					<button
+						type="button"
+						class="tag-button"
+						class:active={$activeTag === "solo"}
+						onclick={() => toggleTag("solo")}
+					>
+						Solo
+					</button>
+
+					<div class="custom-dropdown">
+						<button
+							type="button"
+							class="dropdown-button"
+							class:active={dropdownOpen}
+							onclick={toggleDropdown}
+						>
+							Sort by ▼
+						</button>
+						{#if dropdownOpen}
+							<div class="dropdown-menu" role="menu">
+								<button
+									type="button"
+									role="menuitem"
+									onclick={() => setSortOrder("descending")}
+								>
+									Name A → Z
+								</button>
+								<button
+									type="button"
+									role="menuitem"
+									onclick={() => setSortOrder("ascending")}
+								>
+									Name Z → A
+								</button>
+							</div>
+						{/if}
+					</div>
 				</div>
+			</FadeIn>
+		</div>
+		<FadeIn>
+			<div
+				class="games-container"
+				class:has-running={$runningGame !== ""}
+			>
+				{#each $filteredGames as game (game.slug)}
+					<GameCard {game} />
+				{/each}
 			</div>
-		</div>
-		<div class="games-container" class:has-running={$runningGame !== ''}>
-			{#each $filteredGames as game (game.slug)}
-				<GameCard {game} />
-			{/each}
-		</div>
+		</FadeIn>
 	</div>
 </div>
 
 <style>
-
 	.right {
 		display: flex;
 		height: 100%;
@@ -104,7 +126,9 @@
 		color: var(--text-secondary);
 		font-size: 0.8rem;
 		cursor: pointer;
-		transition: color 0.2s, background-color 0.2s;
+		transition:
+			color 0.2s,
+			background-color 0.2s;
 		white-space: nowrap;
 	}
 

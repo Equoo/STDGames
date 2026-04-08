@@ -36,6 +36,9 @@
 	--content-fade-start: rgba(3, 3, 15, 0);
 	--content-fade-mid: rgba(3, 3, 15, 0.55);
 	--content-fade-end: rgba(3, 3, 15, 0.97);
+	--btn-hover-bg-color:rgba(0, 102, 255, 0.2);
+	--btn-hover-border-color:rgba(121, 250, 0, 0.6);
+	--btn-active-outline: 0.125rem solid rgba(121, 250, 0, 0.6);
 }
 
 [data-theme="light"] {
@@ -56,6 +59,10 @@
 	--content-fade-start: rgba(240, 236, 248, 0);
 	--content-fade-mid: rgba(240, 236, 248, 0.55);
 	--content-fade-end: rgba(240, 236, 248, 0.97);
+	--btn-hover-bg-color:rgba(0, 102, 255, 0.2);
+	--btn-hover-border-color:rgba(255, 0, 204, 0.5);
+	--btn-active-outline: 0.125rem solid rgba(255, 0, 204, 0.6);
+
 }
 
 /* Dark mode — blue & pink glowing blobs on deep black */
@@ -159,13 +166,13 @@ video {
 	transform: translateZ(0);
 	backface-visibility: hidden;
 	perspective: 1000px;
-	will-change: transform;
+	will-change: auto transform;
 }
 
 /* ========================= GAME CARD ========================= */
 .game-card {
 	transform: translateZ(0);
-	will-change: transform;
+	will-change: auto tranform;
 	backface-visibility: hidden;
 	display: block;
 	width: 100%;
@@ -203,6 +210,7 @@ video {
 	text-transform: uppercase;
 	letter-spacing: 0.05rem;
 }
+
 /* ========================= PAGE ========================= */
 .page {
 	flex: 1;
@@ -210,6 +218,7 @@ video {
 	flex-direction: column;
 	padding-top: 3.125rem;
 	color: var(--text-primary);
+	will-change: auto tranform;
 }
 
 .page-body {
@@ -233,6 +242,7 @@ video {
 	scrollbar-width: thin;
 	scrollbar-color: rgba(120, 50, 200, 0.25) transparent;
 }
+
 .scrollable:hover {
 	scrollbar-color: rgba(160, 80, 220, 0.65) transparent;
 }
@@ -246,7 +256,7 @@ video {
 	height: 4rem;
 	align-items: center;
 	justify-content: space-between;
-	padding: 0 1rem;
+	padding: 0 1.75rem;
 	background: transparent;
 	z-index: 4;
 }
@@ -263,11 +273,29 @@ video {
 }
 
 /* ========================= FOCUS STYLES ========================= */
-:focus-visible {
+/* :focus-visible {
 	outline: 0.125rem solid rgba(0, 102, 255, 0.6);
 	outline-offset: 0.125rem;
 }
 
 button:focus-visible {
 	outline: 0.125rem solid rgba(121, 250, 0, 0.6);
+} */
+
+/* ========================= BUTTONS STYLES ========================= */
+.action-btn {
+	padding: 0.4rem 0.9rem;
+	border-radius: 1rem;
+	border: 0.0625rem solid var(--border-subtle);
+	background: var(--bg-input);
+	color: var(--text-primary);
+	font-size: 0.82rem;
+	cursor: pointer;
+	transition: all 0.18s;
+	align-self: flex-start;
+}
+
+.action-btn:hover {
+	background: var(--btn-hover-bg-color);
+	border-color: var(--btn-hover-border-color);
 }

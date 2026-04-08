@@ -54,7 +54,7 @@
 		background-color: var(--bg-input);
 		transition: transform 0.3s ease;
 		transform: translateZ(0);
-		will-change: transform;
+		will-change: auto transform;
 		backface-visibility: hidden;
 	}
 
@@ -67,7 +67,7 @@
 		inset: 0;
 		background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 55%, transparent 100%);
 		transition: transform 0.3s ease;
-		will-change: transform;
+		will-change: auto transform;
 		backface-visibility: hidden;
 	}
 
