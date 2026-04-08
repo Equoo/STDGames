@@ -73,11 +73,7 @@
 					/>
 				</svg>
 			</button>
-			<div
-				class="hero-bg"
-				style="background-image: url('{artworkUrl}');
-           transform: translateY({scrollY * 0.4}px);"
-			></div>
+			<img class="hero-bg" src="{artworkUrl}" style="transform: translateY({scrollY * 0.4}px);"/>
 			{#if $selectedGame.tags && $selectedGame.tags.length > 0}
 				<div class="tags">
 					{#each $selectedGame.tags as tag}
@@ -87,43 +83,44 @@
 			{/if}
 			<div class="hero-fade"></div>
 			<div class="glass-transition"></div>
-		</div>
 
-		<!-- Scroll hint outside .hero so it stacks above hero-content (z:10) -->
-		<div class="scroll-hint" class:hidden={scrollY > 80}>
-			<span class="scroll-label">scroll</span>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="4"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<polyline points="6 9 12 15 18 9" />
-			</svg>
-		</div>
-
-		<div class="hero-content">
-			<h1 class="game-title">
-				{$selectedGame.name || $selectedGame.slug}
-			</h1>
-
-			<div class="hero-actions">
-				<button
-					class="play-button"
-					class:kill={isRunning}
-					onclick={handlePlayClick}
-					disabled={isLaunching}
+			<!-- Scroll hint outside .hero so it stacks above hero-content (z:10) -->
+			<div class="scroll-hint" class:hidden={scrollY > 80}>
+				<span class="scroll-label">scroll</span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="4"
+					stroke-linecap="round"
+					stroke-linejoin="round"
 				>
-					{isRunning ? "Kill" : isLaunching ? "Launching..." : "Play"}
-				</button>
-				<button class="back-button" onclick={handleBackClick}
-					>← Library</button
-				>
+					<polyline points="6 9 12 15 18 9" />
+				</svg>
+			</div>
+
+			<div class="hero-content">
+				<h1 class="game-title">
+					{$selectedGame.name || $selectedGame.slug}
+				</h1>
+
+				<div class="hero-actions">
+					<button
+						class="play-button"
+						class:kill={isRunning}
+						onclick={handlePlayClick}
+						disabled={isLaunching}
+					>
+						{isRunning ? "Kill" : isLaunching ? "Launching..." : "Play"}
+					</button>
+					<button class="back-button" onclick={handleBackClick}
+						>← Library</button
+					>
+				</div>
 			</div>
 		</div>
+
 		<!-- Content: progressive frosted glass from transparent → solid -->
 		<div class="content">
 			{#if $selectedGame.description || $selectedGame.short_description}
@@ -168,18 +165,23 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: 100vh;
+		height: Calc(100vh - 3.125rem);
 		z-index: 0;
 		overflow: hidden;
 	}
 
 	.hero-bg {
-		position: absolute;
-		inset: -10% 0 -10%;
-		background-size: cover;
-		background-position: center 35%;
-		background-repeat: no-repeat;
 		will-change: transform;
+		position: absolute;
+		top: -10%;
+		left: 0;
+		width: 100%;
+		height: 120%;
+
+		object-fit: cover;
+		object-position: center 35%;
+
+		transform: translateZ(0);
 	}
 
 	.hero-fade {
@@ -215,9 +217,9 @@
 		color: rgba(0, 0, 0, 0.9);
 	}
 	.hero-content {
-		position: sticky;
-		margin-top: 80vh;
-		top: 2rem; 
+		position: -webkit-sticky;
+		margin-top: auto;
+		top: 2rem;
 		left: 1.75rem;
 		z-index: 10;
 		display: flex;
@@ -297,9 +299,9 @@
 	.content {
 		position: relative;
 		z-index: 3;
-		top: 0vh;
+		margin-top: Calc(100vh - 3.125em);
 		width: 100%;
-		height: 200vh;
+		height: auto;
 		background: linear-gradient(
 			to bottom,
 			var(--content-fade-start) 100%,
@@ -391,7 +393,7 @@
 	/* ── Scroll hint ── */
 	.scroll-hint {
 		position: absolute;
-		top: 89vh;
+		bottom: 0;
 		left: 50%;
 		transform: translateX(-50%);
 		z-index: 5;

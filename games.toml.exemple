@@ -4,9 +4,9 @@
 # MANGOHUD - set to 1 to enable MangoHud
 # MANGOHUD_CONFIG - config string for MangoHud, see
 # WINEDLLOVERRIDES - set to e.g. "winhttp.dll=n,b" to override DLL loading in Proton/Wine
-#                   - This exemple is usefull for unity games modding
-#                   - "n" means native, "b" means builtin
-#                   - Multiple overrides can be separated by semicolon, e.g. "winhttp.dll=n,b;d3d11.dll=n,b"
+#					- This exemple is usefull for unity games modding
+#					- "n" means native, "b" means builtin
+#					- Multiple overrides can be separated by semicolon, e.g. "winhttp.dll=n,b;d3d11.dll=n,b"
 # DXVK_HUD - set to e.g. "1,fps" to enable DXVK HUD
 # STORE - set to "steam" or "epic" to indicate the store used
 # GAMEID - set to the game's store ID (e.g. Steam AppID)
@@ -18,7 +18,6 @@
 # [[games]]
 # slug = "mygame"
 # status = "working"
-
 
 # [games.metadata]
 # api.id = 123456
@@ -39,18 +38,15 @@
 # movies_thumbnails = [ "movie1-thumb.png", "movie2-thumb.png" ]
 # tags = [ "Action", "Adventure", "Indie" ]
 
-
 # [games.launch]
 # proton = "ge9.23" # optional, use Proton version "ge9.23"
 # environ = { "STORE"= "steam", "GAMEID"= "123456", "DRI_PRIME"= "1", "MANGOHUD"= "1" } # optional, additional env variables
 # overlays = [ "$GAMES_DIR/mygame" ] # optional, paths to overlay directories
 # start = [ "mygame.sh", "-arg1", "value1" ] # command to start the game
 
-
 [[games]]
 slug = "battlenet"
 status = "working"
-
 
 [games.metadata]
 name = "BattleNet"
@@ -60,23 +56,19 @@ cover = "https://lutris.net/media/games/screenshots/Battle.net_001.png"
 description = "this is battle.net launcher."
 tags = [ "Store" ]
 
-
 [games.launch]
 proton = "ge10.25"
 overlays = [ "$GAMES_DIR/battlenet" ]
 start = [ "Battle.net-Setup.exe" ]
 
 
-
 [[games]]
 slug = "hytale"
 status = "working"
 
-
 [games.metadata]
 api.id = 113360
 api.client = "igdb"
-
 
 [games.launch]
 noruntime = true
@@ -85,16 +77,13 @@ overlays = [ "$GAMES_DIR/hytale" ]
 prestart = ["$GAMES_DIR/hytale/install.sh"]
 start = [ "AppRun" ]
 
-
 [[games]]
 slug = "norestforthewicked"
 status = "working"
 
-
 [games.metadata]
 api.id = 1371980
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge10.25"
@@ -102,11 +91,9 @@ environ = { "STORE"= "steam", "GAMEID"= "1371980", "DRI_PRIME"= "1","PROTON_USE_
 overlays = [ "$GAMES_DIR/norestforthewicked/No-Rest-For-The-Wicked-AnkerGames/NoRestForTheWicked" ]
 start = [ "NoRestForTheWicked.exe" ]
 
-
 [[games]]
 slug = "turzu"
 status = "working"
-
 
 
 [games.metadata]
@@ -118,18 +105,15 @@ description = "Yuzu is an open-source emulator for the Nintendo Switch from the 
 short_description = "Yuzu is an open-source emulator for the Nintendo Switch from the creators of Citra."
 tags = [ "Emulator" ]
 
-
 [games.launch]
 noruntime = true
 overlays = [ "$GAMES_DIR/turzu/additionnals/home" ]
 start = [ "$GAMES_DIR/turzu/start.sh" ]
 
 
-
 [[games]]
 slug = "steam"
 status = "working"
-
 
 [games.metadata]
 name = "Steam"
@@ -140,7 +124,6 @@ description = "Yuzu is an open-source emulator for the Nintendo Switch from the 
 short_description = "Yuzu is an open-source emulator for the Nintendo Switch from the creators of Citra."
 tags = [ "Store" ]
 
-
 [games.launch]
 noruntime = true
 # environ = { "HOME"="/tmp/$USER/stdgames/work" }
@@ -148,16 +131,13 @@ overlays = [ "$GAMES_DIR/steam" ]
 # start = [ "/usr/bin/env", "HOME=/tmp/$USER/stdgames/work", ".local/share/Steam/steam.sh" ]
 start = [ "/usr/bin/env", "HOME=/tmp/$USER/stdgames/work", "/usr/bin/steam" , "steam://run/480" ]
 
-
 [[games]]
 slug = "flyknight"
 status = "working"
 
-
 [games.metadata]
 api.id = 3108510
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -165,16 +145,13 @@ environ = { "STORE"= "steam", "GAMEID"= "3108510", "DRI_PRIME"= "1", "PROTON_USE
 overlays = [ "$GAMES_DIR/flyknight" ]
 start = [ "FlyKnightPrelude.exe" ]
 
-
 [[games]]
 slug = "slaythespire2"
 status = "working"
 
-
 [games.metadata]
 api.id = 2868840
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -183,16 +160,13 @@ overlays = [ "$GAMES_DIR/slaythespire2" ]
 start = [ "SlayTheSpire2.exe" ]
 
 
-
 [[games]]
 slug = "shroomandgloom"
 status = "working"
 
-
 [games.metadata]
 api.id = 3271280
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge10.25"
@@ -200,16 +174,13 @@ environ = { "STORE"= "steam", "GAMEID"= "3271280", "DRI_PRIME"= "1" }
 overlays = [ "$GAMES_DIR/shroomandgloom" ]
 start = [ "Shroom and Gloom.exe" ]
 
-
 [[games]]
 slug = "thelastheroofnostalgaia"
 status = "working"
 
-
 [games.metadata]
 api.id = 1766100
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge10.25"
@@ -218,16 +189,13 @@ overlays = [ "$GAMES_DIR/thelastheroofnostalgaia" ]
 start = [ "TLHON.exe" ]
 
 
-
 [[games]]
 slug = "logicworld"
 status = "working"
 
-
 [games.metadata]
 api.id = 1054340
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -236,16 +204,13 @@ overlays = [ "$GAMES_DIR/logicworld" ]
 start = [ "Logic_World.exe" ]
 
 
-
 [[games]]
 slug = "farmer_replaced"
 status = "working"
 
-
 [games.metadata]
 api.id = 2060160
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -254,16 +219,13 @@ overlays = [ "$GAMES_DIR/farmer_replaced" ]
 start = [ "TheFarmerWasReplaced.exe" ]
 
 
-
 [[games]]
 slug = "turing_complete"
 status = "working"
 
-
 [games.metadata]
 api.id = 1444480
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -272,16 +234,13 @@ overlays = [ "$GAMES_DIR/turing_complete" ]
 start = [ "Turing Complete.exe" ]
 
 
-
 [[games]]
 slug = "carimara"
 status = "working"
 
-
 [games.metadata]
 api.id = 3570370
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -292,16 +251,13 @@ start = [ "CARIMARA_BeneathTheForlornLimbs.exe" ]
 
 
 
-
 [[games]]
 slug = "balatro"
 status = "working"
 
-
 [games.metadata]
 api.id = 2379780
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -309,16 +265,13 @@ overlays = [ "$GAMES_DIR/balatro" ]
 start = [ "balatro" ]
 
 
-
 [[games]]
 slug = "portal2"
 status = "working"
 
-
 [games.metadata]
 api.id = 620
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -327,50 +280,41 @@ overlays = [ "$GAMES_DIR/portal2" ]
 start = [ "portal2.exe", "+cc_lang", "french", "+sv_lan", "1" ]
 
 
-
 #[[games]]
 #slug = "supervive"
 #status = "working"
 
-
 #[games.metadata]
 #api.id = 620
 #api.client = "steam"
-
 
 #[games.launch]
 #environ = { "DRI_PRIME"= "1" }
 #overlays = [ "$GAMES_DIR/portal2" ]
 #start = [ "portal2.exe", "+cc_lang", "french", "+sv_lan", "1" ]
 
-
 # Weird bug cannot launch any game or even use back button into menu
 # [[games]]
 # slug = "broforce"
 # status = "working"
 
-
 # [games.metadata]
 # api.id = 274190
 # api.client = "steam"
-
 
 # [games.launch]
 # noruntime = true
 # overlays = [ "$GAMES_DIR/broforce" ]
 # start = [ "start.sh" ]
 
-
 # SEGFAULT
 # [[games]]
 # slug = "darkestdungeon"
 # status = "working"
 
-
 # [games.metadata]
 # api.id = 262060
 # api.client = "steam"
-
 
 # [games.launch]
 # noruntime = true
@@ -378,16 +322,13 @@ start = [ "portal2.exe", "+cc_lang", "french", "+sv_lan", "1" ]
 # start = [ "darkest.bin.x86_64" ]
 
 
-
 [[games]]
 slug = "borderlands2"
 status = "working"
 
-
 [games.metadata]
 api.id = 49520
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -396,16 +337,13 @@ overlays = [ "$GAMES_DIR/borderlands2" ]
 start = [ "Binaries/Win32/Borderlands2.exe" ]
 
 
-
 [[games]]
 slug = "lethalcompany"
 status = "working"
 
-
 [games.metadata]
 api.id = 1966720
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -414,16 +352,13 @@ overlays = [ "$GAMES_DIR/lethalcompany" ]
 start = [ "Lethal Company.exe" ]
 
 
-
 [[games]]
 slug = "spin_rhythm"
 status = "working"
 
-
 [games.metadata]
 api.id = 1058830
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge10.25"
@@ -432,16 +367,13 @@ overlays = [ "$GAMES_DIR/spin_rhythm" ]
 start = [ "SpinRhythm.exe" ]
 
 
-
 [[games]]
 slug = "crabchampions"
 status = "working"
 
-
 [games.metadata]
 api.id = 774801
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -450,16 +382,13 @@ overlays = [ "$GAMES_DIR/crabchampions" ]
 start = [ "CrabChampions/Binaries/Win64/CrabChampions-Win64-Shipping.exe" ]
 
 
-
 [[games]]
 slug = "katanazero"
 status = "working"
 
-
 [games.metadata]
 api.id = 460950
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -468,16 +397,13 @@ overlays = [ "$GAMES_DIR/katanazero" ]
 start = [ "KatanaZERO.exe", "-opengl" ]
 
 
-
 [[games]]
 slug = "rvthereyet"
 status = "working"
 
-
 [games.metadata]
 api.id = 3949040
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -488,16 +414,13 @@ overlays = [ "$GAMES_DIR/rvthereyet" ]
 start = [ "Ride.exe" ]
 
 
-
 [[games]]
 slug = "counterstrike1.6"
 status = "working"
 
-
 [games.metadata]
 api.id = 10
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -505,16 +428,13 @@ overlays = [ "$GAMES_DIR/counterstrike1.6" ]
 start = [ "cstrike.sh" ]
 
 
-
 [[games]]
 slug = "stardewvalley"
 status = "working"
 
-
 [games.metadata]
 api.id = 413150
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -522,16 +442,13 @@ overlays = [ "$GAMES_DIR/stardewvalley" ]
 start = [ "start.sh" ]
 
 
-
 [[games]]
 slug = "factorio"
 status = "working"
 
-
 [games.metadata]
 api.id = 427520
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -539,23 +456,19 @@ overlays = [ "$GAMES_DIR/factorio" ]
 start = [ "bin/x64/factorio" ]
 
 
-
 [[games]]
 slug = "fez"
 status = "working"
 
-
 [games.metadata]
 api.id = 224760
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
 environ = { "MANGOHUD_CONFIG"= "no_display,fps_limit=60", "LD_PRELOAD"= "/usr/$LIB/mangohud/libMangoHud_shim.so" }
 overlays = [ "$GAMES_DIR/fez" ]
 start = [ "/usr/bin/mangohud", "$GAMES_DIR/fez/FEZ" ]
-
 
 # Not launching
 # [[games]]
@@ -573,16 +486,13 @@ start = [ "/usr/bin/mangohud", "$GAMES_DIR/fez/FEZ" ]
 # start = [ "/sgoinfre/lcottet/Games/Celeste/Celeste" ]
 
 
-
 [[games]]
 slug = "buckshot"
 status = "working"
 
-
 [games.metadata]
 api.id = 2835570
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -592,23 +502,19 @@ start = [ "Buckshot Roulette.x86_64" ]
 
 
 
-
 [[games]]
 slug = "megabonk"
 status = "working"
 
-
 [games.metadata]
 api.id = 3405340
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
 environ = {}
 overlays = [ "/sgoinfre/lcottet/Games/megabonk/" ]
 start = [ "Megabonk.x86_64" ]
-
 
 
 # ya plus de fichiers
@@ -628,16 +534,13 @@ start = [ "Megabonk.x86_64" ]
 # start = [ "Forts.exe" ]
 
 
-
 [[games]]
 slug = "hotlinemiami2"
 status = "working"
 
-
 [games.metadata]
 api.id = 274170
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -645,16 +548,13 @@ overlays = [ "$GAMES_DIR/hotlinemiami2" ]
 start = [ "HotlineMiami2" ]
 
 
-
 [[games]]
 slug = "hyperlightdrifter"
 status = "working"
 
-
 [games.metadata]
 api.id = 257850
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -662,16 +562,13 @@ overlays = [ "$GAMES_DIR/hyperlightdrifter" ]
 start = [ "run.sh" ]
 
 
-
 [[games]]
 slug = "inscryption"
 status = "working"
 
-
 [games.metadata]
 api.id = 1092790
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge7.55"
@@ -680,16 +577,13 @@ overlays = [ "$GAMES_DIR/inscryption" ]
 start = [ "Inscryption.exe", "-console", "-dev" ]
 
 
-
 [[games]]
 slug = "rainbowsixsiege"
 status = "working"
 
-
 [games.metadata]
 api.id = 359550
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge7.55"
@@ -698,16 +592,13 @@ overlays = [ "$GAMES_DIR/rainbowsixsiege" ]
 start = [ "RainbowSix.exe" ]
 
 
-
 [[games]]
 slug = "scourgebringer"
 status = "working"
 
-
 [games.metadata]
 api.id = 1037020
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -715,16 +606,13 @@ overlays = [ "$GAMES_DIR/scourgebringer" ]
 start = [ "start.sh" ]
 
 
-
 [[games]]
 slug = "snkfangame"
 status = "working"
 
-
 [games.metadata]
 api.id = 152751
 api.client = "igdb"
-
 
 [games.launch]
 noruntime = true
@@ -732,16 +620,13 @@ overlays = [ "$GAMES_DIR/snkfangame" ]
 start = [ "raot" ]
 
 
-
 [[games]]
 slug = "mariokart"
 status = "working"
 
-
 [games.metadata]
 api.id = 26764
 api.client = "igdb"
-
 
 [games.launch]
 noruntime = true
@@ -749,16 +634,13 @@ overlays = [ "$GAMES_DIR/turzu/additionnals/home" ]
 start = [ "$GAMES_DIR/turzu/start.sh", "-f", "-g", "$GAMES_DIR/switch/mariokart.xci" ]
 
 
-
 [[games]]
 slug = "thebindingofisaac"
 status = "working"
 
-
 [games.metadata]
 api.id = 113200
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -767,16 +649,13 @@ overlays = [ "$GAMES_DIR/thebindingofisaac" ]
 start = [ "isaac-ng.exe" ]
 
 
-
 [[games]]
 slug = "ghostrunner"
 status = "working"
 
-
 [games.metadata]
 api.id = 1139900
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -785,16 +664,13 @@ overlays = [ "$GAMES_DIR/Ghostrunner" ]
 start = [ "Ghostrunner.exe" ]
 
 
-
 [[games]]
 slug = "ultimatechickenhorse"
 status = "working"
 
-
 [games.metadata]
 api.id = 386940
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -803,17 +679,14 @@ overlays = [ "$GAMES_DIR/ultimatechickenhorse" ]
 start = [ "UltimateChickenHorse.exe", "-opengl" ]
 
 
-
 # # NOTE: ACTULLY COMMNTED launch issues
 # [[games]]
 # slug = "eldenringNightreign"
 # status = "working"
 
-
 # [games.metadata]
 # api.id = 2622380
 # api.client = "steam"
-
 
 # [games.launch]
 # proton = "ge9.23"
@@ -823,16 +696,13 @@ start = [ "UltimateChickenHorse.exe", "-opengl" ]
 # start = [ "Game/nightreign.exe" ]
 
 
-
 [[games]]
 slug = "ktane"
 status = "working"
 
-
 [games.metadata]
 api.id = 341800
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -840,17 +710,14 @@ overlays = [ "$GAMES_DIR/Keeptalkingnnobodyexplodes", "$GAMES_DIR/Keeptalkingnno
 start = [ "ktane.x86_64" ]
 
 
-
 [[games]]
 slug = "raccoin"
 status = "working"
-
 
 [games.metadata]
 api.id = 3784030
 api.client = "steam"
 cover = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3784030/75d93f090fa932324ab3447a5c755c047bbe1256/library_capsule_2x.jpg?t=1762772614"
-
 
 [games.launch]
 proton = "ge10.25"
@@ -859,16 +726,13 @@ overlays = [ "$GAMES_DIR/raccoin", "$GAMES_DIR/raccoin_steamemu" ]
 start = [ "RACCOIN.exe" ]
 
 
-
 [[games]]
 slug = "valheim"
 status = "working"
 
-
 [games.metadata]
 api.id = 892970
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -876,16 +740,13 @@ overlays = [ "$GAMES_DIR/valheim" ]
 start = [ "start-vulkan.sh" ]
 
 
-
 [[games]]
 slug = "warcraft3"
 status = "working"
 
-
 [games.metadata]
 api.id = 132
 api.client = "igdb"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -893,17 +754,14 @@ environ = { "GAMEID"= "0", "PROTON_USE_WINE3D"= "1" }
 overlays = [ "$GAMES_DIR/warcraft3" ]
 start = [ "Frozen Throne.exe" ]
 
-
 # files corrupted
 # [[games]]
 # slug = "darksoulsremastered"
 # status = "working"
 
-
 # [games.metadata]
 # api.id = 570940
 # api.client = "steam"
-
 
 # [games.launch]
 # proton = "ge9.23"
@@ -912,16 +770,13 @@ start = [ "Frozen Throne.exe" ]
 # start = [ "DarkSoulsRemastered.exe", "-offline" ]
 
 
-
 [[games]]
 slug = "wizardoflegend"
 status = "working"
 
-
 [games.metadata]
 api.id = 445980
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -929,16 +784,13 @@ overlays = [ "$GAMES_DIR/wizardoflegend" ]
 start = [ "start.sh" ]
 
 
-
 [[games]]
 slug = "lemnis_gate"
 status = "working"
 
-
 [games.metadata]
 api.id = 950180
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -947,16 +799,13 @@ overlays = [ "$GAMES_DIR/lemnis_gate" ]
 start = [ "LemnisGate.exe" ]
 
 
-
 [[games]]
 slug = "css"
 status = "working"
 
-
 [games.metadata]
 api.id = 240
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -965,16 +814,13 @@ overlays = [ "$GAMES_DIR/css" ]
 start = [ "hl2.exe", "-game", "cstrike" ]
 
 
-
 [[games]]
 slug = "csgo"
 status = "working"
 
-
 [games.metadata]
 api.id = 1372
 api.client = "igdb"
-
 
 
 # [games.launch]
@@ -982,7 +828,6 @@ api.client = "igdb"
 # environ = { "STORE"= "steam", "GAMEID"= "240" }
 # overlays = [ "$GAMES_DIR/csgo_new" ]
 # start = [ "CSGOLoader.exe" ]
-
 
 [games.launch]
 proton = "ge9.23"
@@ -999,16 +844,13 @@ start = ["CSGOLoader.exe", "-vulkan", "+fps_max", "60", "-windowed", "-noborder"
 # start = [ "steam-runtime/run.sh", "./csgo.sh", "-vulkan" ]
 
 
-
 [[games]]
 slug = "cs2"
 status = "working"
 
-
 [games.metadata]
 api.id = 730
 api.client = "steam"
-
 
 [games.launch]
 # proton = "ge9.23"
@@ -1019,16 +861,13 @@ noruntime = false
 overlays = [ "$GAMES_DIR/cs2" ]
 start = [ "game/cs2.sh" ]
 
-
 [[games]]
 slug = "noita"
 status = "working"
 
-
 [games.metadata]
 api.id = 881100
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -1036,17 +875,14 @@ environ = { "STORE"= "steam", "GAMEID"= "881100" }
 overlays = [ "$GAMES_DIR/noita" ]
 start = [ "noita.exe" ]
 
-
 # need to be launched from local
 # [[games]]
 # slug = "project_zomboid"
 # status = "working"
 
-
 # [games.metadata]
 # api.id = 108600
 # api.client = "steam"
-
 
 # [games.launch]
 # proton = "ge9.23"
@@ -1056,16 +892,13 @@ start = [ "noita.exe" ]
 # start = [ "ProjectZomboid64.exe" ]
 
 
-
 [[games]]
 slug = "thelastspell"
 status = "working"
 
-
 [games.metadata]
 api.id = 1105670
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge7.55"
@@ -1073,17 +906,14 @@ environ = { "STORE"= "steam", "GAMEID"= "1105670", "DRI_PRIME"= "1" }
 overlays = [ "$GAMES_DIR/thelastspell" ]
 start = [ "The Last Spell.exe" ]
 
-
 # Weird cursor bug and maybe renderer 
 [[games]]
 slug = "dungeondrafters"
 status = "working"
 
-
 [games.metadata]
 api.id = 1824580
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge10.25"
@@ -1092,16 +922,13 @@ overlays = [ "$GAMES_DIR/dungeondrafters" ]
 start = [ "Dungeon Drafters.exe"]
 
 
-
 [[games]]
 slug = "neonwhite"
 status = "working"
 
-
 [games.metadata]
 api.id = 1533420
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge7.55"
@@ -1110,23 +937,19 @@ overlays = [ "$GAMES_DIR/neonwhite" ]
 start = [ "neonwhite/Neon White.exe" ]
 
 
-
 [[games]]
 slug = "yousuckatparking"
 status = "onlinebreak"
 
-
 [games.metadata]
 api.id = 837880
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
 environ = { "STORE"= "steam", "GAMEID"= "837880" }
 overlays = [ "$GAMES_DIR/yousuckatparking" ]
 start = [ "YSAP.exe" ]
-
 
 # NOTE: ACTULLY COMMNTED
 # [[games]]
@@ -1145,16 +968,13 @@ start = [ "YSAP.exe" ]
 # #start = [ "/home/dderny/Downloads/VC_redist.x64.exe" ] 
 
 
-
 [[games]]
 slug = "vrising"
 status = "working"
 
-
 [games.metadata]
 api.id = 1604030
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -1163,23 +983,19 @@ overlays = [ "$GAMES_DIR/vrising" ]
 start = [ "VRising.exe" ]
 
 
-
 [[games]]
 slug = "furi"
 status = "working"
 
-
 [games.metadata]
 api.id = 423230
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
 environ = { "STORE"= "steam", "GAMEID"= "423230" }
 overlays = [ "$GAMES_DIR/furi" ]
 start = [ "Furi/Furi.exe" ]
-
 
 
 # NOTE: ACTULLY COMMNTED
@@ -1198,16 +1014,13 @@ start = [ "Furi/Furi.exe" ]
 # start = [ "VoidTrain.exe" ]
 
 
-
 [[games]]
 slug = "echopointnova"
 status = "working"
 
-
 [games.metadata]
 api.id = 1836730
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge7.55"
@@ -1216,16 +1029,13 @@ overlays = [ "$GAMES_DIR/echopointnova" ]
 start = [ "Greylock.exe" ]
 
 
-
 [[games]]
 slug = "deeprockgalactic"
 status = "working"
 
-
 [games.metadata]
 api.id = 548430
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -1234,16 +1044,13 @@ overlays = [ "$GAMES_DIR/deeprockgalactic" ]
 start = [ "FSD.exe" ]
 
 
-
 [[games]]
 slug = "deeprockgalacticsurvivor"
 status = "working"
 
-
 [games.metadata]
 api.id = 2321470
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge7.55"
@@ -1252,16 +1059,13 @@ overlays = [ "$GAMES_DIR/deeprockgalacticsurvivor" ]
 start = [ "Deep Rock Galactic Survivor.exe" ]
 
 
-
 [[games]]
 slug = "hollowknight"
 status = "working"
 
-
 [games.metadata]
 api.id = 367520
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -1269,16 +1073,13 @@ overlays = [ "$GAMES_DIR/hollowknight" ]
 start = [ "start.sh" ]
 
 
-
 [[games]]
 slug = "artofrally"
 status = "working"
 
-
 [games.metadata]
 api.id = 550320
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -1286,16 +1087,13 @@ overlays = [ "$GAMES_DIR/artofrally" ]
 start = [ "start.sh" ]
 
 
-
 [[games]]
 slug = "yomihustle"
 status = "working"
 
-
 [games.metadata]
 api.id = 2212330
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true
@@ -1303,16 +1101,13 @@ overlays = [ "$GAMES_DIR/yomihustle" ]
 start = [ "YourOnlyMoveIsHUSTLE.x86_64" ]
 
 
-
 # [[games]]
 # slug = "alienswarmreactivedrop"
 # status = "working"
 
-
 # [games.metadata]
 # api.id = 563560
 # api.client = "steam"
-
 
 # [games.launch]
 # proton = "ge9.23"
@@ -1321,16 +1116,13 @@ start = [ "YourOnlyMoveIsHUSTLE.x86_64" ]
 # start = [ "reactivedrop.exe" ]
 
 
-
 [[games]]
 slug = "freeways"
 status = "working"
 
-
 [games.metadata]
 api.id = 780210
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -1339,16 +1131,13 @@ overlays = [ "$GAMES_DIR/freeways" ]
 start = [ "Freeways.exe" ]
 
 
-
 [[games]]
 slug = "hollowknightsilksong"
 status = "working"
 
-
 [games.metadata]
 api.id = 1030300
 api.client = "steam"
-
 
 [games.launch]
 proton = "ge9.23"
@@ -1357,16 +1146,13 @@ overlays = [ "$GAMES_DIR/hollowknightsilksong" ]
 start = [ "Hollow Knight Silksong.exe" ]
 
 
-
 [[games]]
 slug = "powdertoy"
 status = "working"
 
-
 [games.metadata]
 api.id = 1148350
 api.client = "steam"
-
 
 [games.launch]
 noruntime = true

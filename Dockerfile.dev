@@ -1,4 +1,4 @@
-FROM buildpack-deps:jammy
+FROM buildpack-deps:questing
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
@@ -60,9 +60,7 @@ RUN apt-get update && apt-get install -y \
     libxrender-dev \
     libxtst-dev \
     libxss-dev \
-    libgconf-2-4 \
     libnss3 \
-    libasound2 \
     zsh \
     rsync \
     firefox

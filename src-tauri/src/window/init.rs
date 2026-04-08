@@ -74,7 +74,8 @@ fn init_env_for_codecs() -> Result<()> {
 }
 
 pub fn init_window(library: Vec<Game>, game_exec: GameExecution) {
-    init_env_for_codecs().expect("Failed to set environment variables for codecs");
+    // unsafe { std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1"); }
+    // init_env_for_codecs().expect("Failed to set environment variables for codecs");
 
     Builder::default()
         .plugin(tauri_plugin_opener::init())

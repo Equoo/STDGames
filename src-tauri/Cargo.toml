@@ -1,11 +1,9 @@
 [package]
 name = "stdgames"
-version = "0.1.5"
+version = "0.2.0"
 description = "A Game Launcher"
 authors = ["Saru", "Timéo", "David"]
 edition = "2024"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
@@ -40,5 +38,5 @@ x11 = { version = "2.21", features = ["xlib"] }
 [profile.dev]
 incremental = true
 
-# [profile.dev]
-# lto = "fat"
+[profile.release]
+lto = "fat"

@@ -10,15 +10,15 @@ frontbuild:
 	docker run --rm -it -p 5173:5173 -v $(shell pwd):/app -w /app node:20 npm run build
 
 dev:
-	@xhost +local:docker
+	@mkdir -p /tmp/stdgame_target
 	@docker build -t stddev:latest -f Dockerfile.dev .
+	@env > .env.docker
 	@docker run -it --rm \
 		--ipc=host \
-		--add-host=host.docker.internal:host-gateway \
 		--network host \
 		-u $(id -u):$(id -g) \
 		-v $(PWD)/:/app \
-		-v $(PWD)/src-tauri/target:/app/src-tauri/target \
+		-v /tmp/stdgame_target:/app/src-tauri/target \
 		-v /sgoinfre:/sgoinfre \
 		-v /goinfre:/goinfre \
 		-v /run/user/$(shell id -u):/run/user/$(shell id -u) \
@@ -28,7 +28,7 @@ dev:
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v /dev/dri:/dev/dri \
 		-v /home/$(USER):/home/$(USER) \
-		$(shell env | sed 's/^/-e "/' | sed 's/$$/"/') \
+		--env-file .env.docker \
 		-e GDK_BACKEND=x11 \
 		-e GDK_SCALE=1 \
 		-e GTK_MODULES='' \

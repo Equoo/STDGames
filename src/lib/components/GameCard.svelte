@@ -24,6 +24,7 @@
 	title={game.name || game.slug}
 >
 	<div class="card-bg" style="background-image: url('{bgImage}');"></div>
+	<!-- <img class="card-bg" src="{bgImage}"/> -->
 	<div class="card-overlay"></div>
 	<div class="card-info">
 		{#if game.tags && game.tags.length > 0}
@@ -42,6 +43,9 @@
 
 <style>
 	.game-card {
+		transform: translateZ(0);
+		will-change: transform;
+		backface-visibility: hidden;
 		display: block;
 		width: 100%;
 		position: relative;
@@ -56,7 +60,7 @@
 	}
 
 	.game-card:hover {
-		transform: scale(1.025);
+		transform: scale(1.02);
 		box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.45);
 		border-color: var(--border-subtle);
 	}
@@ -68,6 +72,9 @@
 		background-position: center;
 		background-color: var(--bg-input);
 		transition: transform 0.3s ease;
+		transform: translateZ(0);
+		will-change: transform;
+		backface-visibility: hidden;
 	}
 
 	.game-card:hover .card-bg {

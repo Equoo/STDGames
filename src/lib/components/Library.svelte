@@ -96,7 +96,7 @@
 	}
 
 	.library-header {
-		position: sticky;
+		position: -webkit-sticky;
 		display: flex;
 		top: 0;
 		height: 4rem;

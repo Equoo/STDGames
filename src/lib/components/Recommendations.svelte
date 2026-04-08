@@ -1,4 +1,5 @@
 <script lang="ts">
+	import GameCard from './GameCard.svelte';
 	import { gameLibrary, selectedGame, currentView, favorites } from '$lib/stores/gameStore';
 	import type { GameDisplay } from '$lib/types/game';
 
@@ -48,20 +49,7 @@
 				</div>
 				<div class="rec-grid">
 					{#each picks as game (game.slug)}
-						<button class="rec-card" onclick={() => openGame(game)}>
-							<div class="rec-card-bg" style="background-image: url('{getImage(game)}');"></div>
-							<div class="rec-card-overlay"></div>
-							<div class="rec-card-info">
-								{#if game.tags && game.tags.length > 0}
-									<div class="rec-card-tags">
-										{#each game.tags.slice(0, 3) as tag}
-											<span class="rec-tag">{tag}</span>
-										{/each}
-									</div>
-								{/if}
-								<p class="rec-card-name">{game.name ?? game.slug}</p>
-							</div>
-						</button>
+						<GameCard {game} />
 					{/each}
 				</div>
 			</div>
@@ -81,20 +69,7 @@
 				{:else}
 					<div class="rec-grid">
 						{#each $gameLibrary.filter(g => $favorites.includes(g.slug)) as game (game.slug)}
-							<button class="rec-card" onclick={() => openGame(game)}>
-								<div class="rec-card-bg" style="background-image: url('{getImage(game)}');"></div>
-								<div class="rec-card-overlay"></div>
-								<div class="rec-card-info">
-									{#if game.tags && game.tags.length > 0}
-										<div class="rec-card-tags">
-											{#each game.tags.slice(0, 3) as tag}
-												<span class="rec-tag">{tag}</span>
-											{/each}
-										</div>
-									{/if}
-									<p class="rec-card-name">{game.name ?? game.slug}</p>
-								</div>
-							</button>
+							<GameCard {game} />
 						{/each}
 					</div>
 				{/if}
@@ -196,83 +171,6 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
 		gap: 1rem;
-	}
-
-	/* ── Card ── */
-	.rec-card {
-		position: relative;
-		aspect-ratio: 16 / 9;
-		border-radius: 0.75rem;
-		overflow: hidden;
-		cursor: pointer;
-		border: 0.0625rem solid var(--border-color);
-		background: var(--bg-card);
-		padding: 0;
-		transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-	}
-
-	.rec-card:hover {
-		transform: scale(1.025);
-		box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.45);
-		border-color: var(--border-subtle);
-	}
-
-	.rec-card-bg {
-		position: absolute;
-		inset: 0;
-		background-size: cover;
-		background-position: center;
-		transition: transform 0.3s ease;
-	}
-
-	.rec-card:hover .rec-card-bg {
-		transform: scale(1.06);
-	}
-
-	.rec-card-overlay {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 55%, transparent 100%);
-	}
-
-	.rec-card-info {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 0.8rem 0.9rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-		text-align: left;
-	}
-
-	.rec-card-name {
-		margin: 0;
-		font-family: 'Brunson', sans-serif;
-		font-size: 1rem;
-		letter-spacing: 0.05rem;
-		color: #fff;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.rec-card-tags {
-		display: flex;
-		gap: 0.3rem;
-		flex-wrap: wrap;
-	}
-
-	.rec-tag {
-		font-size: 0.62rem;
-		padding: 0.15rem 0.45rem;
-		background: rgba(255,255,255,0.15);
-		border: 0.0625rem solid rgba(255,255,255,0.25);
-		border-radius: 0.25rem;
-		color: rgba(255,255,255,0.85);
-		text-transform: uppercase;
-		letter-spacing: 0.05rem;
 	}
 
 	/* ── Placeholder ── */
