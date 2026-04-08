@@ -46,6 +46,13 @@
 </script>
 
 {#if $selectedGame}
+	<h1 class="game-title page-headers">
+		{#if $selectedGame.logo}
+			<img src={$selectedGame.logo} />
+		{:else}
+			{$selectedGame.name || $selectedGame.slug}
+		{/if}
+	</h1>
 	<div
 		class="preview-container scrollable"
 		bind:this={containerEl}
@@ -53,6 +60,41 @@
 	>
 		<!-- Hero -->
 		<div class="hero">
+			<img
+				class="hero-bg"
+				src={artworkUrl}
+				style="transform: translateY({scrollY * 0.4}px);"
+			/>
+			{#if $selectedGame.tags && $selectedGame.tags.length > 0}
+				<div class="game-tags">
+					{#each $selectedGame.tags as tag}
+						<span class="game-tag">{tag}</span>
+					{/each}
+				</div>
+			{/if}
+			<div class="hero-fade"></div>
+			<div class="glass-transition"></div>
+			<!-- Scroll hint outside .hero so it stacks above hero-content (z:10) -->
+			<div class="scroll-hint" class:hidden={scrollY > 80}>
+				<span class="scroll-label">scroll</span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="4"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<polyline points="6 9 12 15 18 9" />
+				</svg>
+			</div>
+		</div>
+
+		<div
+			class="hero-content-wrapper"
+			style="margin-top: calc(100vh - 3rem - {heroContentHeight}px)"
+		>
 			<button
 				class="fav-btn"
 				class:active={isFavorite}
@@ -74,47 +116,7 @@
 					/>
 				</svg>
 			</button>
-			<img class="hero-bg" src="{artworkUrl}" style="transform: translateY({scrollY * 0.4}px);"/>
-			{#if $selectedGame.tags && $selectedGame.tags.length > 0}
-				<div class="game-tags">
-					{#each $selectedGame.tags as tag}
-						<span class="game-tag">{tag}</span>
-					{/each}
-				</div>
-			{/if}
-			<div class="hero-fade"></div>
-			<div class="glass-transition"></div>
-
-			<!-- Scroll hint outside .hero so it stacks above hero-content (z:10) -->
-			<div class="scroll-hint" class:hidden={scrollY > 80}>
-				<span class="scroll-label">scroll</span>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="4"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<polyline points="6 9 12 15 18 9" />
-				</svg>
-			</div>
-		</div>
-
-		<div
-		  class="hero-content-wrapper"
-		  style="margin-top: calc(100vh - 3rem - {heroContentHeight}px)"
-		>
 			<div class="hero-content" bind:clientHeight={heroContentHeight}>
-				<h1 class="game-title">
-					{#if $selectedGame.logo}
-						<img src="{$selectedGame.logo}" width="30%"/>
-					{:else}
-						{$selectedGame.name || $selectedGame.slug}
-					{/if}
-				</h1>
-
 				<div class="hero-actions">
 					<button
 						class="play-button"
@@ -122,7 +124,11 @@
 						onclick={handlePlayClick}
 						disabled={isLaunching}
 					>
-						{isRunning ? "Kill" : isLaunching ? "Launching..." : "Play"}
+						{isRunning
+							? "Kill"
+							: isLaunching
+								? "Launching..."
+								: "Play"}
 					</button>
 					<button class="back-button" onclick={handleBackClick}
 						>← Library</button
@@ -205,38 +211,52 @@
 
 	.hero-content-wrapper {
 		position: sticky;
-		margin-left: 1.75rem;
-		top: 7.125rem;
+		margin-left: 2rem;
+		top: 2.5rem;
 		left: 1.75rem;
-		z-index: 10;
+		z-index: 5;
 	}
 	.hero-content {
 		position: relative;
-		z-index: 10;
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 		height: fit-content;
 		width: fit-content;
 	}
-
-	.game-title {
-		margin: 0;
-		font-family: "Brunson", sans-serif;
-		font-size: 2.8rem;
-		color: #fff;
-		text-align: left;
-		text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.8);
-		letter-spacing: 0.1rem;
-		line-height: 1;
-	}
-
 	.hero-actions {
 		display: flex;
 		gap: 0.6rem;
 		align-items: center;
-		margin-top: 0.25rem;
 	}
+	
+	.game-title {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		margin: 0;
+		position: absolute;
+		left: 20%;
+		width: 80%;
+		height: 7.125rem;
+		z-index: 5;
+		font-family: "Brunson", sans-serif;
+		font-size: 2.8rem;
+		text-align: center;
+		text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.8);
+		letter-spacing: 0.1rem;
+		line-height: 1;
+	}
+	.game-title h1 {
+		color: var(--text-primary);;
+		text-align: center;
+	}
+	.game-title img {
+		height: 7.125rem;
+		max-width: 25%;
+	}
+
+
 
 	.play-button {
 		padding: 0.55rem 1.8rem;
@@ -277,11 +297,11 @@
 		transition: all 0.2s;
 	}
 
-	:global([data-theme="dark"] .back-button ){
+	:global([data-theme="dark"] .back-button) {
 		color: rgba(255, 255, 255, 0.9);
 	}
 
-	:global([data-theme="light"] .back-button ){
+	:global([data-theme="light"] .back-button) {
 		color: rgba(0, 0, 0, 0.9);
 	}
 	.back-button:hover {
@@ -290,7 +310,7 @@
 
 	.content {
 		position: relative;
-		z-index: 3;
+		z-index: 1;
 		margin-top: 100vh;
 		width: 100%;
 		height: auto;
@@ -338,9 +358,7 @@
 	/* ── Favorite button ── */
 	.fav-btn {
 		position: absolute;
-		top: calc(3.125rem + 0.75rem);
 		right: 1rem;
-		z-index: 5;
 		width: 2.4rem;
 		height: 2.4rem;
 		display: flex;
@@ -348,7 +366,7 @@
 		justify-content: center;
 		border-radius: 50%;
 		border: 0.0625rem solid rgba(255, 255, 255, 0.25);
-		background: rgba(0, 0, 0, 0.35);
+		background: rgba(104, 104, 104, 0.35);
 		backdrop-filter: blur(0.5rem);
 		cursor: pointer;
 		transition:
@@ -398,10 +416,10 @@
 		transition: opacity 1s ease;
 		pointer-events: none;
 	}
-	:global([data-theme="dark"] .scroll-hint ){
+	:global([data-theme="dark"] .scroll-hint) {
 		color: rgba(255, 255, 255, 0.7);
 	}
-	:global([data-theme="light"] .scroll-hint ){
+	:global([data-theme="light"] .scroll-hint) {
 		color: rgba(0, 0, 0, 0.7);
 	}
 	.scroll-hint.hidden {
@@ -442,7 +460,7 @@
 		gap: 1rem;
 		text-align: left;
 		position: relative;
-		z-index: 1;
+		z-index: 0;
 	}
 
 	.short-desc {
