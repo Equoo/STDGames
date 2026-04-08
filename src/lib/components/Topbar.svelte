@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { currentView } from "$lib/stores/gameStore";
 	import lettersLogo from "$lib/assets/icons/stdgames_letters_only.png";
-
 	let mx = $state(0);
 	let my = $state(0);
 
@@ -29,47 +28,50 @@
 			<img src={lettersLogo} alt="STDGames" class="logo" />
 			<div class="glow-layer"></div>
 		</div>
-
-		<nav class="nav">
-			<button
-				class="nav-btn"
-				class:active={$currentView === "home"}
-				onclick={() => go("home")}>Home</button
-			>
-			<button
-				class="nav-btn"
-				class:active={$currentView === "library"}
-				onclick={() => go("library")}>Library</button
-			>
-			<button
-				class="nav-btn"
-				class:active={$currentView === "settings"}
-				onclick={() => go("settings")}>Settings</button
-			>
-		</nav>
+			<nav class="nav">
+				<button
+					class="nav-btn"
+					class:active={$currentView === "home"}
+					onclick={() => go("home")}>Home</button
+				>
+				<button
+					class="nav-btn"
+					class:active={$currentView === "library"}
+					onclick={() => go("library")}>Library</button
+				>
+				<button
+					class="nav-btn"
+					class:active={$currentView === "settings"}
+					onclick={() => go("settings")}>Settings</button
+				>
+			</nav>
 	</div>
 </div>
 
 <style>
 	.topbar {
-		position: sticky;
+		position: absolute;
 		top: 0;
+		left: 0;
+		right: 0;
 		display: flex;
-		height: 3.125rem;
+		height: 7.125rem; /* 3.125rem nav + 4rem header zone */
 		padding: 0 1rem;
-		background: var(--bg-panel);
+		background: transparent;
 		backdrop-filter: blur(1.5rem) saturate(1.6);
 		-webkit-backdrop-filter: blur(1.5rem) saturate(1.6);
-		align-items: center;
-		z-index: 100;
+		align-items: flex-start;
+		z-index: 3;
+		pointer-events: none;
 	}
 
 	.topbar-content {
 		width: 100%;
 		display: flex;
 		align-items: center;
-		height: 100%;
+		height: 3.125rem;
 		gap: 1.25rem;
+		pointer-events: all;
 	}
 
 	/* ── Logo ── */

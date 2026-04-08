@@ -42,7 +42,7 @@
 		</button>
 	</div>
 
-	<div class="sidebar-content">
+	<div class="sidebar-content scrollable">
 		<div class="game-list" role="list">
 			{#each $filteredGames as game (game.slug)}
 				<button
@@ -68,24 +68,29 @@
 		flex: 0 0 auto;
 		width: 20%;
 		flex-direction: column;
-		padding: 0 0.625rem;
+		padding: 3.125rem 0.625rem 0;
 		color: var(--text-primary);
 		transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
 		            padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 		overflow: hidden;
+		pointer-events: none;
 	}
 
 	.sidebar.collapsed {
 		width: 3.5rem;
-		padding: 0 0.35rem;
+		padding: 3.125rem 0.35rem 0;
 	}
 
 	/* ── Top row (search + toggle) ── */
 	.sidebar-top {
+		position: relative;
+		z-index: 5;
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		padding: 0.5rem 0;
+		height: 4rem;
+		flex-shrink: 0;
+		pointer-events: auto;
 	}
 
 	.search-wrap {
@@ -195,16 +200,10 @@
 		display: flex;
 		flex: 1;
 		min-height: 0;
+		pointer-events: auto;
 		width: 100%;
-		overflow-y: scroll;
 		overflow-x: hidden;
 		direction: rtl;
-		scrollbar-width: thin;
-		scrollbar-color: rgba(120, 50, 200, 0.25) transparent;
-	}
-
-	.sidebar-content:hover {
-		scrollbar-color: rgba(160, 80, 220, 0.65) transparent;
 	}
 
 	.game-list {
@@ -299,6 +298,9 @@
 		width: 1.875rem;
 		height: 1.875rem;
 		object-fit: cover;
+		transform: translateZ(0);
+		will-change: transform;
+		backface-visibility: hidden;
 		transition: transform 0.2s ease;
 	}
 

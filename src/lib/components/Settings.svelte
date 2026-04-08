@@ -2,6 +2,7 @@
 	import { theme } from "$lib/stores/gameStore";
 	import type { Theme } from "$lib/stores/gameStore";
 	import { addDesktopIcon, openUrl } from "$lib/api/system";
+	import BlurIn from "./Anim.svelte";
 
 	function setTheme(value: Theme) {
 		theme.set(value);
@@ -9,8 +10,11 @@
 </script>
 
 <div class="settings page">
-	<div class="settings-header">
-		<h1 class="title">Settings</h1>
+	<div class="page-body scrollable">
+	<div class="settings-header page-headers">
+	<BlurIn>
+		<h1 class="page-title">Settings</h1>
+	</BlurIn>
 	</div>
 
 	<div class="settings-body">
@@ -66,39 +70,14 @@
 			</div>
 		</section>
 	</div>
+	</div>
 </div>
 
 <style>
-	.page {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		color: var(--text-primary);
-	}
 
-	.settings-header {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		height: 3.75rem;
-		padding: 0 1.25rem;
-		background: var(--bg-panel);
-		backdrop-filter: blur(0.625rem);
-		border-bottom: 0.0625rem solid var(--border-color);
-	}
-
-	.title {
-		margin: 0;
-		font-family: "Brunson", sans-serif;
-		font-size: 1.5rem;
-		letter-spacing: 0.3125rem;
-	}
 
 	/* ── 3-column body ── */
 	.settings-body {
-		flex: 1;
-		overflow-y: auto;
 		padding: 2rem;
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);

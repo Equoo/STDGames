@@ -1,7 +1,8 @@
 <script lang="ts">
 	import GameCard from './GameCard.svelte';
-	import { gameLibrary, selectedGame, currentView, favorites } from '$lib/stores/gameStore';
+	import { gameLibrary, favorites } from '$lib/stores/gameStore';
 	import type { GameDisplay } from '$lib/types/game';
+	import BlurIn from "./Anim.svelte";
 
 	let picks: GameDisplay[] = $state([]);
 	let initialized = false;
@@ -22,19 +23,14 @@
 		picks = copy.slice(0, 6);
 	}
 
-	function getImage(game: GameDisplay): string {
-		return game.hero ?? game.cover ?? game.screenshots?.[0] ?? '';
-	}
-
-	function openGame(game: GameDisplay) {
-		selectedGame.set(game);
-		currentView.set('preview');
-	}
 </script>
 
 <div class="page">
-	<div class="rec-header">
-		<h1 class="rec-title">Discover</h1>
+	<div class="page-body scrollable">
+	<div class="rec-header page-headers">
+	<BlurIn>
+		<h1 class="page-title">Discover</h1>
+	</BlurIn>
 	</div>
 
 	<div class="rec-body">
@@ -76,47 +72,13 @@
 			</div>
 		{/if}
 	</div>
+	</div>
 </div>
 
 <style>
-	.page {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-		color: var(--text-primary);
-	}
-
-	/* ── Header ── */
-	.rec-header {
-		flex-shrink: 0;
-		padding: 0 1.25rem;
-		height: 3.75rem;
-		display: flex;
-		align-items: baseline;
-		gap: 1rem;
-		background: var(--bg-panel);
-		backdrop-filter: blur(0.625rem);
-		border-bottom: 0.0625rem solid var(--border-color);
-	}
-
-	.rec-title {
-		margin: 0;
-		font-family: 'Brunson', sans-serif;
-		font-size: 1.5rem;
-		letter-spacing: 0.3125rem;
-	}
-
-	.rec-subtitle {
-		margin: 0;
-		font-size: 0.8rem;
-		color: var(--text-secondary);
-	}
 
 	/* ── Body ── */
 	.rec-body {
-		flex: 1;
-		overflow-y: auto;
 		padding: 1.5rem;
 		display: flex;
 		flex-direction: column;

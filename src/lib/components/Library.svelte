@@ -2,6 +2,7 @@
 	import GameCard from './GameCard.svelte';
 	import { filteredGames, sortOrder, activeTag, runningGame } from '$lib/stores/gameStore';
 	import type { SortOrder } from '$lib/types/game';
+	import BlurIn from "./Anim.svelte";
 
 	let dropdownOpen = $state(false);
 
@@ -33,92 +34,60 @@
 <svelte:window onclick={handleClickOutside} />
 
 <div class="library page">
-	<div class="library-header">
-		<h1 class="title">Library</h1>
-		<div class="right">
-			<button
-				type="button"
-				class="tag-button"
-				class:active={$activeTag === 'multiplayer'}
-				onclick={() => toggleTag('multiplayer')}
-			>
-				Multiplayer
-			</button>
-			<button
-				type="button"
-				class="tag-button"
-				class:active={$activeTag === 'solo'}
-				onclick={() => toggleTag('solo')}
-			>
-				Solo
-			</button>
-
-			<div class="custom-dropdown">
+	<div class="page-body scrollable">
+		<div class="library-header page-headers">
+		<BlurIn>
+			<h1 class="page-title">Library</h1>
+		</BlurIn>
+			<div class="right">
 				<button
 					type="button"
-					class="dropdown-button"
-					class:active={dropdownOpen}
-					onclick={toggleDropdown}
+					class="tag-button"
+					class:active={$activeTag === 'multiplayer'}
+					onclick={() => toggleTag('multiplayer')}
 				>
-					Sort by ▼
+					Multiplayer
 				</button>
-				{#if dropdownOpen}
-					<div class="dropdown-menu" role="menu">
-						<button type="button" role="menuitem" onclick={() => setSortOrder('descending')}>
-							Name A → Z
-						</button>
-						<button type="button" role="menuitem" onclick={() => setSortOrder('ascending')}>
-							Name Z → A
-						</button>
-					</div>
-				{/if}
+				<button
+					type="button"
+					class="tag-button"
+					class:active={$activeTag === 'solo'}
+					onclick={() => toggleTag('solo')}
+				>
+					Solo
+				</button>
+
+				<div class="custom-dropdown">
+					<button
+						type="button"
+						class="dropdown-button"
+						class:active={dropdownOpen}
+						onclick={toggleDropdown}
+					>
+						Sort by ▼
+					</button>
+					{#if dropdownOpen}
+						<div class="dropdown-menu" role="menu">
+							<button type="button" role="menuitem" onclick={() => setSortOrder('descending')}>
+								Name A → Z
+							</button>
+							<button type="button" role="menuitem" onclick={() => setSortOrder('ascending')}>
+								Name Z → A
+							</button>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
-	</div>
-	<div class="games-container" class:has-running={$runningGame !== ''}>
-		{#each $filteredGames as game (game.slug)}
-			<GameCard {game} />
-		{/each}
+		<div class="games-container" class:has-running={$runningGame !== ''}>
+			{#each $filteredGames as game (game.slug)}
+				<GameCard {game} />
+			{/each}
+		</div>
 	</div>
 </div>
 
 <style>
-	.page {
-		flex: 1;
-		min-height: 0;
-		overflow-y: scroll;
-		scrollbar-width: thin;
-		scrollbar-color: rgba(120, 50, 200, 0.25) transparent;
-	}
-
-	.page:hover {
-		scrollbar-color: rgba(160, 80, 220, 0.65) transparent;
-	}
-
-	.library-header {
-		position: -webkit-sticky;
-		display: flex;
-		top: 0;
-		height: 4rem;
-		align-items: center;
-		justify-content: space-between;
-		background: var(--bg-panel);
-		backdrop-filter: blur(1.5rem) saturate(1.6);
-		-webkit-backdrop-filter: blur(1.5rem) saturate(1.6);
-		border-bottom: 0.0625rem solid var(--border-color);
-		z-index: 2;
-		padding: 0 1rem;
-	}
-
-	.title {
-		margin: 0;
-		padding-left: 0.3125rem;
-		color: var(--text-primary);
-		font-family: 'Brunson', sans-serif;
-		font-size: 1.5rem;
-		letter-spacing: 0.3125rem;
-		white-space: nowrap;
-	}
 
 	.right {
 		display: flex;
@@ -215,6 +184,8 @@
 		grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
 		gap: 1rem;
 		padding: 1.5rem;
+		transform: translateZ(0);
+		will-change: transform;
 	}
 
 	.games-container.has-running :global(.game-card:not(.running)) {

@@ -47,7 +47,7 @@
 
 {#if $selectedGame}
 	<div
-		class="preview-container"
+		class="preview-container scrollable"
 		bind:this={containerEl}
 		onscroll={handleScroll}
 	>
@@ -76,9 +76,9 @@
 			</button>
 			<img class="hero-bg" src="{artworkUrl}" style="transform: translateY({scrollY * 0.4}px);"/>
 			{#if $selectedGame.tags && $selectedGame.tags.length > 0}
-				<div class="tags">
+				<div class="game-tags">
 					{#each $selectedGame.tags as tag}
-						<span class="tag">{tag}</span>
+						<span class="game-tag">{tag}</span>
 					{/each}
 				</div>
 			{/if}
@@ -104,7 +104,7 @@
 
 		<div
 		  class="hero-content-wrapper"
-		  style="margin-top: calc(100vh - 5.125em - {heroContentHeight}px)"
+		  style="margin-top: calc(100vh - 3rem - {heroContentHeight}px)"
 		>
 			<div class="hero-content" bind:clientHeight={heroContentHeight}>
 				<h1 class="game-title">
@@ -164,7 +164,6 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		overflow-y: auto;
 		overflow-x: hidden;
 		color: var(--text-primary);
 	}
@@ -175,7 +174,7 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: Calc(100vh - 3.125rem);
+		height: 100vh;
 		z-index: 0;
 		overflow: hidden;
 	}
@@ -200,36 +199,15 @@
 		pointer-events: none;
 	}
 
-	.tags {
-		display: flex;
+	:global(.hero .game-tags) {
 		margin: 1rem;
 		gap: 1rem;
-		flex-wrap: wrap;
 	}
 
-	.tag {
-		background: rgba(255, 255, 255, 0.15);
-		border: 0.0625rem solid rgba(255, 255, 255, 0.3);
-		backdrop-filter: blur(0.25rem);
-		color: rgba(255, 255, 255, 0.9);
-		font-size: 0.7rem;
-		padding: 0.2rem 0.6rem;
-		border-radius: 0.3rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05rem;
-	}
-
-	:global([data-theme="dark"] .tag  ){
-		color: rgba(255, 255, 255, 0.9);
-	}
-
-	:global([data-theme="light"] .tag ){
-		color: rgba(0, 0, 0, 0.9);
-	}
 	.hero-content-wrapper {
-		position: -webkit-sticky;
+		position: sticky;
 		margin-left: 1.75rem;
-		top: 2rem;
+		top: 7.125rem;
 		left: 1.75rem;
 		z-index: 10;
 	}
@@ -314,7 +292,7 @@
 	.content {
 		position: relative;
 		z-index: 3;
-		margin-top: Calc(100vh - 3.125em);
+		margin-top: 100vh;
 		width: 100%;
 		height: auto;
 		background: linear-gradient(
@@ -361,7 +339,7 @@
 	/* ── Favorite button ── */
 	.fav-btn {
 		position: absolute;
-		top: 1rem;
+		top: calc(3.125rem + 0.75rem);
 		right: 1rem;
 		z-index: 5;
 		width: 2.4rem;

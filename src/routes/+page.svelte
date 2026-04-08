@@ -33,9 +33,9 @@
 	});
 </script>
 
-<Topbar />
-
 <div class="frosted-glass">
+	<Topbar />
+
 	<div class="big-container">
 		<Sidebar />
 
@@ -54,10 +54,7 @@
 <style>
 	.frosted-glass {
 		position: absolute;
-		top: 3.125rem;
-		left: 0;
-		height: calc(100% - 3.125rem);
-		width: 100%;
+		inset: 0;
 		background: var(--bg-frosted);
 		backdrop-filter: blur(var(--frosted-blur));
 	}
@@ -66,6 +63,5 @@
 		display: flex;
 		width: 100%;
 		height: 100%;
-		max-height: 100%;
 	}
 </style>

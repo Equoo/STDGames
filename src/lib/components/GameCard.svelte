@@ -28,9 +28,9 @@
 	<div class="card-overlay"></div>
 	<div class="card-info">
 		{#if game.tags && game.tags.length > 0}
-			<div class="card-tags">
+			<div class="game-tags">
 				{#each game.tags.slice(0, 3) as tag}
-					<span class="card-tag">{tag}</span>
+					<span class="game-tag">{tag}</span>
 				{/each}
 			</div>
 		{/if}
@@ -42,27 +42,8 @@
 </button>
 
 <style>
-	.game-card {
-		transform: translateZ(0);
-		will-change: transform;
-		backface-visibility: hidden;
-		display: block;
-		width: 100%;
-		position: relative;
-		aspect-ratio: 16 / 9;
-		border-radius: 0.75rem;
-		overflow: hidden;
-		cursor: pointer;
-		border: 0.0625rem solid var(--border-color);
-		background: var(--bg-card);
-		padding: 0;
-		transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-	}
-
-	.game-card:hover {
-		transform: scale(1.02);
-		box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.45);
-		border-color: var(--border-subtle);
+	:global(.game-card:hover) .card-bg {
+		transform: scale(1.06);
 	}
 
 	.card-bg {
@@ -85,6 +66,13 @@
 		position: absolute;
 		inset: 0;
 		background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.2) 55%, transparent 100%);
+		transition: transform 0.3s ease;
+		will-change: transform;
+		backface-visibility: hidden;
+	}
+
+	.game-card:hover .card-overlay {
+		transform: scale(1.06);
 	}
 
 	.card-info {
@@ -110,22 +98,6 @@
 		text-overflow: ellipsis;
 	}
 
-	.card-tags {
-		display: flex;
-		gap: 0.3rem;
-		flex-wrap: wrap;
-	}
-
-	.card-tag {
-		font-size: 0.62rem;
-		padding: 0.15rem 0.45rem;
-		background: rgba(255,255,255,0.15);
-		border: 0.0625rem solid rgba(255,255,255,0.25);
-		border-radius: 0.25rem;
-		color: rgba(255,255,255,0.85);
-		text-transform: uppercase;
-		letter-spacing: 0.05rem;
-	}
 
 	.running-badge {
 		position: absolute;

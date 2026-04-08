@@ -17,7 +17,8 @@
 }
 
 /* ========================= THEME VARIABLES ========================= */
-:root, [data-theme="dark"] {
+:root,
+[data-theme="dark"] {
 	--bg-frosted-solid: rgba(3, 3, 15, 0.7);
 	--bg-overlay: rgba(0, 0, 0, 0.75);
 	--bg-panel: rgba(0, 0, 0, 0.55);
@@ -60,9 +61,9 @@
 /* Dark mode — blue & pink glowing blobs on deep black */
 [data-theme="dark"] body {
 	background:
-		radial-gradient(ellipse 85% 70% at 78% 20%, rgba(20, 80, 255, 0.52) 0%, transparent 65%),
-		radial-gradient(ellipse 70% 60% at 10% 75%, rgba(210, 20, 180, 0.4) 0%, transparent 63%),
-		radial-gradient(ellipse 55% 50% at 55% 95%, rgba(80, 0, 210, 0.28) 0%, transparent 60%),
+		radial-gradient(ellipse 85% 75% at 10% 20%, rgba(20, 80, 255, 0.92) 0%, transparent 70%),
+		radial-gradient(ellipse 78% 68% at 85% 60%, rgba(200, 20, 170, 0.88) 0%, transparent 68%),
+		radial-gradient(ellipse 65% 58% at 48% 95%, rgba(80, 0, 200, 0.82) 0%, transparent 68%),
 		#03030f;
 }
 
@@ -88,8 +89,14 @@ body::after {
 	transform: translateZ(0);
 }
 
-[data-theme="dark"] body::after { opacity: 0.07; }
-[data-theme="light"] body::after { opacity: 0.11; }
+[data-theme="dark"] body::after {
+	opacity: 0.0;
+	mix-blend-mode: soft-light;
+}
+
+[data-theme="light"] body::after {
+	opacity: 0.1;
+}
 
 /* ========================= RESPONSIVE SCALING ========================= */
 /* Base: 16px at 1920px viewport width */
@@ -142,8 +149,106 @@ video {
 /* scrollbar-width/color are the standard CSS properties — these work on WebKitGTK/Linux.
    ::-webkit-scrollbar pseudo-elements are not supported on WebKitGTK and are removed. */
 * {
-	scrollbar-width: thin;
+	scrollbar-width: none;
 	scrollbar-color: transparent transparent;
+}
+
+.game-list-item,
+.play-button,
+.game-settings-button {
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000px;
+	will-change: transform;
+}
+
+/* ========================= GAME CARD ========================= */
+.game-card {
+	transform: translateZ(0);
+	will-change: transform;
+	backface-visibility: hidden;
+	display: block;
+	width: 100%;
+	position: relative;
+	aspect-ratio: 16 / 9;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	cursor: pointer;
+	border: 0.0625rem solid var(--border-color);
+	background: var(--bg-card);
+	padding: 0;
+	transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.game-card:hover {
+	transform: scale(1.02);
+	box-shadow: 0 0 1.2rem rgba(0, 0, 0, 0.5);
+	border-color: var(--border-subtle);
+}
+
+/* ========================= GAME TAG ========================= */
+.game-tags {
+	display: flex;
+	gap: 0.3rem;
+	flex-wrap: wrap;
+}
+
+.game-tag {
+	font-size: 0.65rem;
+	padding: 0.18rem 0.5rem;
+	background: rgba(255, 255, 255, 0.15);
+	border: 0.0625rem solid rgba(255, 255, 255, 0.25);
+	border-radius: 0.3rem;
+	color: rgba(255, 255, 255, 0.88);
+	text-transform: uppercase;
+	letter-spacing: 0.05rem;
+}
+/* ========================= PAGE ========================= */
+.page {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	padding-top: 3.125rem;
+	color: var(--text-primary);
+}
+
+.page-body {
+	flex: 1;
+	min-height: 0;
+}
+
+/* ========================= PAGE TITLE ========================= */
+.page-title {
+	margin: 0;
+	font-family: 'Brunson', sans-serif;
+	font-size: 1.5rem;
+	letter-spacing: 0.3125rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+}
+
+/* ========================= SCROLLABLE ========================= */
+.scrollable {
+	overflow-y: scroll;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(120, 50, 200, 0.25) transparent;
+}
+.scrollable:hover {
+	scrollbar-color: rgba(160, 80, 220, 0.65) transparent;
+}
+
+/* ========================= HEADERS ========================= */
+.page-headers {
+	position: sticky;
+	top: 0;
+	flex-shrink: 0;
+	display: flex;
+	height: 4rem;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 1rem;
+	background: transparent;
+	z-index: 4;
 }
 
 /* ========================= UTILITIES ========================= */
