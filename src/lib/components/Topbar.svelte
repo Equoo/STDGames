@@ -28,23 +28,23 @@
 			<img src={lettersLogo} alt="STDGames" class="logo" />
 			<div class="glow-layer"></div>
 		</div>
-			<nav class="nav">
-				<button
-					class="nav-btn"
-					class:active={$currentView === "home"}
-					onclick={() => go("home")}>Home</button
-				>
-				<button
-					class="nav-btn"
-					class:active={$currentView === "library"}
-					onclick={() => go("library")}>Library</button
-				>
-				<button
-					class="nav-btn"
-					class:active={$currentView === "settings"}
-					onclick={() => go("settings")}>Settings</button
-				>
-			</nav>
+		<nav class="nav">
+			<button
+				class="nav-btn"
+				class:active={$currentView === "home"}
+				onclick={() => go("home")}>Home</button
+			>
+			<button
+				class="nav-btn"
+				class:active={$currentView === "library"}
+				onclick={() => go("library")}>Library</button
+			>
+			<button
+				class="nav-btn"
+				class:active={$currentView === "settings"}
+				onclick={() => go("settings")}>Settings</button
+			>
+		</nav>
 	</div>
 </div>
 
@@ -160,7 +160,10 @@
 		font-family: "Brunson", sans-serif;
 		font-size: 1rem;
 		letter-spacing: 0.125rem;
+		/* text-shadow: var(--bg-dropdown) 0px 0px 15px;
+		outline: 0.1px var(--bg-dropdown); */
 		color: var(--text-secondary);
+		mix-blend-mode:difference;
 		cursor: pointer;
 		transition:
 			color 0.2s ease,

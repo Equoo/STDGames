@@ -84,7 +84,7 @@
 	/* ── Top row (search + toggle) ── */
 	.sidebar-top {
 		position: relative;
-		z-index: 5;
+		z-index: 6;
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;

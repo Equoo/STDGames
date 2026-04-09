@@ -7,6 +7,11 @@
 	} from "$lib/stores/gameStore";
 	import { launchGame, killRunningGame } from "$lib/api/games";
 	import Carousel from "./Carousel.svelte";
+	import FadeIn from "./anim/FadeIn.svelte";
+	import SlideIn from "./anim/SlideIn.svelte";
+	import ProgBlur from "./effect/ProgBlur.svelte";
+	import { cubicOut } from "svelte/easing";
+	import { slide, fade } from "svelte/transition";
 
 	let heroContentHeight = $state();
 	let isLaunching = $state(false);
@@ -46,13 +51,19 @@
 </script>
 
 {#if $selectedGame}
-	<h1 class="game-title page-headers">
-		{#if $selectedGame.logo}
-			<img src={$selectedGame.logo} />
-		{:else}
-			{$selectedGame.name || $selectedGame.slug}
-		{/if}
-	</h1>
+	{#key $selectedGame}
+		<h1
+			in:slide={{ easing: cubicOut, duration: 600, axis: "y" }}
+			out:fade={{ easing: cubicOut, duration: 500 }}
+			class="game-title page-headers"
+		>
+			{#if $selectedGame.logo}
+				<img src={$selectedGame.logo} />
+			{:else}
+				{$selectedGame.name || $selectedGame.slug}
+			{/if}
+		</h1>
+	{/key}
 	<div
 		class="preview-container scrollable"
 		bind:this={containerEl}
@@ -188,12 +199,12 @@
 	.hero-bg {
 		will-change: transform;
 		position: absolute;
-		top: 10%;
+		top: 8%;
 		left: 0;
 		width: 100%;
-		height: 120%;
+		height: 100%;
 		object-fit: cover;
-		object-position: center 35%;
+		object-position: center center;
 
 		transform: translateZ(0);
 	}
@@ -212,7 +223,7 @@
 	.hero-content-wrapper {
 		position: sticky;
 		margin-left: 2rem;
-		top: 2.5rem;
+		top: 4rem;
 		left: 1.75rem;
 		z-index: 5;
 	}
@@ -229,7 +240,7 @@
 		gap: 0.6rem;
 		align-items: center;
 	}
-	
+
 	.game-title {
 		display: flex;
 		flex-direction: column;
@@ -239,24 +250,31 @@
 		left: 20%;
 		width: 80%;
 		height: 7.125rem;
-		z-index: 5;
+		z-index: 6;
 		font-family: "Brunson", sans-serif;
 		font-size: 2.8rem;
 		text-align: center;
 		text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.8);
 		letter-spacing: 0.1rem;
 		line-height: 1;
+		transition:
+			left 0.3s ease,
+			width 0.3s ease;
+		pointer-events: none;
+	}
+
+	:global(.sidebar.collapsed ~ .game-title) {
+		left: 3.5rem;
+		width: calc(100% - 3.5rem);
 	}
 	.game-title h1 {
-		color: var(--text-primary);;
+		color: var(--text-primary);
 		text-align: center;
 	}
 	.game-title img {
 		height: 7.125rem;
 		max-width: 25%;
 	}
-
-
 
 	.play-button {
 		padding: 0.55rem 1.8rem;
