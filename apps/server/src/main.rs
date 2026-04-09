@@ -34,14 +34,18 @@ async fn main() {
     ));
     let app_state = AppState { clients };
 
+    let cors = CorsLayer::new()
+    .allow_origin(Any)
+    .allow_methods(Any)
+    .allow_headers(Any);
+
     let static_files = get_service(ServeDir::new("resources"));
 
     let app = Router::new()
-        .nest_service("/cdn/", static_files
-            .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
-        )
+        .nest_service("/cdn/", static_files)
         .route("/api/data", post(api_data))
-        .with_state(app_state);
+        .with_state(app_state)
+        .layer(cors);
 
     info!("Server running on port 3000");
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
