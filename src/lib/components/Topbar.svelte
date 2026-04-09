@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ContrastText from '$lib/components/ContrastText.svelte';
 	import { currentView } from "$lib/stores/gameStore";
 	import lettersLogo from "$lib/assets/icons/stdgames_letters_only.png";
 	let mx = $state(0);
@@ -13,6 +14,8 @@
 	function go(view: "home" | "library" | "settings") {
 		currentView.set(view);
 	}
+
+	let section: HTMLElement;
 </script>
 
 <div class="topbar">
@@ -32,17 +35,17 @@
 			<button
 				class="nav-btn"
 				class:active={$currentView === "home"}
-				onclick={() => go("home")}>Home</button
+				onclick={() => go("home")}><ContrastText container={section}>Home</ContrastText></button
 			>
 			<button
 				class="nav-btn"
 				class:active={$currentView === "library"}
-				onclick={() => go("library")}>Library</button
+				onclick={() => go("library")}><ContrastText container={section}>Library</ContrastText></button
 			>
 			<button
 				class="nav-btn"
 				class:active={$currentView === "settings"}
-				onclick={() => go("settings")}>Settings</button
+				onclick={() => go("settings")}><ContrastText container={section}>Settings</ContrastText></button
 			>
 		</nav>
 	</div>

@@ -10,6 +10,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
 use tower_http::services::ServeDir;
+use tower_http::cors::{CorsLayer, Any};
 use tracing::{Level, error, info};
 
 mod clients;
@@ -36,7 +37,9 @@ async fn main() {
     let static_files = get_service(ServeDir::new("resources"));
 
     let app = Router::new()
-        .nest_service("/cdn/", static_files)
+        .nest_service("/cdn/", static_files
+            .layer(CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any))
+        )
         .route("/api/data", post(api_data))
         .with_state(app_state);
 

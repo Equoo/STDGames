@@ -72,6 +72,7 @@
 		<!-- Hero -->
 		<div class="hero">
 			<img
+	   			crossOrigin='anonymous'
 				class="hero-bg"
 				src={artworkUrl}
 				style="transform: translateY({scrollY * 0.4}px);"
