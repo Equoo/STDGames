@@ -11,6 +11,11 @@
 
 	let pollingInterval: ReturnType<typeof setInterval>;
 
+	let page = $state<HTMLElement | undefined>();
+	let attachedPage = $derived(
+		page?.isConnected ? page : undefined
+	);
+
 	onMount(async () => {
 		// Load game library
 		const library = await fetchGameLibrary();
@@ -24,6 +29,8 @@
 			const running = await getRunningGame();
 			runningGame.set(running);
 		}, 1000);
+
+		page = document.body;
 	});
 
 	onDestroy(() => {
@@ -34,19 +41,19 @@
 </script>
 
 <div class="frosted-glass">
-	<Topbar />
+	<Topbar section={attachedPage}/>
 
 	<div class="big-container">
 		<Sidebar />
 
 		{#if $currentView === 'home'}
-			<Recommendations />
+			<Recommendations section={attachedPage}/>
 		{:else if $currentView === 'library'}
-			<Library />
+			<Library section={attachedPage}/>
 		{:else if $currentView === 'settings'}
-			<Settings />
+			<Settings section={attachedPage}/>
 		{:else}
-			<GamePreview />
+			<GamePreview section={attachedPage}/>
 		{/if}
 	</div>
 </div>

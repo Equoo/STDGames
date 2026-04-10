@@ -17,6 +17,11 @@
 }
 
 /* ========================= THEME VARIABLES ========================= */
+:root {
+	--text-primary-light: #2d1b4e;
+	--text-primary-dark: #ffffff;
+}
+
 :root,
 [data-theme="dark"] {
 	--bg-frosted-solid: rgba(3, 3, 15, 0.7);
@@ -233,7 +238,6 @@ video {
 	font-size: 1.5rem;
 	letter-spacing: 0.3125rem;
 	color: var(--text-primary);
-	text-shadow: var(--bg-dropdown) 1px 1px 15px;
 	white-space: nowrap;
 }
 

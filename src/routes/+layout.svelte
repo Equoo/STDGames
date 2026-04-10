@@ -3,7 +3,6 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { theme } from '$lib/stores/gameStore';
 	import { onMount } from 'svelte';
-	export const ssr = false;
 
 	let { children } = $props();
 

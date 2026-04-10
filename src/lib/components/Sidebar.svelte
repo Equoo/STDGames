@@ -53,7 +53,7 @@
 					title={game.name || game.slug}
 				>
 					<div class="icon-container">
-						<img src={game.icon} alt="{game.slug} icon" class="game-list-icon" />
+						<img src={game.icon} alt="{game.slug} icon" class="no-capture game-list-icon" />
 					</div>
 					<span class="item-name">{@html highlightMatch(game.name || game.slug, $searchQuery)}</span>
 				</button>

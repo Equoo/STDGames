@@ -37,6 +37,9 @@
 			dropdownOpen = false;
 		}
 	}
+
+	import ContrastText from '$lib/components/ContrastText.svelte';
+	let { section } = $props();
 </script>
 
 <svelte:window onclick={handleClickOutside} />
@@ -45,7 +48,7 @@
 	<div class="page-body scrollable">
 		<div class="library-header page-headers">
 			<FlyIn>
-				<h1 class="page-title">Library</h1>
+				<h1 class="page-title no-capture"><ContrastText container={section}>Library</ContrastText></h1>
 			</FlyIn>
 			<FadeIn>
 				<div class="right">

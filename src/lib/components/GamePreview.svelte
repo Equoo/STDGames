@@ -48,6 +48,9 @@
 	function handleScroll() {
 		scrollY = containerEl?.scrollTop ?? 0;
 	}
+	
+	import ContrastText from '$lib/components/ContrastText.svelte';
+	let { section } = $props();
 </script>
 
 {#if $selectedGame}
@@ -55,12 +58,12 @@
 		<h1
 			in:slide={{ easing: cubicOut, duration: 600, axis: "y" }}
 			out:fade={{ easing: cubicOut, duration: 500 }}
-			class="game-title page-headers"
+			class="game-title page-headers no-capture"
 		>
 			{#if $selectedGame.logo}
 				<img src={$selectedGame.logo} />
 			{:else}
-				{$selectedGame.name || $selectedGame.slug}
+				<ContrastText container={section}>{$selectedGame.name || $selectedGame.slug}</ContrastText>
 			{/if}
 		</h1>
 	{/key}
@@ -255,7 +258,6 @@
 		font-family: "Brunson", sans-serif;
 		font-size: 2.8rem;
 		text-align: center;
-		text-shadow: 0 0.125rem 1.5rem rgba(0, 0, 0, 0.8);
 		letter-spacing: 0.1rem;
 		line-height: 1;
 		transition:

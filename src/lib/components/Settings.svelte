@@ -10,13 +10,16 @@
 	function setTheme(value: Theme) {
 		theme.set(value);
 	}
+
+	import ContrastText from '$lib/components/ContrastText.svelte';
+	let { section } = $props();
 </script>
 
 <div class="settings page">
 	<div class="page-body scrollable">
 		<div class="settings-header page-headers">
 			<FlyIn>
-				<h1 class="page-title">Settings</h1>
+				<h1 class="page-title no-capture"><ContrastText container={section}>Settings</ContrastText></h1>
 			</FlyIn>
 		</div>
 

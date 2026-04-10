@@ -24,13 +24,16 @@
 		}
 		picks = copy.slice(0, 6);
 	}
+	
+	import ContrastText from '$lib/components/ContrastText.svelte';
+	let { section } = $props();
 </script>
 
 <div class="page">
 	<div class="page-body scrollable">
 		<div class="rec-header page-headers">
 			<FlyIn>
-				<h1 class="page-title">Home</h1>
+				<h1 class="page-title no-capture"><ContrastText container={section}>Home</ContrastText></h1>
 			</FlyIn>
 		</div>
 

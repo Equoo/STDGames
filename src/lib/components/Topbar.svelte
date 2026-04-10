@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import ContrastText from '$lib/components/ContrastText.svelte';
 	import { currentView } from "$lib/stores/gameStore";
 	import lettersLogo from "$lib/assets/icons/stdgames_letters_only.png";
+
+	let { section } = $props();
+
 	let mx = $state(0);
 	let my = $state(0);
 
@@ -15,17 +17,10 @@
 	function go(view: "home" | "library" | "settings") {
 		currentView.set(view);
 	}
-
-	let section: HTMLElement = $state();
-	let scroll_elem: HTMLElement = $state();
-
-	onMount(() => {
-		scroll_elem = document.querySelector('.preview-container');
-	  });
 </script>
 
 <div class="topbar">
-	<div class="topbar-content" bind:this={section}>
+	<div class="topbar-content">
 		<!-- Logo with mouse-tracking glow -->
 		<div
 			class="logo-wrapper"
@@ -39,22 +34,21 @@
 		</div>
 		<nav class="nav">
 			<button
-				class="nav-btn"
+				class="nav-btn no-capture"
 				class:active={$currentView === "home"}
 				onclick={() => go("home")}><ContrastText container={section}>Home</ContrastText></button
 			>
 			<button
-				class="nav-btn"
+				class="nav-btn no-capture"
 				class:active={$currentView === "library"}
 				onclick={() => go("library")}><ContrastText container={section}>Library</ContrastText></button
 			>
 			<button
-				class="nav-btn"
+				class="nav-btn no-capture"
 				class:active={$currentView === "settings"}
 				onclick={() => go("settings")}><ContrastText container={section}>Settings</ContrastText></button
 			>
 		</nav>
-		<ContrastText scroll={scroll_elem} container={section}>Home</ContrastText>
 	</div>
 </div>
 
