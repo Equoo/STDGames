@@ -1,0 +1,39 @@
+FROM ubuntu:22.04 AS builder
+
+RUN apt-get update && apt-get install -y \
+    sshfs \
+    patchelf \
+    binutils \
+    --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /bundle
+
+# Copy the sshfs binary
+RUN cp $(which sshfs) ./sshfs.bin
+
+# Find all shared lib deps
+RUN ldd ./sshfs.bin \
+    | awk '{print $3}' \
+    | grep '^/' \
+    | grep -v 'libpthread\|libc\.so\|libdl\|libm\.so\|librt\|ld-linux\|libresolv\|libnss' \
+    | xargs -I{} cp {} ./
+
+# Also grab libfuse3 and its dependencies explicitly
+RUN cp /lib/x86_64-linux-gnu/libfuse3.so.3 . 2>/dev/null || true
+RUN cp /usr/lib/x86_64-linux-gnu/libfuse3.so.3 . 2>/dev/null || true
+
+# Patch the rpath so it finds libs in the same dir
+RUN patchelf --set-rpath '$ORIGIN' ./sshfs.bin
+
+# Write the launcher wrapper
+RUN cat > sshfs <<'EOF'
+#!/bin/sh
+SELF=$(readlink -f "$0")
+DIR=$(dirname "$SELF")
+export LD_LIBRARY_PATH="$DIR:$LD_LIBRARY_PATH"
+exec "$DIR/sshfs.bin" "$@"
+EOF
+RUN chmod +x sshfs
+
+FROM scratch
+COPY --from=builder /bundle /bundle
