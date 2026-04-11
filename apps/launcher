@@ -1,0 +1,37 @@
+#! /bin/bash
+
+BASEDIR="${BASEDIR:-$(readlink -f "$(dirname "$(readlink -f "$0")")")}"
+SSHFS=$BASEDIR/sshfs/sshfs-bundle/sshfs
+SSHKEY=$BASEDIR/keys/ssh_key
+
+SSH=1
+PORT=44424
+HOST=games.a2itech.fr
+USER=std
+HOST_DIR=/shared
+DATA_DIR=$(mktemp -d)
+
+
+MOUNTED=$(mount | grep -m 1 "@$HOST:")
+if [ -n "$MOUNTED" ]; then
+	fusermount -u $(echo "$MOUNTED" | awk '{print $3}')
+fi
+
+mkdir -p $DEST
+
+if [ $SSH ]; then
+	$SSHFS -p $PORT $USER@$HOST:$HOST_DIR $DATA_DIR -o "ssh_command=ssh -i $HOME/.ssh/stdgame" -o "StrictHostKeyChecking=no,UserKnownHostsFile=/dev/null,compression=no,cache=yes,kernel_cache,max_read=131072,max_write=131072,Ciphers=aes128-gcm@openssh.com,auto_cache,attr_timeout=600,entry_timeout=600,negative_timeout=120,ServerAliveInterval=15,reconnect"
+else
+	# socat tcp-listen:1234,reuseaddr,fork  exec:/usr/lib/openssh/sftp-server
+	$SSHFS -o directport=$PORT $HOST:$FOLDER $DEST
+fi
+
+
+JUNEST_DIR=$HOME/.cache/stdgame/junest
+git clone https://github.com/fsquillace/junest.git $JUNEST_DIR
+
+JUNEST=$JUNEST_DIR/bin/junest
+
+JUNEST_HOME=$DATA_DIR/
+JUNESTENV=0
+
