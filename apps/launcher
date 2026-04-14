@@ -1,6 +1,67 @@
 #! /bin/bash
 
+# LEVEL: 0=fatal only, 1=+error, 2=+warn, 3=+info(default), 4=+debug, 5=+dim
+LOG_LEVEL=${LEVEL:-3}
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[0;37m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m' # No Color
+
+# Basic
+print()    { echo -e "${NC}$*${NC}"; }
+success()  { echo -e "${GREEN}[OK]${NC} $*"; }
+bold()     { echo -e "${BOLD}$*${NC}"; }
+dim()      { echo -e "${DIM}$*${NC}"; }
+
+_log() {
+    local level=$1 color=$2 label=$3; shift 3
+    [ "$level" -le "$LOG_LEVEL" ] && echo -e "${color}${label}${NC} $*"
+}
+_err() {
+    local level=$1 color=$2 label=$3; shift 3
+    [ "$level" -le "$LOG_LEVEL" ] && echo -e "${color}${label}${NC} $*" >&2
+}
+
+debug()   { _log 4 "${DIM}"     "[DEBUG]" "$*"; }
+info()    { _log 3 "${CYAN}"    "[INFO] " "$*"; }
+warn()    { _log 2 "${YELLOW}"  "[WARN] " "$*"; }
+error()   { _err 1 "${RED}"     "[ERROR]" "$*"; }
+fatal()   { _err 0 "${RED}${BOLD}" "[FATAL]" "$*"; exit 1; }
+
+# Section header
+header() {
+    local text="$*"
+    local len=${#text}
+    local line=$(printf '─%.0s' $(seq 1 $((len + 4))))
+    echo -e "${BLUE}${BOLD}┌${line}┐${NC}"
+    echo -e "${BLUE}${BOLD}│  ${text}  │${NC}"
+    echo -e "${BLUE}${BOLD}└${line}┘${NC}"
+}
+
+# Step with index
+step() {
+    local n=$1; shift
+    echo -e "${MAGENTA}[${n}]${NC} $*"
+}
+
+
+
 BASEDIR="${BASEDIR:-$(readlink -f "$(dirname "$(readlink -f "$0")")")}"
+
+DATA_DIR=$(mktemp -d)
+LAUNCHER_BIN=$BASEDIR/launcher.bin
+CACHE=$HOME/.cache/stdgame/
+JUNEST_DIR=$CACHE/junest
+JUNEST_HOME=$CACHE/junest_home
+JUNEST=$JUNEST_DIR/bin/junest
 SSHFS=$BASEDIR/sshfs/sshfs-bundle/sshfs
 SSHKEY=$BASEDIR/keys/ssh_key
 
@@ -9,29 +70,104 @@ PORT=44424
 HOST=games.a2itech.fr
 USER=std
 HOST_DIR=/shared
-DATA_DIR=$(mktemp -d)
 
+mount_filesystem() {
+	header "Mounting server filesystem"
 
-MOUNTED=$(mount | grep -m 1 "@$HOST:")
-if [ -n "$MOUNTED" ]; then
-	fusermount -u $(echo "$MOUNTED" | awk '{print $3}')
-fi
+	step 1 "Unmount old connections" # TODO Use old connection, check if work else umount and new
 
-mkdir -p $DEST
+	mount | grep "@$HOST:" | awk '{print $3}' | while read -r mountpoint; do
+		debug "Unmounting $mountpoint"
+		fusermount -u "$mountpoint"
+	done
 
-if [ $SSH ]; then
-	$SSHFS -p $PORT $USER@$HOST:$HOST_DIR $DATA_DIR -o "ssh_command=ssh -i $HOME/.ssh/stdgame" -o "StrictHostKeyChecking=no,UserKnownHostsFile=/dev/null,compression=no,cache=yes,kernel_cache,max_read=131072,max_write=131072,Ciphers=aes128-gcm@openssh.com,auto_cache,attr_timeout=600,entry_timeout=600,negative_timeout=120,ServerAliveInterval=15,reconnect"
-else
-	# socat tcp-listen:1234,reuseaddr,fork  exec:/usr/lib/openssh/sftp-server
-	$SSHFS -o directport=$PORT $HOST:$FOLDER $DEST
-fi
+	step 2 "Mounting"
+	debug "Mounting at $DATA_DIR"
 
+	mkdir -p $DATA_DIR
+	mkdir -p $HOME/.ssh
+	cp $SSHKEY $HOME/.ssh/stdgame
 
-JUNEST_DIR=$HOME/.cache/stdgame/junest
-git clone https://github.com/fsquillace/junest.git $JUNEST_DIR
+	if [ $SSH ]; then
+		debug "Trying to mount from ssh"
+		output=$(
+			$SSHFS -p $PORT $USER@$HOST:$HOST_DIR $DATA_DIR \
+				-o ssh_command="ssh -i $HOME/.ssh/stdgame" \
+				-o MACs=umac-64-etm@openssh.com \
+				-o StrictHostKeyChecking=no \
+				-o UserKnownHostsFile=/dev/null \
+				-o Ciphers=aes128-gcm@openssh.com \
+				-o Compression=no \
+				-o cache=yes \
+				-o kernel_cache \
+				-o cache_timeout=86400 \
+				-o attr_timeout=86400 \
+				-o entry_timeout=86400 \
+				-o max_read=524288 \
+				-o ServerAliveInterval=15 \
+				-o dcache_max_size=10000 \
+				-o NumberOfPasswordPrompts=0 \
+				-o ControlMaster=auto \
+				-o ControlPath=/tmp/sshfs-ctl-%r@%h:%p \
+				-o ControlPersist=yes \
+				-o max_conns=8 \
+				-o reconnect 2>&1
+		)
+		if [ $? -ne 0 ]; then
+			fatal "$output"
+		fi
+	else
+		debug "Trying to mount without ssh"
+		# socat tcp-listen:1234,reuseaddr,fork  exec:/usr/lib/openssh/sftp-server
+		$SSHFS -o directport=$PORT $HOST:$FOLDER $DEST
+	fi
 
-JUNEST=$JUNEST_DIR/bin/junest
+	success "Mounting complete"
+}
 
-JUNEST_HOME=$DATA_DIR/
-JUNESTENV=0
+setup_junest() {
+	header "Setup JuNest"
+
+	step 1 "Download JuNest binaries"
+	if [ ! -f "$JUNEST" ]; then
+		git clone https://github.com/fsquillace/junest.git $JUNEST_DIR
+	else
+		info "JuNest binaries already downloaded"
+	fi
+
+	step 2 "Download JuNest image without libs"
+
+	if [ -d "$JUNEST_HOME" ] && \
+		[ "$(du -sm "$JUNEST_HOME" | cut -f1)" -gt 42 ]; then
+		info "JuNest image already downloaded"
+	else
+		DATA_JUNEST_HOME=$DATA_DIR/junest/home.tar.xz
+		TMP_FILE=$(mktemp)
+
+		rsync -a --info=progress2 $DATA_JUNEST_HOME $TMP_FILE
+		tar -xf $TMP_FILE -C $CACHE
+	fi
+
+	success "Complete"
+}
+
+run_junest() {
+	header "Run JuNest"
+
+	DATA_JUNEST_BIND=$DATA_DIR/junest/bind/
+
+	export JUNEST_HOME=$JUNEST_HOME
+	export PYTHONPATH=/usr/lib/python3/dist-packages
+	export JUNESTENV=0
+	$JUNEST -b " \
+		--bind $DATA_JUNEST_BIND/usr /usr \
+		--bind-try /sgoinfre /sgoinfre \
+		--bind-try /goinfre /goinfre \
+		--bind-try /media /media \
+	" $LAUNCHER_BIN
+}
+
+mount_filesystem
+setup_junest
+run_junest
 
