@@ -7,12 +7,17 @@ use crate::execution::GameExecution;
 use crate::window::init::init_window;
 use crate::library::load_library;
 
-mod execution;
 mod utils;
 mod window;
 mod cli;
 mod config;
+
+mod app_state;
+
+mod execution;
 mod library;
+mod methods;
+mod store;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

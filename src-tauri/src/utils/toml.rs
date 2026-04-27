@@ -1,5 +1,6 @@
 
-fn format_toml_error(content: &str, error: &toml::de::Error, file_path: Option<&str>) -> String {
+
+pub fn format_toml_error(content: &str, error: &toml::de::Error, file_path: Option<&str>) -> String {
     let mut output = String::new();
 
     // Header with file info

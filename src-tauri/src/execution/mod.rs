@@ -1,31 +1,61 @@
-use std::process::Child;
+use std::{collections::HashMap, process::{Child, ExitStatus}};
 
-use crate::library::Game;
+use anyhow::Result;
 
-pub mod setup;
-pub mod build_command;
-pub mod junest;
-pub mod manager;
+use crate::{library::Game, methods::LaunchMode};
 
-#[derive(Clone)]
-pub struct Overlay {
-	pub src: Vec<String>,
-	pub dst: String,
+pub struct GameExec {
+    cmd: Vec<String>,
+    precmd: Vec<String>,
+    env: HashMap<String, String>
 }
+
+impl GameExec {
+    pub fn new(cmd: Vec<String>) -> Self {
+        GameExec{cmd, precmd: Vec::new(), env: HashMap::new()}
+    }
+
+    pub fn add_precmd(&mut self, precmd: Vec<String>) -> &mut Self {
+        self.precmd = precmd;
+        self
+    }
+
+    pub fn add_environs(&mut self, environs: HashMap<String, String>) -> &mut Self {
+        self.env = environs;
+        self
+    }
+
+    pub fn add_(&mut self, environs: HashMap<String, String>) -> &mut Self {
+        self.env = environs;
+        self
+    }
+}
+
 
 //#[derive(Clone)]
 pub struct GameProcess {
-	pub process: Child,
+	process: Child,
 	pub name: String,
+    pub method: LaunchMode
 }
 
-pub struct GameExecution {
-	library: Vec<Game>,
-	pub running: Option<GameProcess>,
+impl GameProcess {
+    pub fn kill(mut self) -> Result<()> {
+        self.process.kill()?;
+
+        Ok(())
+    }
+
+    pub fn wait(mut self) -> Result<ExitStatus> {
+        Ok(self.process.wait()?)
+    }
+
+    pub fn is_running(mut self) -> Result<bool> {
+        Ok(self.process.try_wait()?.is_none())
+    }
+
+    pub fn pid(self) -> u32 {
+        self.process.id()
+    }
 }
 
-impl GameExecution {
-	pub fn new( lib: Vec<Game>) -> Self {
-		Self { library: lib, running: None }
-	}
-}

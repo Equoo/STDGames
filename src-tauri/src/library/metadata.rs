@@ -1,4 +1,20 @@
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct GameMetadataAPI {
+    pub store_pages: Option<Vec<String>>,
+    pub name: Option<String>,
+    pub icon: Option<usize>,
+    pub logo: Option<usize>,
+    pub hero: Option<usize>,
+    pub cover: Option<usize>,
+    pub description: Option<String>,
+    pub short_description: Option<String>,
+    pub screenshots: Option<Vec<usize>>,
+    pub movies: Option<Vec<usize>>,
+    pub movies_thumbnails: Option<Vec<usize>>,
+    pub tags: Option<Vec<String>>,
+    pub assets: Vec<String>,
+}
 
 fn get_asset(asset_id: Option<usize>, assets: &Vec<String>) -> Option<String> {
     match asset_id {
@@ -104,3 +120,5 @@ pub async fn load_api_data(games: &mut Vec<Game>) -> Result<()> {
 
     Ok(())
 }
+
+

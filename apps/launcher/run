@@ -1,0 +1,60 @@
+#! /bin/bash
+
+BASEDIR="${BASEDIR:-$(readlink -f "$(dirname "$(readlink -f "$0")")")}"
+
+source $BASEDIR/config.sh
+
+source $BASEDIR/logging.sh
+source $BASEDIR/checks.sh
+source $BASEDIR/mount.sh
+
+setup_junest() {
+	header "Setup JuNest"
+
+	step 1 "Download JuNest binaries"
+	if [ ! -f "$JUNEST" ]; then
+		git clone https://github.com/fsquillace/junest.git $JUNEST_DIR
+	else
+		info "JuNest binaries already downloaded"
+	fi
+
+	step 2 "Download JuNest image without libs"
+
+	if [ -d "$JUNEST_HOME" ] && \
+		[ "$(du -sm "$JUNEST_HOME" | cut -f1)" -gt 42 ]; then
+		info "JuNest image already downloaded"
+	else
+		DATA_JUNEST_HOME=$DATA_DIR/junest/home.tar.xz
+		TMP_FILE=$(mktemp)
+
+		rsync -a --info=progress2 $DATA_JUNEST_HOME $TMP_FILE
+		tar -xf $TMP_FILE -C $CACHE
+	fi
+
+	success "Complete"
+}
+
+run_junest() {
+	header "Run JuNest"
+
+	DATA_JUNEST_BIND=$DATA_DIR/junest/bind/
+
+	export JUNEST_HOME=$JUNEST_HOME
+	export PYTHONPATH=/usr/lib/python3/dist-packages
+	export JUNESTENV=0
+	$JUNEST -b " \
+		--bind $DATA_JUNEST_BIND/usr /usr \
+		--bind-try /sgoinfre /sgoinfre \
+		--bind-try /goinfre /goinfre \
+		--bind-try /media /media \
+		-- $LAUNCHER_BIN
+	"
+}
+
+if ! check_fuse; then
+	fatal "fusermount isn't accessible. You may use ./run_compat"
+fi
+
+mount_filesystem
+setup_junest
+run_junest

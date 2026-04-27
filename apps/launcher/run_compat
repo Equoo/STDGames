@@ -1,0 +1,50 @@
+#! /bin/bash
+
+BASEDIR="${BASEDIR:-$(readlink -f "$(dirname "$(readlink -f "$0")")")}"
+
+source $BASEDIR/config.sh
+
+source $BASEDIR/logging.sh
+source $BASEDIR/checks.sh
+source $BASEDIR/mount.sh
+
+compatibility() {
+	CONTAINER_NAME="stdgame_runner"
+	IMAGE="stdgame_image:latest"
+	header "Compatibility mode"
+
+	# docker build -t $IMAGE $BASEDIR/ || true
+
+	docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+	if ! docker ps -q -f name="$CONTAINER_NAME" | grep -q .; then
+	  docker run -d \
+		--name "$CONTAINER_NAME" \
+		--privileged \
+		--device /dev/dri \
+		-v "$BASEDIR:$CACHE/app" \
+		-v "$HOME:/root" \
+		-v "$HOME:$HOME" \
+		-v "/goinfre:/goinfre" \
+		-v "/sgoinfre:/sgoinfre" \
+		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		-e DISPLAY="$DISPLAY" \
+		-e SSHFS=sshfs \
+		-e USER=$USER \
+		--network host \
+		"$IMAGE" sleep infinity
+	fi
+
+	docker exec -it "$CONTAINER_NAME" $@
+}
+
+
+if check_fuse; then
+	mount_filesystem
+else
+	if check_docker; then
+		compatibility env HOME=$HOME $CACHE/app/run
+	else
+		fatal "Fuse3 isn't accessible. Docker isn't too."
+	fi
+fi
