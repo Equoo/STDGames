@@ -1,36 +1,33 @@
 use anyhow::{Result, anyhow};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::fmt::Write;
 use std::{collections::HashMap, fs, path::Path};
-use toml;
 
-use crate::config::CONFIG;
+use crate::{methods::ModeId, utils::format_toml_error};
 
 mod metadata;
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Games {
-    pub games: Vec<Game>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+#[serde(default)]
 pub struct Game {
     pub slug: String,
     pub metadata: GameMetadata,
-    pub methods: Vec<String>,
+    pub methods: Vec<ModeId>,
     pub proton: Option<String>,
-    pub is_local: Option<bool>,
-    pub environs: Option<HashMap<String, String>>,
+    pub force_dl: bool,
+    pub environs: HashMap<String, String>,
     pub srcs: Vec<String>,
     pub cmd: Vec<String>,
-    pub precmd: Option<Vec<String>>,
+    pub precmd: Vec<String>,
+    pub prelaunch: Option<Vec<String>>,
+    pub postlaunch: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+#[serde(default)]
 pub struct GameMetadata {
     pub api: Option<ApiClient>,
-    pub store_pages: Option<Vec<String>>,
+    pub store_pages: Vec<String>,
     pub name: Option<String>,
     pub icon: Option<String>,
     pub logo: Option<String>,
@@ -38,10 +35,10 @@ pub struct GameMetadata {
     pub cover: Option<String>,
     pub description: Option<String>,
     pub short_description: Option<String>,
-    pub screenshots: Option<Vec<String>>,
-    pub movies: Option<Vec<String>>,
-    pub movies_thumbnails: Option<Vec<String>>,
-    pub tags: Option<Vec<String>>,
+    pub screenshots: Vec<String>,
+    pub movies: Vec<String>,
+    pub movies_thumbnails: Vec<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -51,7 +48,7 @@ pub struct ApiClient {
 }
 
 impl Game {
-    fn abs_command(root: &String, command: &Vec<String>) {
+    fn abs_command(root: &String, command: &mut Vec<String>) {
         command[0] = if Path::new(&command[0]).is_absolute() {
             command[0].clone()
         } else {
@@ -65,7 +62,7 @@ impl Game {
         re.captures_iter(str).for_each(|c| {
             if let Some(m) = c.get(1) {
                 if let Some(value) = environs.get(m.as_str()) {
-                    str.replace(format!("${}", m.as_str()), value);
+                    str.replace(&format!("${}", m.as_str()), value);
                 }
             }
         });
@@ -82,14 +79,26 @@ impl Game {
             Self::expand_environs(environs, v);
         });
 
-        Self::abs_command(root, &self.cmd);
-        if let Some(cmd) = &mut self.precmd {
-            cmd.iter_mut().for_each(|v| {
-                Self::expand_environs(environs, v);
-            });
+        Self::abs_command(root, &mut self.cmd);
 
-            Self::abs_command(root, &cmd);
-        }
+        self.precmd.iter_mut().for_each(|v| {
+            Self::expand_environs(environs, v);
+        });
+
+        Self::abs_command(root, &mut self.precmd);
     }
 }
 
+pub fn load_library(path: &Path) -> Result<HashMap<String, Game>> {
+    let content = fs::read_to_string(path)?;
+
+    Ok(
+        toml::from_str::<Vec<Game>>(&content).map_err(|e| {
+            let error_msg = format_toml_error(&content, &e, path.to_str());
+            anyhow!("\n\n{}", error_msg)
+        })?
+        .into_iter()
+        .map(|v| (v.slug.clone(), v))
+        .collect()
+    )
+}

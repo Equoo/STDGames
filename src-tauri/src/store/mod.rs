@@ -1,19 +1,20 @@
 use std::process::ExitStatus;
 use anyhow::Result;
 
-mod epic;
+// mod epic;
 mod steam;
-mod switch;
+// mod switch;
 
-pub use epic::EpicStore;
+use serde::{Deserialize, Serialize};
 pub use steam::SteamStore;
-pub use switch::SwitchStore;
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd, Eq, Ord)]
+pub enum StoreId {
+    Steam,
+    Epic,
+    Switch
+}
 
 pub trait Store {
-    pub fn login() -> Result<()>;
-    pub fn open() -> Result<()>;
-    pub fn close() -> Result<()>;
-    pub fn is_active() -> Result<bool>;
-    pub fn wait() -> Result<ExitStatus>;
-    pub fn pid() -> Option<u32>;
+
 }

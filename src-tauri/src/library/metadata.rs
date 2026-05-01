@@ -1,3 +1,10 @@
+use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
+use anyhow::Result;
+
+use crate::library::{ApiClient, Game};
+
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadataAPI {

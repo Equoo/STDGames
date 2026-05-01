@@ -1,22 +1,25 @@
-use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use tokio::process::Command;
 
-use crate::{execution::GameProcess, library::Game};
+use crate::library::Game;
 
-mod epic;
-mod native;
-mod onlinefix;
-mod steam;
-mod switch;
+pub mod native;
+// use  epic;
+// mod onlinefix;
+// mod steam;
+// mod switch;
 
-pub enum LaunchMethod {
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd, Eq, Ord)]
+pub enum ModeId {
+    Native,
     Steam,
     SteamOnlineFix,
-    Native,
     Epic,
-    Switch
+    Switch,
 }
 
 pub trait LaunchMode {
-    pub fn launch(game: &Game) -> Result<GameProcess>;
-    pub fn name() -> String;
+    fn build_cmd(&self, game: &Game) -> Command;
+    fn mode_id(&self) -> ModeId;
+    fn name(&self) -> &'static str;
 }
