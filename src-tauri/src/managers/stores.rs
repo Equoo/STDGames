@@ -9,8 +9,7 @@ use crate::{
 
 pub struct StoreProcessManager {
     stores: BTreeMap<StoreId, Box<dyn Store>>,
-    child: Option<Child>,
-    store_id: Option<StoreId>,
+    childs: HashMap<StoreId, Child>,
 }
 
 // TODO: Keep tracking of child after launcher closing
@@ -19,20 +18,20 @@ impl StoreProcessManager {
         Ok(())
     }
 
-    pub async fn kill(&mut self) -> Result<()> {
-        if let Some(child) = self.child.as_mut() {
+    pub async fn kill(&mut self, id: StoreId) -> Result<()> {
+        if let Some(child) = self.childs.get(id).as_mut() {
             child.kill().await?;
         }
         Ok(())
     }
-    pub fn is_running(&mut self) -> Result<bool> {
-        if let Some(child) = self.child.as_mut() {
+    pub fn is_running(&mut self, id: StoreId) -> Result<bool> {
+        if let Some(child) = self.childs.get(id).as_mut() {
             Ok(child.try_wait()?.is_none())
         } else {
             Ok(false)
         }
     }
-    pub fn get_running(&self) -> Option<StoreId> {
-        self.store_id.clone()
+    pub fn get_running(&self) -> Vec<StoreId> {
+        self.childs.iter().map(|k, v| k).collect();
     }
 }
