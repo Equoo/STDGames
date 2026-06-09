@@ -2,6 +2,7 @@
 pub mod stages;
 
 use std::{collections::HashMap, process::Command};
+use tokio::process::Child;
 use tracing::{info, warn};
 use fs_extra::error::Result;
 
@@ -21,7 +22,7 @@ struct RuntimeBuilder {
     stages: Vec<String>,
     loop_hooks: Vec<Fn<Result<()>>>,
     post_hooks: Vec<Fn<Result<()>>>,
-    audit_log: Path
+    dry: bool
 }
 
 impl RuntimeBuilder {
@@ -30,6 +31,14 @@ impl RuntimeBuilder {
         let mut obj = Self::default();
         obj.name = name;
         obj.workdir = workdir;
+        obj
+    }
+    pub fn new_dry(name: String, workdir: PathBuf) -> Self {
+        info!("=== Dry Runtime Building ===");
+        let mut obj = Self::default();
+        obj.name = name;
+        obj.workdir = workdir;
+        obj.dry = true;
         obj
     }
 
@@ -49,10 +58,6 @@ impl RuntimeBuilder {
         self.environs.extend(envs.iter());
         self
     }
-    
-    pub async fn dry_execute(self) -> Result<()> {
-
-    }
 
     pub async fn execute(self) -> Result<()> {
         info!("=== Launch Runtime ===", self.stages.len());
@@ -66,5 +71,7 @@ impl RuntimeBuilder {
 }
 
 struct Runtime {
-
+    child: Child
 }
+
+

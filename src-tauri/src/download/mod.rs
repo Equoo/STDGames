@@ -5,32 +5,49 @@ use anyhow::Result;
 
 use crate::library::Game;
 
-// struct NodeInfo {
-//     addr: SocketAddr,
-//     game_ids: HashSet<&'static str>
-// }
+pub enum DownloadType {
+    GAME,
+    TOOL,
+    STORE
+}
 
 struct DownloadItem {
-    game: &'static str,
+    typ: DownloadType,
+    id: &'static str,
     progress: f32,
+    complete: bool,
     destination: PathBuf
 }
 
-// TODO: If TEMP installed check if owned or not
+#[derive(Default)]
 pub struct DownloadManager {
-    // nodes: RwLock<HashMap<u32, NodeInfo>>,
     downloads: HashMap<&'static str, DownloadItem>,
-    current: Option<&'static str>
+    order: Vec<&'static str>,
+    downloading: bool,
 }
+
+static MANAGER: OnceLock<Mutex<DownloadManager>> = OnceLock::new();
 
 impl DownloadManager {
+    pub fn init(server: &'static str) -> Result<()> {
+        MANAGER.set(Mutex::new(DownloadManager::default()))?;
+        Ok(())
+    }
 
-}
+    pub fn add(id: &'static str, typ: DownloadType, dest: PathBuf) -> Result<()> {
+        Ok(())
+    }
 
-pub trait DownloadMode {
-    fn start(game: &Game);
-    fn progress() -> f32;
-    fn mode_id() -> DownloadModeId;
-    fn is_ready() ->  bool;
-    fn cancel();
+    pub fn start(id: &'static str) -> Result<()> {
+        Ok(())
+    }
+    pub fn progress(id: &'static str) -> Option<f32> {
+        None
+    }
+    pub fn is_completed(id: &'static str) -> Option<bool> {
+        None
+    }
+    pub fn cancel(id: &'static str) -> Result<()> {
+        Ok(())
+    }
 }

@@ -2,6 +2,8 @@
 use anyhow::Result;
 use tracing::{info, debug};
 
+use crate::download::{DownloadManager, DownloadType};
+
 fn detect_slr_root() -> Option<PathBuf> {
     let candidates = [
         dirs::home_dir()?.join(".steam/steam/steamapps/common/SteamLinuxRuntime_sniper"),
@@ -26,6 +28,8 @@ impl RuntimeBuilder {
                 path
             } else {
                 debug!("Downloading…");
+                DownloadManager::add("steamruntime", DownloadType::TOOL, "");
+                DownloadManager::start("steamruntime");
                 // TODO: Download steamruntime
                 runtime
             }
