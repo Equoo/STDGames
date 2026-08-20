@@ -17,9 +17,10 @@ impl GameExecution {
     pub fn start(&mut self, name: &str) -> Result<()> {
         // add possibility to launch via steam
 
-        let vars = CONFIG.clone().build_vars();
+        let host_vars = CONFIG.clone().build_vars();
+        let sandbox_vars = CONFIG.clone().build_sandbox_vars();
         let mut launch_data = get_game(&self.library, &name.to_string())?.launch.clone();
-        launch_data.replace_vars(&vars);
+        launch_data.replace_vars(&host_vars, &sandbox_vars);
         let child = GameExecution::build_command(name, &launch_data)?.spawn()?;
         self.running = Some(GameProcess {
             name: name.to_string(),

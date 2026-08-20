@@ -80,12 +80,13 @@ pub fn init_cli(
 		io::stdout().flush().unwrap();
 	})?;
 
-	let vars = CONFIG.clone().build_vars();
+	let host_vars = CONFIG.clone().build_vars();
+	let sandbox_vars = CONFIG.clone().build_sandbox_vars();
 
 	match &cli.command {
 		Some(Commands::Run { game }) => {
 			let mut launch_data = get_game(library, &game)?.launch.clone();
-			launch_data.replace_vars(&vars);
+			launch_data.replace_vars(&host_vars, &sandbox_vars);
 			
 			let mut child = GameExecution::build_command(&game, &launch_data)?
 				.spawn()?;
@@ -102,7 +103,7 @@ pub fn init_cli(
 			let mut launch_data = get_game(library, &game)?.launch.clone();
 			launch_data.start = ["/bin/bash".to_string()].to_vec();
 			launch_data.noruntime = Some(true);
-			launch_data.replace_vars(&vars);
+			launch_data.replace_vars(&host_vars, &sandbox_vars);
 			
 			let err = GameExecution::build_command(&game, &launch_data)?
 				.exec();
