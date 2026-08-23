@@ -51,6 +51,12 @@ impl GameExecution {
                         "'{}' exited with {status}",
                         self.running.as_ref().unwrap().name,
                     ));
+                    // Clear the finished process so we don't log/re-check it
+                    // on every future poll: try_wait() caches and keeps
+                    // returning the same exit status forever once a child
+                    // has exited, so without this is_running() would report
+                    // (and log) the same exit on every call from here on.
+                    self.running = None;
                     false
                 }
                 Ok(None) => true,
@@ -59,6 +65,7 @@ impl GameExecution {
                         "'{}' error while waiting: {e}",
                         self.running.as_ref().unwrap().name,
                     ));
+                    self.running = None;
                     false
                 }
             }
