@@ -30,6 +30,20 @@ impl GameExecution {
             PathBuf::from(&CONFIG.user_home)
         };
 
+        // The stdgames binary is itself launched from an AppImage AppRun
+        // script that exports LD_LIBRARY_PATH pointing at the AppImage's own
+        // bundled libs (so the GUI/webview can find its libs). Command
+        // inherits the full parent environment by default, and nothing
+        // downstream (junest/bwrap) clears it, so without this that AppImage
+        // LD_LIBRARY_PATH leaks all the way into the sandboxed process and
+        // can shadow the sandbox's own libs with older bundled ones (e.g.
+        // an AppImage-bundled libzstd.so.1 missing symbols that the
+        // sandbox's own newer libzstd.so.1 has, breaking pyzstd/umu-run).
+        if let Ok(leaked) = std::env::var("LD_LIBRARY_PATH") {
+            log_step("junest_cmd", format!("stripping inherited LD_LIBRARY_PATH from host launcher: {leaked}"));
+        }
+        cmd.env_remove("LD_LIBRARY_PATH");
+
         cmd.env("JUNEST_HOME", CONFIG.temp_junest_home_dir.clone());
         cmd.env("PYTHONPATH", "/usr/lib/python3/dist-packages");
         cmd.envs(environ).current_dir(work_dir);
