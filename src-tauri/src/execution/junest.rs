@@ -24,15 +24,17 @@ impl GameExecution {
 
         let user = CONFIG.username.clone();
         let overlay_str = if let Some(o) = overlay {
-            // Ensure the overlay directories exist
+            // Ensure the overlay directories exist. These are host-side paths:
+            // bwrap's --overlay takes RWSRC/WORKDIR as outside-the-sandbox
+            // paths (resolved here, on the host, before the sandbox exists),
+            // so no /tmp/{user}/{user}/... doubling is needed for them - only
+            // the overlay DEST argument is sandbox-relative (see the bare
+            // "/tmp/stdgames/work" above).
             [
                 &format!("/tmp/{user}"),
                 &format!("/tmp/{user}/stdgames/rw"),
-                &format!("/tmp/{user}/{user}/stdgames/rw"),
                 &format!("/tmp/{user}/stdgames/overlay_work"),
-                &format!("/tmp/{user}/{user}/stdgames/overlay_work"),
                 &format!("/tmp/{user}/stdgames/work"),
-                &format!("/tmp/{user}/{user}/stdgames/work"),
             ]
             .iter()
             .for_each(|folder| {
@@ -43,7 +45,7 @@ impl GameExecution {
 
             format!(
                 "--overlay-src {}
-				--overlay /tmp/{user}/stdgames/rw /tmp/{user}/stdgames/overlay_work /tmp/{user}/stdgames/work",
+				--overlay /tmp/{user}/stdgames/rw /tmp/{user}/stdgames/overlay_work /tmp/stdgames/work",
                 o.src.join(" --overlay-src ")
             )
         } else {
