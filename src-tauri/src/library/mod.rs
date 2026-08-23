@@ -106,6 +106,14 @@ impl GameLaunchData {
         host_vars: &HashMap<String, String>,
         sandbox_vars: &HashMap<String, String>,
     ) {
+        crate::debug::log_step(
+            "replace_vars",
+            format!(
+                "before: overlays={:?} start={:?} prestart={:?} before={:?}",
+                self.overlays, self.start, self.prestart, self.before
+            ),
+        );
+
         replace_all_vars(&mut self.start, sandbox_vars);
         if let Some(pre) = &mut self.prestart {
             replace_all_vars(pre, sandbox_vars);
@@ -129,6 +137,14 @@ impl GameLaunchData {
         if let Some(pre) = &mut self.prestart {
             *pre = Self::get_abs_command(pre.clone());
         }
+
+        crate::debug::log_step(
+            "replace_vars",
+            format!(
+                "after: overlays={:?} start={:?} prestart={:?} environs={:?}",
+                self.overlays, self.start, self.prestart, self.environs
+            ),
+        );
     }
 }
 

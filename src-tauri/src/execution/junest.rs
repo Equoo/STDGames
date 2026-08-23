@@ -3,16 +3,28 @@ use uzers::get_current_uid;
 
 use crate::{
     config::CONFIG,
+    debug::log_step,
     execution::{GameExecution, Overlay},
     utils::copy_savedata,
 };
 
 impl GameExecution {
     pub fn junest_cmd(environ: HashMap<String, String>, overlay: &Option<Overlay>) -> Command {
+        log_step("junest_cmd", format!("junest_bin={} overlay_src={:?} overlay_dst={:?}",
+            CONFIG.junest_bin,
+            overlay.as_ref().map(|o| &o.src),
+            overlay.as_ref().map(|o| &o.dst),
+        ));
+
         let mut cmd = Command::new(CONFIG.junest_bin.clone());
 
         let work_dir = if let Some(overlay) = overlay {
-            overlay.src.iter().for_each(|src| { copy_savedata(src, &overlay.dst); });
+            overlay.src.iter().for_each(|src| {
+                match copy_savedata(src, &overlay.dst) {
+                    Ok(stats) => log_step("junest_cmd", format!("copy_savedata {} -> {}: {:?}", src, overlay.dst, stats)),
+                    Err(e) => log_step("junest_cmd", format!("copy_savedata {} -> {} FAILED: {}", src, overlay.dst, e)),
+                }
+            });
             PathBuf::from(format!("/tmp/{}/stdgames/work", CONFIG.username))
       } else {
             PathBuf::from(&CONFIG.user_home)
@@ -39,7 +51,7 @@ impl GameExecution {
             .iter()
             .for_each(|folder| {
                 std::fs::create_dir_all(folder).unwrap_or_else(|e| {
-                    eprintln!("Failed to create directory {}: {}", folder, e);
+                    log_step("junest_cmd", format!("FAILED to create directory {}: {}", folder, e));
                 });
             });
 
@@ -51,6 +63,7 @@ impl GameExecution {
         } else {
             String::new()
         };
+        log_step("junest_cmd", format!("overlay_str: {}", overlay_str.replace('\n', " ").trim()));
 
         let uid = get_current_uid();
         cmd.arg("-b").arg(format!(
@@ -72,6 +85,8 @@ impl GameExecution {
             cmd.arg(format!("/tmp/stdgames/rw")); // really weird
             cmd.arg(overlay.as_ref().unwrap().dst.clone());
         }
+
+        log_step("junest_cmd", format!("built command: {:?}", cmd));
 
         cmd
     }
