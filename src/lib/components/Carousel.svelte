@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resizedUrl } from '$lib/api/images';
 
 	const ACTIVE_WIDTH = 0.66;
 	const CONTAINER_HEIGHT_REM = 31.25;
@@ -151,13 +152,17 @@
 				result.push({
 					type: 'video',
 					src: videos[videoIndex],
-					thumbnail: thumbnails?.[videoIndex]
+					thumbnail: resizedUrl(thumbnails?.[videoIndex], { w: 480 })
 				});
 				videoIndex++;
 			} else if (screenshotIndex < totalScreenshots && screenshots) {
+				// Every item is mounted in the DOM at once (only visibility is
+				// toggled), so all screenshots load up front - resize them
+				// down from full resolution to what the carousel actually
+				// displays them at.
 				result.push({
 					type: 'image',
-					src: screenshots[screenshotIndex]
+					src: resizedUrl(screenshots[screenshotIndex], { w: 960 }) ?? screenshots[screenshotIndex]
 				});
 				screenshotIndex++;
 			}

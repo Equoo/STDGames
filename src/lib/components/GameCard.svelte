@@ -1,12 +1,18 @@
 <script lang="ts">
 	import type { GameDisplay } from '$lib/types/game';
 	import { selectedGame, currentView, runningGame } from '$lib/stores/gameStore';
+	import { resizedUrl } from '$lib/api/images';
 
 	interface Props {
 		game: GameDisplay;
 	}
 
 	let { game }: Props = $props();
+
+	// The library grid can render dozens of cards at once, each only
+	// ~12rem wide, so request a thumbnail instead of the full-resolution
+	// cover art (2x for hi-dpi displays).
+	let coverUrl = $derived(resizedUrl(game.cover, { w: 400 }));
 
 	function handleClick() {
 		selectedGame.set(game);
@@ -21,7 +27,7 @@
 	onclick={handleClick}
 	aria-label="Open {game.name || game.slug}"
 >
-	<div class="game-cover" style="background-image: url('{game.cover}');"></div>
+	<div class="game-cover" style="background-image: url('{coverUrl}');"></div>
 </button>
 
 <style>
