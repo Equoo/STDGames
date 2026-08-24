@@ -92,6 +92,28 @@ impl Config {
         env_vars.extend(env::vars().map(|(k, v)| (k, v)));
         env_vars
     }
+
+    /// Same as `build_vars`, but for values used inside the junest/bwrap
+    /// sandbox (e.g. `GameLaunchData::start`/`prestart`/`before`/`environs`).
+    ///
+    /// `junest_cmd` binds host `/tmp/<username>` onto the sandbox's bare
+    /// `/tmp`, so any host path under `/tmp/<username>` needs that prefix
+    /// dropped down to `/tmp` to be valid from inside the sandbox. Paths
+    /// consumed by bwrap itself on the host side before the sandbox exists
+    /// (like `overlays`, resolved via `--overlay-src`) must keep using
+    /// `build_vars` instead.
+    pub fn build_sandbox_vars(self) -> HashMap<String, String> {
+        let host_tmp_prefix = format!("/tmp/{}", self.username);
+        let mut env_vars = self.build_vars();
+        for key in ["GAMES_DIR", "TEMP_DIR", "TEMP_JUNEST_HOME_DIR", "TEMP_UMU_DIR"] {
+            if let Some(value) = env_vars.get(key) {
+                if let Some(rest) = value.strip_prefix(&host_tmp_prefix) {
+                    env_vars.insert(key.to_string(), format!("/tmp{}", rest));
+                }
+            }
+        }
+        env_vars
+    }
 }
 
 pub static CONFIG: Lazy<Config> =

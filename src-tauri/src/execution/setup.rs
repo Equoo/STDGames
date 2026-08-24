@@ -12,13 +12,17 @@ use std::env;
 
 use crate::{
 	config::CONFIG,
+	debug::log_step,
 	execution::GameExecution,
 	utils::{copy_directory, is_authorized, is_mounted},
 };
 
 impl GameExecution {
 	pub fn setup(handle: impl Fn(f32)) -> Result<()> {
+		log_step("setup", "starting setup");
+
 		if !is_authorized() {
+			log_step("setup", "unauthorized: user is in the restricted piscine group");
 			Err(anyhow::anyhow!(
 				"Unauthorized: Please ensure you have the necessary permissions."
 			))?;
@@ -30,12 +34,15 @@ impl GameExecution {
 		] {
 			fs::create_dir_all(directory)?;
 		}
+		log_step("setup", format!("ensured directories exist: {} {}", CONFIG.junest_home_dir, CONFIG.temp_junest_home_dir));
 
         if  fs::read_dir(&CONFIG.games_dir).is_err() {
+			log_step("setup", format!("games_dir {} not readable, running fusermount -u", CONFIG.games_dir));
             Command::new("fusermount").args(vec!["-u", &CONFIG.games_dir]).spawn()?;
         }
 
         if !is_mounted("std@82.67.99.87:/shared") {
+			log_step("setup", "games share not mounted, mounting via sshfs");
             let home = env::var("HOME").expect("HOME not set");
             let mut dest = PathBuf::from(home);
             dest.push(".ssh/stdgame");
@@ -60,6 +67,7 @@ impl GameExecution {
             ]).spawn()?;
         }
 
+		log_step("setup", format!("copying junest home {} -> {}", CONFIG.junest_home_dir, CONFIG.temp_junest_home_dir));
 		copy_directory(
 			Path::new(&CONFIG.junest_home_dir),
 			Path::new(&CONFIG.temp_junest_home_dir),
@@ -67,19 +75,26 @@ impl GameExecution {
 				handle(data.files_copied as f32 / data.num_files as f32 * 75.0);
 			},
 		)?;
+		log_step("setup", "junest home copy done");
 
 		if !Path::new(&CONFIG.temp_umu_dir).exists() {
+			log_step("setup", format!("extracting umu archive {} -> {}", CONFIG.archive_file, CONFIG.temp_umu_dir));
 			let zip_file = format!("{}/{}", CONFIG.temp_dir, "umu.zip");
 			copy(CONFIG.archive_file.clone(), zip_file.clone())?;
 
 			handle(83.0);
 
 			zip_extract(&PathBuf::from(zip_file), &PathBuf::from(CONFIG.temp_umu_dir.clone()))?;
+			log_step("setup", "umu archive extraction done");
+		} else {
+			log_step("setup", format!("umu dir {} already exists, skipping extraction", CONFIG.temp_umu_dir));
 		}
 
 		handle(100.0);
 
 		sleep(Duration::from_secs_f32(0.5));
+
+		log_step("setup", "setup complete");
 
 		Ok(())
 	}

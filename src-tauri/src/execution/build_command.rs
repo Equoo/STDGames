@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 
 use crate::{
 	config::CONFIG,
+	debug::log_step,
 	execution::{GameExecution, Overlay},
 	library::GameLaunchData
 };
@@ -25,6 +26,11 @@ impl GameExecution {
 		name: &str,
 		data: &GameLaunchData,
 	) -> Result<Command> {
+		log_step("build_command", format!(
+			"name={name} proton={:?} noruntime={:?} start={:?} overlays={:?}",
+			data.proton, data.noruntime, data.start, data.overlays
+		));
+
 		let overlay = Some(Overlay{
 			src: data.overlays.clone(),
 			dst: format!("{}/{}", CONFIG.user_save_dir, name)
@@ -36,6 +42,7 @@ impl GameExecution {
 		);
 
         if data.before.is_some() {
+			log_step("build_command", format!("before: {:?}", data.before));
             cmd.args(data.before.clone().unwrap());
         }
 
@@ -43,30 +50,43 @@ impl GameExecution {
 			let proton = data.proton.as_ref().unwrap();
 			let prefix = format!("{}/{proton}", CONFIG.user_save_dir);
 
+			log_step("build_command", format!(
+				"proton={proton} STEAM_COMPAT_DATA_PATH={prefix} WINEPREFIX={prefix} PROTONPATH={}/{proton}",
+				CONFIG.protons_dir,
+			));
+
 			cmd.env("STEAM_COMPAT_DATA_PATH", prefix.clone())
 			.env("WINEPREFIX", prefix)
 			.env("PROTONPATH", format!("{}/{}", CONFIG.protons_dir, proton));
 		} else {
+			log_step("build_command", "no proton set, UMU_NO_PROTON=1");
 			cmd.env("UMU_NO_PROTON", "1");
 		}
 
 		cmd.env("UMU_RUNTIME_UPDATE", "0");
 
 		if !data.noruntime.unwrap_or(false) {
+			log_step("build_command", format!("noruntime=false, prepending umu_run: {}", CONFIG.umu_run));
 			cmd.arg(CONFIG.umu_run.clone());
+		} else {
+			log_step("build_command", "noruntime=true, running start directly with no umu/proton wrapper");
 		}
 
 		if data.prestart.is_some() {
+			log_step("build_command", format!("running prestart: {:?}", data.prestart));
 			let mut prestart_cmd = command_clone(&cmd);
-			prestart_cmd.args(data.prestart.as_ref().unwrap())
+			let status = prestart_cmd.args(data.prestart.as_ref().unwrap())
 				.spawn()
 				.with_context(|| format!("Failed to run prestart for {}", name))?
 				.wait()
 				.with_context(|| format!("Failed to wait for prestart to finish for {}", name))?;
+			log_step("build_command", format!("prestart exited with {}", status));
 		}
 
 		cmd.args(&data.start)
 			.current_dir(format!("/tmp/{}/stdgames/work", CONFIG.username));
+
+		log_step("build_command", format!("final command: {:?}", cmd));
 
 		Ok(cmd)
 	}
