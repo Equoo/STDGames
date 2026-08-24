@@ -4,8 +4,6 @@ use std::fmt::Write;
 use std::{collections::HashMap, fs, path::Path};
 use toml;
 
-use crate::config::CONFIG;
-
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GameMetadataAPI {
     pub store_pages: Option<Vec<String>>,
@@ -72,33 +70,64 @@ pub struct GameLaunchData {
     pub prestart: Option<Vec<String>>,
 }
 
+fn replace_all_vars(strings: &mut [String], vars: &HashMap<String, String>) {
+    for (k, v) in vars {
+        let mut vk = k.clone();
+        vk.insert(0, '$');
+        for s in strings.iter_mut() {
+            *s = s.replace(&vk, v);
+        }
+    }
+}
+
 impl GameLaunchData {
+    /// `command[0]` is exec'd from inside the junest/bwrap sandbox, so a
+    /// relative program name must be made absolute using the sandbox-visible
+    /// work dir (bare `/tmp/stdgames/work`, no username - see
+    /// `Config::build_sandbox_vars`), not the host-side path.
     fn get_abs_command(mut command: Vec<String>) -> Vec<String> {
         command[0] = if Path::new(&command[0]).is_absolute() {
             command[0].clone()
         } else {
-            format!("/tmp/{}/stdgames/work/{}", CONFIG.username, command[0])
+            format!("/tmp/stdgames/work/{}", command[0])
         };
         command
     }
 
-    pub fn replace_vars(&mut self, vars: &HashMap<String, String>) {
-        for (k, v) in vars {
-            let mut vk = k.clone();
-            vk.insert(0, '$');
-            self.start.iter_mut().for_each(|s| {
-                *s = s.replace(&vk, v);
-            });
-            if let Some(pre) = &mut self.prestart {
-                pre.iter_mut().for_each(|s| {
-                    *s = s.replace(&vk, v);
-                });
-            }
-            self.overlays.iter_mut().for_each(|s| {
-                *s = s.replace(&vk, v);
-            });
-            if let Some(environs) = &mut self.environs {
-                if let Some(ev) = environs.get_mut(k) {
+    /// `host_vars` are used for `overlays`: bwrap resolves `--overlay-src`
+    /// itself, on the host, before the sandbox's mount namespace exists.
+    ///
+    /// `sandbox_vars` are used for `start`/`prestart`/`before`/`environs`:
+    /// those run as argv/env inside the already-constructed sandbox, where
+    /// `/tmp/<username>`-rooted host paths aren't valid (see
+    /// `Config::build_sandbox_vars`).
+    pub fn replace_vars(
+        &mut self,
+        host_vars: &HashMap<String, String>,
+        sandbox_vars: &HashMap<String, String>,
+    ) {
+        crate::debug::log_step(
+            "replace_vars",
+            format!(
+                "before: overlays={:?} start={:?} prestart={:?} before={:?}",
+                self.overlays, self.start, self.prestart, self.before
+            ),
+        );
+
+        replace_all_vars(&mut self.start, sandbox_vars);
+        if let Some(pre) = &mut self.prestart {
+            replace_all_vars(pre, sandbox_vars);
+        }
+        if let Some(before) = &mut self.before {
+            replace_all_vars(before, sandbox_vars);
+        }
+        replace_all_vars(&mut self.overlays, host_vars);
+
+        if let Some(environs) = &mut self.environs {
+            for (k, ev) in environs.iter_mut() {
+                if let Some(v) = sandbox_vars.get(k) {
+                    let mut vk = k.clone();
+                    vk.insert(0, '$');
                     *ev = ev.replace(&vk, v);
                 }
             }
@@ -108,6 +137,14 @@ impl GameLaunchData {
         if let Some(pre) = &mut self.prestart {
             *pre = Self::get_abs_command(pre.clone());
         }
+
+        crate::debug::log_step(
+            "replace_vars",
+            format!(
+                "after: overlays={:?} start={:?} prestart={:?} environs={:?}",
+                self.overlays, self.start, self.prestart, self.environs
+            ),
+        );
     }
 }
 
