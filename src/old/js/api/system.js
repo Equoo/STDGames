@@ -3,7 +3,7 @@ const { opener } = window.__TAURI__;
 
 export async function addIcon() {
   try {
-    const result = await invoke("add_launcher_desktop");
+    const result = await invoke("add_launcher_to_desktop");
     if (result != "") alert(result);
   } catch (err) {
     alert("Erreur lors de lajout de l'icon : " + err);
