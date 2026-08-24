@@ -13,6 +13,7 @@ mod window;
 mod cli;
 mod config;
 mod library;
+mod debug;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

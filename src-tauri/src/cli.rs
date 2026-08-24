@@ -7,6 +7,7 @@ use anyhow::Result;
 use std::io::{self, Write};
 
 use crate::config::CONFIG;
+use crate::debug::log_step;
 use crate::library::Game;
 use crate::execution::{GameExecution, GameProcess};
 
@@ -80,32 +81,38 @@ pub fn init_cli(
 		io::stdout().flush().unwrap();
 	})?;
 
-	let vars = CONFIG.clone().build_vars();
+	let host_vars = CONFIG.clone().build_vars();
+	let sandbox_vars = CONFIG.clone().build_sandbox_vars();
 
 	match &cli.command {
 		Some(Commands::Run { game }) => {
+			log_step("cli", format!("run '{game}' requested"));
 			let mut launch_data = get_game(library, &game)?.launch.clone();
-			launch_data.replace_vars(&vars);
-			
+			launch_data.replace_vars(&host_vars, &sandbox_vars);
+
 			let mut child = GameExecution::build_command(&game, &launch_data)?
 				.spawn()?;
-            
+
             let pid = child.id();
+			log_step("cli", format!("'{game}' spawned with pid {pid}"));
             // thread::sleep(Duration::from_millis(30000));
 
 
             // Wait for child to finish
-            let _ = child.wait();
+            let status = child.wait();
+			log_step("cli", format!("'{game}' (pid {pid}) exited: {status:?}"));
 
 		}
 		Some(Commands::Bash { game }) => {
+			log_step("cli", format!("bash into '{game}' requested"));
 			let mut launch_data = get_game(library, &game)?.launch.clone();
 			launch_data.start = ["/bin/bash".to_string()].to_vec();
 			launch_data.noruntime = Some(true);
-			launch_data.replace_vars(&vars);
-			
+			launch_data.replace_vars(&host_vars, &sandbox_vars);
+
 			let err = GameExecution::build_command(&game, &launch_data)?
 				.exec();
+			log_step("cli", format!("exec of bash for '{game}' returned (should never happen on success): {err}"));
 			println!("Error running bash: {}", err);
 		}
 		Some(Commands::RunConfig { file }) => {
