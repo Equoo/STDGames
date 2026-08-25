@@ -1,0 +1,75 @@
+import { ScrollView } from "std-widgets.slint";
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { SearchField } from "../primitives/search_field.slint";
+import { IconButton, IconButtonShape } from "../primitives/icon_button.slint";
+import { GameListItem } from "../components/game_list_item.slint";
+import { GameCardData } from "../model.slint";
+
+// ← Sidebar.svelte: collapsible width, search, scrollable running-highlighted game list.
+export component Sidebar inherits Rectangle {
+    in-out property <bool> expanded: true;
+    in property <[GameCardData]> games: [];
+    in-out property <string> search-text;
+    callback search-changed(string);
+    callback game-clicked(string);
+
+    width: root.expanded ? 25 * Scale.unit : 3.5 * Scale.unit;
+    animate width {
+        duration: 300ms;
+        easing: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    VerticalLayout {
+        padding-left: root.expanded ? 0.625 * Scale.unit : 0.35 * Scale.unit;
+        padding-right: root.expanded ? 0.625 * Scale.unit : 0.35 * Scale.unit;
+        // Clears the full 7.125-unit topbar band (nav row + header zone) rather than only the
+        // 3.125-unit nav row, so the search field isn't crowded against the chrome above it.
+        padding-top: 4.6 * Scale.unit;
+        animate padding-left, padding-right { duration: 300ms; }
+
+        top-row := HorizontalLayout {
+            // Was 4 units, which left a large dead gap between the search field and the list.
+            height: 2.6 * Scale.unit;
+            spacing: 0.4 * Scale.unit;
+            padding-bottom: 0.5 * Scale.unit;
+
+            if root.expanded: SearchField {
+                text <=> root.search-text;
+                edited(t) => { root.search-changed(t); }
+            }
+
+            IconButton {
+                shape: IconButtonShape.square;
+                size: 2 * Scale.unit;
+                clicked => { root.expanded = !root.expanded; }
+
+                Path {
+                    width: 1 * Scale.unit;
+                    height: 1 * Scale.unit;
+                    viewbox-width: 24;
+                    viewbox-height: 24;
+                    stroke: Theme.text-secondary;
+                    stroke-width: 2.5px;
+                    commands: root.expanded ? "M15 18 9 12 15 6" : "M9 18 15 12 9 6";
+                }
+            }
+        }
+
+        list := ScrollView {
+            vertical-scrollbar-policy: ScrollBarPolicy.as-needed;
+            horizontal-scrollbar-policy: ScrollBarPolicy.always-off;
+
+            VerticalLayout {
+                spacing: 0.125 * Scale.unit;
+                alignment: start;
+
+                for game in root.games: GameListItem {
+                    game: game;
+                    collapsed: !root.expanded;
+                    clicked => { root.game-clicked(game.slug); }
+                }
+            }
+        }
+    }
+}

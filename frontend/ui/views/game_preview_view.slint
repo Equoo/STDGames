@@ -1,0 +1,281 @@
+import { ScrollView } from "std-widgets.slint";
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+import { TagPill, TagPillVariant } from "../primitives/tag_pill.slint";
+import { IconButton, IconButtonShape } from "../primitives/icon_button.slint";
+import { Carousel } from "../components/carousel.slint";
+import { DescriptionBlocks } from "../components/description_blocks.slint";
+import { GameCardData, CarouselMedia, DescriptionBlock } from "../model.slint";
+
+// ← GamePreview.svelte. The CSS "sticky" action bar becomes a fixed (always-visible) overlay
+// since Slint's ScrollView has no sticky-positioning primitive; parallax and the hero→content
+// fade use deviation 2's plain gradient (the P1 "gets ~90% of the effect" version — the blurred
+// crossfade P2 polish is not implemented).
+export component GamePreviewView inherits Rectangle {
+    in property <GameCardData> game;
+    in property <bool> is-launching: false;
+    in property <[CarouselMedia]> carousel-media: [];
+    in property <[DescriptionBlock]> description-blocks: [];
+    callback back-clicked();
+    callback play-clicked();
+    callback favorite-toggled();
+
+    // Read by `ChromeBackdrop`'s dynamic blur (via `AppWindow.current-scroll-y`) to track this
+    // view's scroll position — see its doc comment.
+    out property <length> scroll-y: max(0px, -sv.viewport-y);
+
+    // ← `.hero-content-wrapper { position: sticky; top: 4rem; margin-top: calc(100vh - 3rem -
+    // heroContentHeight); }`: at rest the action bar sits near the bottom of the (one-viewport-
+    // tall) hero; scrolling moves it up 1:1 with the content until it would cross the docked
+    // line just under the topbar, where it clamps and stays put. Slint has no sticky-positioning
+    // primitive, so this reproduces it by hand: same resting/docked y values, same `max()` clamp.
+    property <length> action-bar-docked-y: 4 * Scale.unit;
+    property <length> action-bar-rest-y: root.height - 3.5 * Scale.unit;
+    property <length> action-bar-y: max(root.action-bar-docked-y, root.action-bar-rest-y - root.scroll-y);
+
+    // An `Image` reports its full intrinsic pixel width as its preferred width, which stretched
+    // the title pill far wider than the rendered logo. Derive the width from the source's aspect
+    // ratio at the height we actually draw it, capped like the CSS's `max-width: 25%`.
+    property <length> logo-height: 2.8 * Scale.unit;
+    property <length> logo-width: root.game.logo.height > 0
+        ? min(root.logo-height * (root.game.logo.width * 1.0 / root.game.logo.height), 16 * Scale.unit)
+        : 0px;
+
+    sv := ScrollView {
+        width: 100%;
+        height: 100%;
+
+        VerticalLayout {
+            hero := Rectangle {
+                height: root.height;
+                clip: true;
+
+                Image {
+                    source: root.game.hero;
+                    image-fit: cover;
+                    width: 100%;
+                    height: 110%;
+                    y: root.height * 0.08 - root.scroll-y * 0.4;
+                }
+
+                // Sits below the topbar band (7.125 units) and the action bar, so the chips
+                // aren't hidden behind the opaque frosted chrome overlaying the top of the view.
+                if root.game.tags.length > 0: HorizontalLayout {
+                    x: 2 * Scale.unit;
+                    y: 7.4 * Scale.unit;
+                    spacing: 1 * Scale.unit;
+                    alignment: start;
+
+                    for tag in root.game.tags: TagPill { text: tag; variant: TagPillVariant.chip; }
+                }
+
+                Rectangle {
+                    y: parent.height * 0.7;
+                    height: parent.height * 0.3;
+                    background: @linear-gradient(0deg, Theme.content-fade-end 0%, transparent 100%);
+                }
+
+                if root.scroll-y < 5 * Scale.unit: VerticalLayout {
+                    y: parent.height - self.height - 0.5 * Scale.unit;
+                    width: 100%;
+                    alignment: end;
+                    spacing: 0.25 * Scale.unit;
+                    opacity: 1.0 - (root.scroll-y / (5 * Scale.unit));
+                    animate opacity { duration: 400ms; }
+
+                    Text {
+                        text: "scroll";
+                        font-family: Fonts.body;
+                        font-size: 1 * Scale.unit;
+                        letter-spacing: 0.15 * Scale.unit;
+                        color: rgba(255, 255, 255, 0.7);
+                        horizontal-alignment: center;
+                    }
+
+                    Rectangle {
+                        height: 1.3 * Scale.unit;
+
+                        Path {
+                            x: (parent.width - self.width) / 2;
+                            width: 1.3 * Scale.unit;
+                            height: 1.3 * Scale.unit;
+                            viewbox-width: 24;
+                            viewbox-height: 24;
+                            stroke: rgba(255, 255, 255, 0.7);
+                            stroke-width: 4px;
+                            commands: "M6 9 12 15 18 9";
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                background: @linear-gradient(0deg, Theme.content-fade-end 0%, Theme.content-fade-mid 55%, Theme.content-fade-start 100%);
+
+                VerticalLayout {
+                    padding-top: 0.3 * Scale.unit;
+                    padding-bottom: 1.25 * Scale.unit;
+                    spacing: 1.5 * Scale.unit;
+
+                    // Capped at ~733px — Steam's own store-page description column width — and
+                    // centered rather than stretched full-width, matching the source layout this
+                    // is standing in for. `HorizontalLayout { alignment: center }` centers its one
+                    // child based on that child's own (capped) width, the same trick used to
+                    // center the title/logo above; the 3.5-unit subtraction keeps the original
+                    // 1.75-unit side margins on windows narrow enough that the cap doesn't apply.
+                    if root.game.short-description != "" || root.description-blocks.length > 0: HorizontalLayout {
+                        alignment: center;
+
+                        VerticalLayout {
+                            width: min(root.width - 3.5 * Scale.unit, 733px);
+                            spacing: 1 * Scale.unit;
+
+                            if root.game.short-description != "": Text {
+                                text: root.game.short-description;
+                                font-family: Fonts.body;
+                                font-size: 1 * Scale.unit;
+                                color: Theme.text-secondary;
+                                wrap: word-wrap;
+                            }
+
+                            DescriptionBlocks {
+                                blocks: root.description-blocks;
+                            }
+                        }
+                    }
+
+                    if root.carousel-media.length > 0: Carousel {
+                        media: root.carousel-media;
+                    }
+                }
+            }
+        }
+    }
+
+    // Title (`.game-title`, centered over the hero). Positioned in the header zone (below the
+    // 3.125-unit nav bar) so it isn't covered by it — the CSS put it there too, via
+    // `.game-title`'s z-index 6 over the topbar's z-index 3. No background of its own
+    // (`.game-title` had none in the CSS either): it sits directly on the shared `ChromeBackdrop`
+    // behind it, the same as `PageHeader`, so the whole top band reads as one bar.
+    Rectangle {
+        y: 3.125 * Scale.unit;
+        width: 100%;
+        height: 4 * Scale.unit;
+
+        title-layout := HorizontalLayout {
+            // A HorizontalLayout with no explicit width defaults to filling its parent, so
+            // `self.width` here always equals `parent.width` and the old
+            // `x: (parent.width - self.width) / 2` centering math collapsed to 0 — pinning the
+            // logo/title to the left edge instead of centering it. Letting the layout fill its
+            // parent and centering its single child via `alignment` avoids that self-reference.
+            alignment: center;
+
+            if root.game.has-logo: Image {
+                source: root.game.logo;
+                width: root.logo-width;
+                height: root.logo-height;
+                image-fit: contain;
+            }
+            if !root.game.has-logo: Text {
+                text: root.game.name;
+                font-family: Fonts.display;
+                font-size: 2 * Scale.unit;
+                letter-spacing: 0.1 * Scale.unit;
+                color: Theme.text-primary;
+                vertical-alignment: center;
+            }
+        }
+    }
+
+    // Action bar: Play/Kill + Back. Rests near the bottom of the hero, then sticks just under
+    // the topbar once scrolling would carry it past that line — see `action-bar-y` above.
+    HorizontalLayout {
+        x: 2 * Scale.unit;
+        y: root.action-bar-y;
+        spacing: 0.6 * Scale.unit;
+
+        play-btn := Rectangle {
+            width: play-text.width + 3.6 * Scale.unit;
+            height: 2.6 * Scale.unit;
+            // `.play-button:hover { transform: translateY(-0.1rem); }`
+            y: play-area.has-hover ? -0.1 * Scale.unit : 0px;
+            border-radius: 0.4 * Scale.unit;
+            background: root.game.is-running
+                ? @linear-gradient(135deg, #ee0000 0%, #ff4500 100%)
+                : @linear-gradient(135deg, #0066ff 0%, #00a2ff 100%);
+            opacity: root.is-launching ? 0.6 : 1.0;
+            // `.play-button { box-shadow: 0 0.25rem 0.9rem rgba(0,102,255,.5); }`, strengthening
+            // on hover and recoloring for the `.kill` variant.
+            drop-shadow-color: root.game.is-running ? rgba(220, 0, 0, 0.45) : rgba(0, 102, 255, play-area.has-hover ? 0.7 : 0.5);
+            drop-shadow-offset-y: play-area.has-hover ? 0.4 * Scale.unit : 0.25 * Scale.unit;
+            drop-shadow-blur: play-area.has-hover ? 1.2 * Scale.unit : 0.9 * Scale.unit;
+            animate y, drop-shadow-offset-y, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease; }
+
+            play-text := Text {
+                x: (parent.width - self.width) / 2;
+                text: root.game.is-running ? "Kill" : (root.is-launching ? "Launching..." : "Play");
+                font-family: Fonts.body;
+                font-size: 0.9 * Scale.unit;
+                font-weight: 600;
+                color: #ffffff;
+                vertical-alignment: center;
+                height: 100%;
+            }
+
+            play-area := TouchArea {
+                enabled: !root.is-launching;
+                mouse-cursor: root.is-launching ? MouseCursor.default : MouseCursor.pointer;
+                clicked => { root.play-clicked(); }
+            }
+        }
+
+        Rectangle {
+            width: back-text.width + 2.2 * Scale.unit;
+            height: 2.6 * Scale.unit;
+            border-radius: 0.4 * Scale.unit;
+            background: back-area.has-hover ? rgba(255, 255, 255, 0.22) : rgba(255, 255, 255, 0.12);
+            border-width: 0.0625 * Scale.unit;
+            border-color: rgba(255, 255, 255, 0.3);
+            animate background { duration: 200ms; }
+
+            back-text := Text {
+                x: (parent.width - self.width) / 2;
+                text: "← Library";
+                font-family: Fonts.body;
+                font-size: 0.85 * Scale.unit;
+                color: Theme.dark ? rgba(255, 255, 255, 0.9) : rgba(0, 0, 0, 0.9);
+                vertical-alignment: center;
+                height: 100%;
+            }
+
+            back-area := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.back-clicked(); }
+            }
+        }
+    }
+
+    IconButton {
+        x: root.width - self.width - 1 * Scale.unit;
+        y: root.action-bar-y;
+        shape: IconButtonShape.circle;
+        size: 2.4 * Scale.unit;
+        idle-background: rgba(104, 104, 104, 0.35);
+        hover-background: rgba(0, 0, 0, 0.55);
+        clicked => { root.favorite-toggled(); }
+
+        Path {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            width: 1.1 * Scale.unit;
+            height: 1.1 * Scale.unit;
+            viewbox-width: 24;
+            viewbox-height: 24;
+            fill: root.game.is-favorite ? rgba(255, 60, 100, 0.9) : transparent;
+            stroke: root.game.is-favorite ? rgba(255, 60, 100, 0.9) : rgba(255, 255, 255, 0.7);
+            stroke-width: 2px;
+            commands: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z";
+        }
+    }
+}

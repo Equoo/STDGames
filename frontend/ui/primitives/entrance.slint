@@ -1,0 +1,34 @@
+import { Scale } from "../tokens/scale.slint";
+
+// Single shared entrance-animation wrapper, replacing the 5 near-duplicate Svelte wrappers
+// (FlyIn/FadeIn/BlurIn/SlideIn/FadeInOut) — only `fly-left` (page titles) and `fade` (content
+// sections) were ever actually used, so those are the two kinds implemented.
+//
+// Inherits VerticalLayout, not Rectangle, so the wrapper reports its children's real preferred
+// size to the *parent* layout. A Rectangle-based wrapper has no intrinsic size, so it stretched
+// to fill whatever cell it landed in — which both vertically centred the content inside it and
+// stopped enclosing ScrollViews from ever seeing content taller than the viewport (so nothing
+// scrolled). For the same reason the offset is animated via `padding-left`/`padding-top` rather
+// than `x`/`y`: a parent layout assigns its cells' x/y itself, so animating those fights it,
+// while padding is part of the layout's own geometry and animates cleanly.
+export enum EntranceKind { fade, fly-left, slide-y }
+
+export component EntranceFx inherits VerticalLayout {
+    in property <EntranceKind> kind: EntranceKind.fade;
+    in property <duration> duration: 500ms;
+    in property <duration> delay: 25ms;
+    in property <length> distance: 18.75 * Scale.unit; // ~300px at reference scale
+
+    property <bool> ready: false;
+
+    opacity: root.ready ? 1.0 : 0.0;
+    padding-left: (root.kind == EntranceKind.fly-left && !root.ready) ? root.distance : 0px;
+    padding-top: (root.kind == EntranceKind.slide-y && !root.ready) ? root.distance : 0px;
+
+    animate opacity { duration: root.duration; delay: root.delay; easing: cubic-bezier(0.645, 0.045, 0.355, 1); }
+    animate padding-left, padding-top { duration: root.duration; delay: root.delay; easing: cubic-bezier(0.215, 0.61, 0.355, 1); }
+
+    init => { root.ready = true; }
+
+    @children
+}

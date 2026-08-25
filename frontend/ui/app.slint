@@ -1,0 +1,170 @@
+import { Scale } from "tokens/scale.slint";
+import { Theme } from "tokens/palette.slint";
+import { Fonts } from "tokens/fonts.slint";
+import {
+    ViewKind,
+    GameCardData,
+    CarouselMedia,
+    CarouselMediaKind,
+    DescriptionBlock,
+} from "model.slint";
+import { Background } from "components/background.slint";
+import { ChromeBackdrop } from "components/chrome_backdrop.slint";
+import { Topbar } from "layout/topbar.slint";
+import { Sidebar } from "layout/sidebar.slint";
+import { HomeView } from "views/home_view.slint";
+import { LibraryView } from "views/library_view.slint";
+import { SettingsView } from "views/settings_view.slint";
+import { GamePreviewView } from "views/game_preview_view.slint";
+import { SplashWindow } from "views/splashscreen.slint";
+
+export {
+    ViewKind,
+    GameCardData,
+    CarouselMedia,
+    CarouselMediaKind,
+    SplashWindow,
+    Theme,
+}
+
+// ← routes/+layout.svelte + routes/+page.svelte: root window compositing Background, the
+// absolutely-overlaid Topbar (`.frosted-glass`/`.topbar` are CSS position:absolute over the
+// same static background), Sidebar, and the current view.
+export component AppWindow inherits Window {
+    title: "STDGames";
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    default-font-family: Fonts.body;
+    background: Theme.dark ? #03030f : #f0ecf8;
+
+    in-out property <ViewKind> current-view: ViewKind.home;
+    in property <[GameCardData]> sidebar-games: [];
+    in property <[GameCardData]> library-view-games: [];
+    in property <[GameCardData]> home-picks: [];
+    in property <[GameCardData]> favorite-games: [];
+    in-out property <string> search-text;
+    in-out property <string> active-tag: "";
+    in-out property <bool> sort-descending: true;
+    in property <GameCardData> selected-game;
+    in property <bool> has-selected-game: false;
+    in property <string> running-slug: "";
+    in property <bool> is-launching: false;
+    in property <[CarouselMedia]> carousel-media: [];
+    in property <[DescriptionBlock]> description-blocks: [];
+
+    // Approximated backdrop blur behind the topbar — see `ChromeBackdrop`'s doc comment. Rust
+    // composites+blurs this (off the UI thread's critical path, debounced) whenever the visible
+    // view's data/size changes; Slint just tracks live scroll against it, which is cheap.
+    in property <image> dynamic-backdrop;
+    // Slint can't reference a conditionally-instantiated element's property from outside its own
+    // `if` block ("cannot access id"), so each view pushes its own scroll position into this
+    // plain property via a `changed scroll-y` handler at its instantiation site below, rather
+    // than this being computed by reading all three at once.
+    property <length> current-scroll-y: 0px;
+    // So Rust knows where the grid/hero really starts horizontally when compositing the
+    // dynamic-backdrop bitmap — the sidebar's own opaque background covers whatever's behind it
+    // regardless, but the content to its right needs to line up with where it's actually drawn.
+    out property <length> sidebar-width: sidebar.width;
+    callback backdrop-dirty();
+
+    callback search-changed(string);
+    callback tag-toggled(string);
+    callback sort-changed(bool);
+    callback game-selected(string);
+    callback back-to-library();
+    callback play-clicked();
+    callback favorite-toggled();
+    callback reshuffle();
+    callback theme-changed(bool);
+    callback add-desktop-icon();
+    callback open-url(string);
+
+    // Don't set Scale.unit at `init`: `root.width` is still 0px at construction time (before
+    // the compositor assigns real dimensions), and a single frame rendered with a zero scale
+    // unit — every `n * Scale.unit` collapses to 0, including denominators like GameGrid's
+    // `min-card-w + gap` — is enough to permanently break rendering for this window even
+    // though `changed width` corrects the value moments later. `Scale.unit`'s own `16px`
+    // default (tokens/scale.slint) covers everything until the first real width arrives.
+    changed width => {
+        Scale.unit = root.width / 120px * 1px;
+        root.backdrop-dirty();
+    }
+    changed current-view => {
+        root.current-scroll-y = 0px;
+        root.backdrop-dirty();
+    }
+
+    Background {
+        width: 100%;
+        height: 100%;
+    }
+
+    ChromeBackdrop {
+        width: 100%;
+        dynamic-backdrop: root.dynamic-backdrop;
+        scroll-y: root.current-scroll-y;
+    }
+
+    HorizontalLayout {
+        y: 0px;
+        width: 100%;
+        height: 100%;
+
+        sidebar := Sidebar {
+            games: root.sidebar-games;
+            search-text <=> root.search-text;
+            search-changed(t) => { root.search-changed(t); }
+            game-clicked(slug) => { root.game-selected(slug); }
+        }
+
+        Rectangle {
+            clip: true;
+
+            if root.current-view == ViewKind.home: home-view := HomeView {
+                picks: root.home-picks;
+                favorites: root.favorite-games;
+                reshuffle => { root.reshuffle(); }
+                game-clicked(slug) => { root.game-selected(slug); }
+                // Home's grid sits below the 7.125-unit chrome band (nav + sticky page header),
+                // so nothing from it is actually behind the topbar until scroll has passed that
+                // gap — unlike GamePreview's hero, which starts flush with the topbar at rest.
+                changed scroll-y => { root.current-scroll-y = home-view.scroll-y; }
+            }
+            if root.current-view == ViewKind.library: library-view := LibraryView {
+                games: root.library-view-games;
+                active-tag: root.active-tag;
+                sort-descending: root.sort-descending;
+                has-running: root.running-slug != "";
+                tag-toggled(t) => { root.tag-toggled(t); }
+                sort-changed(d) => { root.sort-changed(d); }
+                game-clicked(slug) => { root.game-selected(slug); }
+                // See the matching comment on `home-view`'s handler above.
+                changed scroll-y => { root.current-scroll-y = library-view.scroll-y; }
+            }
+            if root.current-view == ViewKind.settings: SettingsView {
+                theme-changed(d) => { root.theme-changed(d); }
+                add-desktop-icon => { root.add-desktop-icon(); }
+                open-url(u) => { root.open-url(u); }
+            }
+            if root.current-view == ViewKind.preview && root.has-selected-game: preview-view := GamePreviewView {
+                game: root.selected-game;
+                is-launching: root.is-launching;
+                carousel-media: root.carousel-media;
+                description-blocks: root.description-blocks;
+                back-clicked => { root.back-to-library(); }
+                play-clicked => { root.play-clicked(); }
+                favorite-toggled => { root.favorite-toggled(); }
+                changed scroll-y => { root.current-scroll-y = preview-view.scroll-y; }
+            }
+        }
+    }
+
+    Topbar {
+        x: 0px;
+        y: 0px;
+        width: 100%;
+        current-view: root.current-view;
+        content-x: sidebar.width;
+        navigate(v) => { root.current-view = v; }
+    }
+}

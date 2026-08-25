@@ -1,0 +1,61 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+import { GameCardData } from "../model.slint";
+
+// `.game-list-item` — Sidebar row. Substring-match highlighting from the CSS version is not
+// reproduced (Slint's Text has no mixed-formatting spans); the running-game highlight (bold,
+// green, left border) is kept.
+export component GameListItem inherits Rectangle {
+    in property <GameCardData> game;
+    in property <bool> collapsed: false;
+    callback clicked();
+
+    height: 2.1875 * Scale.unit;
+    vertical-stretch: 0;
+    border-radius: 0.3125 * Scale.unit;
+    background: root.game.is-running
+        ? rgba(2, 122, 128, 0.49)
+        : (area.pressed ? rgba(0, 102, 255, 0.28) : (area.has-hover ? Theme.bg-card : Theme.bg-item));
+    border-width: 0.2 * Scale.unit;
+    border-color: root.game.is-running
+        ? rgba(105, 205, 4, 0.6)
+        : (area.has-hover ? rgba(0, 102, 255, 0.7) : transparent);
+    animate background, border-color { duration: 200ms; }
+
+    HorizontalLayout {
+        padding: 0.3125 * Scale.unit;
+        spacing: 0.5 * Scale.unit;
+        alignment: start;
+
+        icon-wrap := Rectangle {
+            width: 1.875 * Scale.unit;
+            height: 1.875 * Scale.unit;
+            border-radius: 0.625 * Scale.unit;
+            clip: true;
+
+            Image {
+                source: root.game.icon;
+                width: 100%;
+                height: 100%;
+                image-fit: cover;
+            }
+        }
+
+        if !root.collapsed: Text {
+            text: root.game.is-running ? root.game.name + " is Running" : root.game.name;
+            font-family: Fonts.body;
+            font-size: 0.8 * Scale.unit;
+            font-weight: root.game.is-running ? 700 : 400;
+            color: root.game.is-running ? rgba(105, 205, 4, 0.9) : Theme.text-primary;
+            overflow: elide;
+            vertical-alignment: center;
+            horizontal-alignment: left;
+        }
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

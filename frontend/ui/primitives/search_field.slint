@@ -1,0 +1,62 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// `.search-bar` — borderless (bottom-line-only) search input used in the Sidebar.
+export component SearchField inherits Rectangle {
+    in property <string> placeholder: "Search games...";
+    in-out property <string> text <=> input.text;
+    callback edited(string);
+
+    property <bool> focused: input.has-focus;
+
+    height: 1.6 * Scale.unit;
+
+    Rectangle {
+        y: parent.height - self.height;
+        height: 0.0625 * Scale.unit;
+        background: root.focused ? rgba(121, 250, 0, 0.55) : (area.has-hover ? Theme.border-subtle : Theme.border-color);
+        animate background { duration: 200ms; }
+    }
+
+    HorizontalLayout {
+        spacing: 0.5 * Scale.unit;
+        padding-top: 0.35 * Scale.unit;
+        padding-bottom: 0.35 * Scale.unit;
+
+        Path {
+            width: 0.9 * Scale.unit;
+            height: 0.9 * Scale.unit;
+            viewbox-width: 24;
+            viewbox-height: 24;
+            stroke: root.focused ? rgba(121, 250, 0, 0.7) : Theme.text-secondary;
+            stroke-width: 2px;
+            commands: "M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM21 21l-4.35-4.35";
+            animate stroke { duration: 200ms; }
+        }
+
+        Rectangle {
+            if input.text == "" && !input.has-focus: Text {
+                text: root.placeholder;
+                color: Theme.text-secondary;
+                font-family: Fonts.body;
+                font-size: 0.85 * Scale.unit;
+                vertical-alignment: center;
+                horizontal-alignment: left;
+            }
+
+            input := TextInput {
+                font-family: Fonts.body;
+                font-size: 0.85 * Scale.unit;
+                color: Theme.text-primary;
+                vertical-alignment: center;
+                single-line: true;
+                edited => { root.edited(self.text); }
+            }
+        }
+    }
+
+    area := TouchArea {
+        clicked => { input.focus(); }
+    }
+}

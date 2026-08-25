@@ -1,0 +1,14 @@
+// Replaces the CSS `font-size: calc(100vw / 120)` rem-scaling trick.
+// AppWindow sets `Scale.unit` once (and on every resize) so every other component can express
+// spacing/sizing as `n * Scale.unit` instead of a literal `rem`/`px` value.
+export global Scale {
+    in-out property <length> unit: 16px;
+
+    // Convenience multiples mirroring common rem values used throughout the CSS.
+    out property <length> xxs: root.unit * 0.3;
+    out property <length> xs: root.unit * 0.5;
+    out property <length> sm: root.unit * 0.75;
+    out property <length> md: root.unit * 1;
+    out property <length> lg: root.unit * 1.5;
+    out property <length> xl: root.unit * 2;
+}

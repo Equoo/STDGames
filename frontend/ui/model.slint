@@ -1,0 +1,44 @@
+// Row type pushed into every game grid/list (`ModelRc<GameCardData>`), rebuilt by `state.rs`
+// on every filter/sort/favorite/running-state change. Image URLs are pre-resolved to
+// `slint::Image` handles by `image_cache.rs` before reaching the UI.
+export struct GameCardData {
+    slug: string,
+    name: string,
+    icon: image,
+    // Full-size, only fetched for the currently previewed game — use this for GamePreview's hero
+    // background.
+    hero: image,
+    // Small (`img_url::card_thumb`), preloaded for the whole library — use this in grid tiles
+    // (`GameCard`) instead of `hero` to avoid downloading full-resolution art per card.
+    hero-thumb: image,
+    logo: image,
+    has-logo: bool,
+    tags: [string],
+    short-description: string,
+    is-favorite: bool,
+    is-running: bool,
+}
+
+export enum CarouselMediaKind { image, video }
+
+export struct CarouselMedia {
+    kind: CarouselMediaKind,
+    src: image,
+}
+
+// The full `description` (unlike `short-description`) is Steam store-page HTML, so it's parsed
+// into blocks (`html::parse_blocks`) rather than carried as one plain string — see
+// `components/description_blocks.slint`, which renders each kind. Only ever populated for the
+// currently-selected game (`AppState::description_blocks`), like `CarouselMedia`.
+export enum DescriptionBlockKind { heading, paragraph, list-item, image }
+
+export struct DescriptionBlock {
+    kind: DescriptionBlockKind,
+    // Steam descriptions commonly lead a paragraph/list-item with a `<strong>Label</strong>` —
+    // rendered bold, ahead of `text`, on the same row. Empty when the block has no such prefix.
+    bold-prefix: string,
+    text: string,
+    image: image,
+}
+
+export enum ViewKind { home, library, settings, preview }

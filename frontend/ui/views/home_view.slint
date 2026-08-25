@@ -1,0 +1,134 @@
+import { ScrollView } from "std-widgets.slint";
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+import { PageHeader } from "../primitives/page_header.slint";
+import { ActionButton } from "../primitives/action_button.slint";
+import { EntranceFx, EntranceKind } from "../primitives/entrance.slint";
+import { GameGrid } from "../components/game_grid.slint";
+import { GameCardData } from "../model.slint";
+
+// ← Recommendations.svelte.
+export component HomeView inherits Rectangle {
+    in property <[GameCardData]> picks: [];
+    in property <[GameCardData]> favorites: [];
+    callback reshuffle();
+    callback game-clicked(string);
+
+    // Read by `ChromeBackdrop`'s dynamic blur (via `AppWindow.current-scroll-y`) to track this
+    // view's scroll position — see its doc comment.
+    out property <length> scroll-y: max(0px, -sv.viewport-y);
+
+    VerticalLayout {
+        padding-top: 3.125 * Scale.unit;
+
+        // Outside the ScrollView below, so it stays fixed in place — matching
+        // `.page-headers`'s `position: sticky; top: 0;` — while only the content underneath
+        // it scrolls.
+        EntranceFx {
+            kind: EntranceKind.fly-left;
+            duration: 400ms;
+
+            PageHeader { title: "Home"; width: 100%; }
+        }
+
+        sv := ScrollView {
+            VerticalLayout {
+                padding: 1.5 * Scale.unit;
+                spacing: 2.5 * Scale.unit;
+                alignment: start;
+
+                // Random picks
+                VerticalLayout {
+                    spacing: 0.9 * Scale.unit;
+
+                    section-row := HorizontalLayout {
+                        spacing: 1 * Scale.unit;
+                        alignment: start;
+                        // Pin the row to its tallest child so the button doesn't get a whole
+                        // stretched cell to fill.
+                        height: self.preferred-height;
+
+                        Text {
+                            text: "RANDOM PICKS";
+                            font-family: Fonts.display;
+                            font-size: 1 * Scale.unit;
+                            letter-spacing: 0.2 * Scale.unit;
+                            color: Theme.text-secondary;
+                            vertical-alignment: center;
+                        }
+
+                        ActionButton {
+                            text: "↺ Reshuffle";
+                            clicked => { root.reshuffle(); }
+                        }
+                    }
+
+                    GameGrid {
+                        games: root.picks;
+                        clicked(slug) => { root.game-clicked(slug); }
+                    }
+                }
+
+                // For you (favorites)
+                EntranceFx {
+                    kind: EntranceKind.fade;
+
+                    favorites-section := VerticalLayout {
+                        spacing: 0.9 * Scale.unit;
+                        alignment: start;
+
+                        Text {
+                            text: "FOR YOU";
+                            font-family: Fonts.display;
+                            font-size: 1 * Scale.unit;
+                            letter-spacing: 0.2 * Scale.unit;
+                            color: Theme.text-secondary;
+                        }
+
+                        if root.favorites.length == 0: Rectangle {
+                            height: 10 * Scale.unit;
+                            border-radius: 0.75 * Scale.unit;
+                            border-width: 0.0625 * Scale.unit;
+                            border-color: Theme.border-subtle;
+
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 0.75 * Scale.unit;
+
+                                Rectangle {
+                                    height: 2 * Scale.unit;
+
+                                    Path {
+                                        x: (parent.width - self.width) / 2;
+                                        width: 2 * Scale.unit;
+                                        height: 2 * Scale.unit;
+                                        viewbox-width: 24;
+                                        viewbox-height: 24;
+                                        stroke: Theme.text-secondary;
+                                        stroke-width: 1.5px;
+                                        opacity: 0.4;
+                                        commands: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z";
+                                    }
+                                }
+
+                                Text {
+                                    text: "Heart a game in its preview to pin it here.";
+                                    font-family: Fonts.body;
+                                    font-size: 0.85 * Scale.unit;
+                                    color: Theme.text-secondary;
+                                    horizontal-alignment: center;
+                                }
+                            }
+                        }
+
+                        if root.favorites.length > 0: GameGrid {
+                            games: root.favorites;
+                            clicked(slug) => { root.game-clicked(slug); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

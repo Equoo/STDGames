@@ -1,0 +1,266 @@
+import { ScrollView } from "std-widgets.slint";
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+import { PageHeader } from "../primitives/page_header.slint";
+import { ActionButton } from "../primitives/action_button.slint";
+import { EntranceFx, EntranceKind } from "../primitives/entrance.slint";
+
+// ← Settings.svelte.
+export component SettingsView inherits Rectangle {
+    callback theme-changed(bool);
+    callback add-desktop-icon();
+    callback open-url(string);
+
+    VerticalLayout {
+        padding-top: 3.125 * Scale.unit;
+
+        // Outside the ScrollView below, so it stays fixed in place — matching
+        // `.page-headers`'s `position: sticky; top: 0;` — while only the content underneath
+        // it scrolls.
+        EntranceFx {
+            kind: EntranceKind.fly-left;
+            duration: 400ms;
+
+            PageHeader { title: "Settings"; width: 100%; }
+        }
+
+        ScrollView {
+            VerticalLayout {
+                alignment: start;
+
+                EntranceFx {
+                    kind: EntranceKind.fade;
+
+                    HorizontalLayout {
+                        padding: 2 * Scale.unit;
+                        spacing: 1.5 * Scale.unit;
+                        alignment: start;
+
+                        // Appearance
+                        VerticalLayout {
+                            spacing: 0.75 * Scale.unit;
+                            alignment: start;
+
+                            section-title-1 := Rectangle {
+                                height: section-title-1-text.height + 0.5 * Scale.unit;
+                                border-width: 0.0625 * Scale.unit;
+                                border-color: transparent;
+
+                                section-title-1-text := Text {
+                                    text: "APPEARANCE";
+                                    font-family: Fonts.display;
+                                    font-size: 0.9 * Scale.unit;
+                                    letter-spacing: 0.2 * Scale.unit;
+                                    color: Theme.text-secondary;
+                                }
+
+                                Rectangle {
+                                    y: parent.height - self.height;
+                                    height: 0.0625 * Scale.unit;
+                                    background: Theme.border-subtle;
+                                }
+                            }
+
+                            Rectangle {
+                                background: Theme.bg-card;
+                                border-width: 0.0625 * Scale.unit;
+                                border-color: Theme.border-color;
+                                border-radius: 0.625 * Scale.unit;
+                                height: 6 * Scale.unit;
+
+                                VerticalLayout {
+                                    padding: 1 * Scale.unit;
+                                    spacing: 0.6 * Scale.unit;
+
+                                    Text {
+                                        text: "Theme";
+                                        font-family: Fonts.body;
+                                        font-size: 0.88 * Scale.unit;
+                                        color: Theme.text-secondary;
+                                    }
+
+                                    Rectangle {
+                                        background: Theme.bg-input;
+                                        border-radius: 0.5 * Scale.unit;
+                                        height: 2.2 * Scale.unit;
+
+                                        HorizontalLayout {
+                                            padding: 0.2 * Scale.unit;
+                                            spacing: 0.25 * Scale.unit;
+
+                                            Rectangle {
+                                                border-radius: 0.35 * Scale.unit;
+                                                background: Theme.dark ? rgba(0, 102, 255, 0.4) : transparent;
+                                                border-width: Theme.dark ? 0.0625 * Scale.unit : 0px;
+                                                border-color: Theme.border-subtle;
+
+                                                Text {
+                                                    text: "Dark";
+                                                    font-family: Fonts.body;
+                                                    font-size: 0.82 * Scale.unit;
+                                                    color: Theme.text-primary;
+                                                    horizontal-alignment: center;
+                                                    vertical-alignment: center;
+                                                }
+
+                                                TouchArea { clicked => { root.theme-changed(true); } }
+                                            }
+
+                                            Rectangle {
+                                                border-radius: 0.35 * Scale.unit;
+                                                background: !Theme.dark ? rgba(0, 102, 255, 0.4) : transparent;
+                                                border-width: !Theme.dark ? 0.0625 * Scale.unit : 0px;
+                                                border-color: Theme.border-subtle;
+
+                                                Text {
+                                                    text: "Light";
+                                                    font-family: Fonts.body;
+                                                    font-size: 0.82 * Scale.unit;
+                                                    color: Theme.text-primary;
+                                                    horizontal-alignment: center;
+                                                    vertical-alignment: center;
+                                                }
+
+                                                TouchArea { clicked => { root.theme-changed(false); } }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // System
+                        VerticalLayout {
+                            spacing: 0.75 * Scale.unit;
+                            alignment: start;
+
+                            Rectangle {
+                                height: sys-title.height + 0.5 * Scale.unit;
+
+                                sys-title := Text {
+                                    text: "SYSTEM";
+                                    font-family: Fonts.display;
+                                    font-size: 0.9 * Scale.unit;
+                                    letter-spacing: 0.2 * Scale.unit;
+                                    color: Theme.text-secondary;
+                                }
+
+                                Rectangle {
+                                    y: parent.height - self.height;
+                                    height: 0.0625 * Scale.unit;
+                                    background: Theme.border-subtle;
+                                }
+                            }
+
+                            Rectangle {
+                                background: Theme.bg-card;
+                                border-width: 0.0625 * Scale.unit;
+                                border-color: Theme.border-color;
+                                border-radius: 0.625 * Scale.unit;
+                                height: 4 * Scale.unit;
+
+                                HorizontalLayout {
+                                    padding: 1 * Scale.unit;
+                                    spacing: 0.6 * Scale.unit;
+                                    alignment: space-between;
+
+                                    Text {
+                                        text: "Add a shortcut to your desktop";
+                                        font-family: Fonts.body;
+                                        font-size: 0.88 * Scale.unit;
+                                        color: Theme.text-secondary;
+                                        vertical-alignment: center;
+                                    }
+
+                                    ActionButton {
+                                        text: "Add to desktop";
+                                        clicked => { root.add-desktop-icon(); }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Community
+                        VerticalLayout {
+                            spacing: 0.75 * Scale.unit;
+                            alignment: start;
+
+                            Rectangle {
+                                height: community-title.height + 0.5 * Scale.unit;
+
+                                community-title := Text {
+                                    text: "COMMUNITY";
+                                    font-family: Fonts.display;
+                                    font-size: 0.9 * Scale.unit;
+                                    letter-spacing: 0.2 * Scale.unit;
+                                    color: Theme.text-secondary;
+                                }
+
+                                Rectangle {
+                                    y: parent.height - self.height;
+                                    height: 0.0625 * Scale.unit;
+                                    background: Theme.border-subtle;
+                                }
+                            }
+
+                            Rectangle {
+                                background: Theme.bg-card;
+                                border-width: 0.0625 * Scale.unit;
+                                border-color: Theme.border-color;
+                                border-radius: 0.625 * Scale.unit;
+                                height: 4 * Scale.unit;
+
+                                HorizontalLayout {
+                                    padding: 1 * Scale.unit;
+                                    spacing: 0.6 * Scale.unit;
+                                    alignment: space-between;
+
+                                    Text {
+                                        text: "Join us on Discord";
+                                        font-family: Fonts.body;
+                                        font-size: 0.88 * Scale.unit;
+                                        color: Theme.text-secondary;
+                                        vertical-alignment: center;
+                                    }
+
+                                    ActionButton {
+                                        text: "Discord";
+                                        clicked => { root.open-url("https://discord.gg/YR7fwGy5D7"); }
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                background: Theme.bg-card;
+                                border-width: 0.0625 * Scale.unit;
+                                border-color: Theme.border-color;
+                                border-radius: 0.625 * Scale.unit;
+                                height: 4 * Scale.unit;
+
+                                HorizontalLayout {
+                                    padding: 1 * Scale.unit;
+                                    spacing: 0.6 * Scale.unit;
+                                    alignment: space-between;
+
+                                    Text {
+                                        text: "Give us a star on Github";
+                                        font-family: Fonts.body;
+                                        font-size: 0.88 * Scale.unit;
+                                        color: Theme.text-secondary;
+                                        vertical-alignment: center;
+                                    }
+
+                                    ActionButton {
+                                        text: "Github";
+                                        clicked => { root.open-url("https://github.com/Equoo/STDGames"); }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

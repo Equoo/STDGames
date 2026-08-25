@@ -1,0 +1,26 @@
+import { Scale } from "../tokens/scale.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// `.running-badge` — small pill shown on a GameCard while its game is the active running game.
+export component RunningBadge inherits Rectangle {
+    border-radius: 0.3 * Scale.unit;
+    background: rgba(2, 122, 128, 0.85);
+    border-width: 0.0625 * Scale.unit;
+    border-color: rgba(105, 205, 4, 0.6);
+
+    HorizontalLayout {
+        padding-left: 0.6 * Scale.unit;
+        padding-right: 0.6 * Scale.unit;
+        padding-top: 0.2 * Scale.unit;
+        padding-bottom: 0.2 * Scale.unit;
+
+        Text {
+            text: "RUNNING";
+            font-family: Fonts.body;
+            font-size: 0.65 * Scale.unit;
+            font-weight: 700;
+            color: rgba(105, 205, 4, 0.95);
+            letter-spacing: 0.05 * Scale.unit;
+        }
+    }
+}

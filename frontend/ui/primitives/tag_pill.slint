@@ -1,0 +1,52 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// `.game-tag` (small display chip on cards) and `.tag-button` (Library filter toggle)
+// folded into one primitive via `variant`.
+export enum TagPillVariant { chip, toggle }
+
+export component TagPill inherits Rectangle {
+    in property <string> text;
+    in property <TagPillVariant> variant: TagPillVariant.chip;
+    in property <bool> active: false;
+    callback clicked();
+
+    property <bool> is-toggle: root.variant == TagPillVariant.toggle;
+
+    // See ActionButton: pin the intrinsic size so layouts don't stretch this to fill its cell.
+    height: label.preferred-height + (root.is-toggle ? 0.8 : 0.36) * Scale.unit;
+    width: label.preferred-width + (root.is-toggle ? 1.5 : 1.0) * Scale.unit;
+    vertical-stretch: 0;
+    horizontal-stretch: 0;
+
+    border-radius: root.is-toggle ? 0.5 * Scale.unit : 0.3 * Scale.unit;
+    border-width: 0.0625 * Scale.unit;
+    border-color: root.is-toggle
+        ? (root.active ? rgba(121, 250, 0, 0.7) : (area.has-hover ? Theme.border-subtle : Theme.border-color))
+        : rgba(255, 255, 255, 0.25);
+    background: root.is-toggle
+        ? (root.active
+            ? rgba(0, 102, 255, 0.2)
+            : (area.pressed ? Theme.bg-input.darker(0.2) : (area.has-hover ? Theme.bg-input : Theme.bg-card)))
+        : rgba(255, 255, 255, 0.15);
+    animate background, border-color { duration: 180ms; }
+
+    label := Text {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        text: root.is-toggle ? root.text : root.text.to-uppercase();
+        font-family: Fonts.body;
+        font-size: root.is-toggle ? 0.8 * Scale.unit : 0.65 * Scale.unit;
+        letter-spacing: root.is-toggle ? 0px : 0.05 * Scale.unit;
+        color: root.is-toggle
+            ? (root.active ? Theme.text-primary : (area.has-hover ? Theme.text-primary : Theme.text-secondary))
+            : rgba(255, 255, 255, 0.88);
+    }
+
+    area := TouchArea {
+        enabled: root.is-toggle;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

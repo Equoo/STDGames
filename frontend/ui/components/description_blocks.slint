@@ -1,0 +1,69 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+import { DescriptionBlock, DescriptionBlockKind } from "../model.slint";
+
+// Renders `html::parse_blocks`' output — a lightweight stand-in for the Steam store page's HTML
+// (`{@html $selectedGame.description}` in the Svelte original), since Slint's `Text` has no
+// rich-text spans or embedded-image support.
+//
+// Each row holds exactly one `Text` (or one `Image`) — no `HorizontalLayout` pairing a wrapping
+// `Text` next to a sibling. An earlier version put a `<strong>Label</strong>` prefix beside the
+// wrapping body text in one row (`horizontal-stretch: 0` next to `: 1`); with a real ~30-block
+// description that made the whole app hang before ever showing a window (reproduced down to: it
+// only happened once this component actually rendered a non-trivial block list — removing it
+// alone fixed the hang). Simplest read: Slint's layout solver struggles to resolve a wrapping
+// Text's width when it depends on a stretch negotiation with a sibling, repeated across many
+// rows inside a ScrollView (whose own height also depends on all of that). Stacking the prefix on
+// its own line — like `to_text`'s plain-text fallback already did — sidesteps the negotiation
+// entirely: each Text either fills its row on its own, or doesn't need wrapping (headings/prefix
+// lines are short), so nothing here yields a *cross-sibling* wrap dependency.
+export component DescriptionBlocks inherits VerticalLayout {
+    in property <[DescriptionBlock]> blocks: [];
+    spacing: 0.85 * Scale.unit;
+
+    for block in root.blocks: VerticalLayout {
+        spacing: 0.2 * Scale.unit;
+
+        if block.kind == DescriptionBlockKind.heading: Text {
+            text: block.text;
+            font-family: Fonts.display;
+            font-size: 1.1 * Scale.unit;
+            letter-spacing: 0.05 * Scale.unit;
+            color: Theme.text-primary;
+            wrap: word-wrap;
+        }
+
+        if block.kind != DescriptionBlockKind.heading && block.kind != DescriptionBlockKind.image && block.bold-prefix != "": Text {
+            text: block.bold-prefix;
+            font-family: Fonts.body;
+            font-size: 0.875 * Scale.unit;
+            font-weight: 700;
+            color: Theme.text-primary;
+            wrap: word-wrap;
+        }
+
+        if block.kind == DescriptionBlockKind.paragraph && block.text != "": Text {
+            text: block.text;
+            font-family: Fonts.body;
+            font-size: 0.875 * Scale.unit;
+            color: Theme.text-primary;
+            wrap: word-wrap;
+        }
+
+        if block.kind == DescriptionBlockKind.list-item && block.text != "": Text {
+            text: "• " + block.text;
+            font-family: Fonts.body;
+            font-size: 0.875 * Scale.unit;
+            color: Theme.text-primary;
+            wrap: word-wrap;
+        }
+
+        if block.kind == DescriptionBlockKind.image && block.image.width > 0: Image {
+            source: block.image;
+            image-fit: contain;
+            width: 100%;
+            height: self.width * (block.image.height * 1.0 / block.image.width);
+        }
+    }
+}

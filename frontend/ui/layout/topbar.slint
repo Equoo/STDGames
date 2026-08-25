@@ -1,0 +1,83 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { NavButton } from "../primitives/nav_button.slint";
+import { ViewKind } from "../model.slint";
+
+// ← Topbar.svelte's nav row. The frosted band itself (`.topbar`'s backdrop-filter) is owned by
+// the shared `ChromeBackdrop` this sits on top of, not by this component — see its doc comment.
+// Logo mouse-tracking glow is deviation 4: clipped to the logo's bounding box via a
+// TouchArea-tracked radial gradient instead of a letter-shaped CSS mask.
+export component Topbar inherits Rectangle {
+    in property <ViewKind> current-view: ViewKind.home;
+    // Left edge of the scrolling content area (i.e. the sidebar's width). The bar overlays the
+    // sidebar too, so its click-blocker must start here or it would swallow clicks meant for
+    // the sidebar's search field and collapse button sitting underneath.
+    in property <length> content-x: 0px;
+    callback navigate(ViewKind);
+
+    height: 3.125 * Scale.unit;
+
+    // Swallow clicks landing on the nav row so content scrolled underneath it isn't clickable
+    // through the chrome. Declared before the nav row itself, so the buttons (later siblings,
+    // painted on top) still receive their own clicks.
+    TouchArea {
+        x: root.content-x;
+        width: root.width - root.content-x;
+    }
+
+    HorizontalLayout {
+        padding-left: 1 * Scale.unit;
+        padding-right: 1 * Scale.unit;
+        alignment: start;
+
+        logo-wrap := Rectangle {
+            width: 5 * Scale.unit;
+            height: 5 * Scale.unit;
+            clip: true;
+
+            Image {
+                source: @image-url("../../assets/icons/stdgames_letters_only.png");
+                width: 100%;
+                height: 100%;
+                image-fit: contain;
+            }
+
+            Rectangle {
+                opacity: logo-area.has-hover ? 1.0 : 0.0;
+                animate opacity { duration: 250ms; }
+                background: Theme.dark
+                    ? @radial-gradient(circle 1.2 * Scale.unit at logo-area.mouse-x logo-area.mouse-y,
+                        rgba(255, 255, 255, 0.8) 0%, rgba(47, 255, 0, 0.5) 35%, rgba(255, 255, 255, 1) 65%, transparent 100%)
+                    : @radial-gradient(circle 1.2 * Scale.unit at logo-area.mouse-x logo-area.mouse-y,
+                        rgba(255, 255, 255, 0.8) 0%, rgba(255, 0, 180, 0.5) 35%, rgba(0, 180, 255, 0.5) 65%, transparent 100%);
+            }
+
+            logo-area := TouchArea {
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        Rectangle { width: 1.25 * Scale.unit; }
+
+        HorizontalLayout {
+            spacing: 0.25 * Scale.unit;
+
+            NavButton {
+                text: "Home";
+                active: root.current-view == ViewKind.home;
+                clicked => { root.navigate(ViewKind.home); }
+            }
+            NavButton {
+                text: "Library";
+                active: root.current-view == ViewKind.library || root.current-view == ViewKind.preview;
+                clicked => { root.navigate(ViewKind.library); }
+            }
+            NavButton {
+                text: "Settings";
+                active: root.current-view == ViewKind.settings;
+                clicked => { root.navigate(ViewKind.settings); }
+            }
+        }
+    }
+}

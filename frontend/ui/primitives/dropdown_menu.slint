@@ -1,0 +1,94 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// Custom "Sort by" dropdown (`.custom-dropdown` / `.dropdown-menu` in Library.svelte).
+export component DropdownMenu inherits Rectangle {
+    in property <string> label: "Sort by";
+    in property <[string]> options: [];
+    callback selected(int);
+
+    // See ActionButton: pin the intrinsic size so layouts don't stretch this to fill its cell.
+    width: trigger-layout.preferred-width;
+    height: trigger-layout.preferred-height;
+    vertical-stretch: 0;
+    horizontal-stretch: 0;
+
+    border-radius: 0.5 * Scale.unit;
+    border-width: 0.0625 * Scale.unit;
+    border-color: (trigger-area.has-hover || popup.is-open) ? Theme.border-subtle : Theme.border-color;
+    background: (trigger-area.has-hover || popup.is-open) ? rgba(0, 102, 255, 0.15) : Theme.bg-card;
+    animate background, border-color { duration: 180ms; }
+
+    trigger-layout := HorizontalLayout {
+        padding-left: 0.75 * Scale.unit;
+        padding-right: 0.75 * Scale.unit;
+        padding-top: 0.4 * Scale.unit;
+        padding-bottom: 0.4 * Scale.unit;
+
+        Text {
+            text: root.label + " ▼";
+            font-family: Fonts.body;
+            font-size: 0.8 * Scale.unit;
+            color: (trigger-area.has-hover || popup.is-open) ? Theme.text-primary : Theme.text-secondary;
+            vertical-alignment: center;
+        }
+    }
+
+    trigger-area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            if (popup.is-open) {
+                popup.close();
+            } else {
+                popup.show();
+            }
+        }
+    }
+
+    popup := PopupWindow {
+        x: 0px;
+        y: root.height + 0.25 * Scale.unit;
+        width: max(root.width, 11.25 * Scale.unit);
+
+        Rectangle {
+            background: Theme.bg-dropdown;
+            border-radius: 0.5 * Scale.unit;
+            border-width: 0.0625 * Scale.unit;
+            border-color: Theme.border-subtle;
+            drop-shadow-color: rgba(0, 0, 0, 0.2);
+            drop-shadow-blur: 1.5 * Scale.unit;
+            drop-shadow-offset-y: 0.5 * Scale.unit;
+
+            VerticalLayout {
+                padding: 0.25 * Scale.unit;
+                spacing: 0.125 * Scale.unit;
+
+                for opt[i] in root.options: Rectangle {
+                    height: 2.1 * Scale.unit;
+                    border-radius: 0.35 * Scale.unit;
+                    background: item-area.has-hover ? Theme.bg-card : transparent;
+                    animate background { duration: 150ms; }
+
+                    Text {
+                        x: 0.75 * Scale.unit;
+                        text: opt;
+                        font-family: Fonts.body;
+                        font-size: 0.85 * Scale.unit;
+                        color: item-area.has-hover ? Theme.text-primary : Theme.text-secondary;
+                        vertical-alignment: center;
+                        height: 100%;
+                    }
+
+                    item-area := TouchArea {
+                        mouse-cursor: pointer;
+                        clicked => {
+                            root.selected(i);
+                            popup.close();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,37 @@
+import { Scale } from "../tokens/scale.slint";
+import { GameCard } from "game_card.slint";
+import { GameCardData } from "../model.slint";
+
+// Shared `repeat(auto-fill, minmax(18rem, 1fr))` reflow grid used by Library and Home.
+export component GameGrid inherits Rectangle {
+    in property <[GameCardData]> games: [];
+    in property <bool> dim-non-running: false;
+    callback clicked(string);
+
+    property <length> gap: 1 * Scale.unit;
+    property <length> min-card-w: 18 * Scale.unit;
+    property <int> cols: max(1, floor((root.width + root.gap) / (root.min-card-w + root.gap)));
+    property <length> card-w: (root.width - (root.cols - 1) * root.gap) / root.cols;
+
+    property <length> content-height: root.games.length > 0
+        ? (ceil(root.games.length * 1.0 / root.cols) * (root.card-w * 9 / 16 + root.gap))
+        : 0px;
+
+    // Publish the computed height as a layout *constraint* rather than assigning `height`
+    // directly (Slint rejects setting both `height` and `min-height`). Assigning `height` alone
+    // only sizes the element — an enclosing layout still treats it as stretchable and an
+    // enclosing ScrollView never learns the content is taller than the viewport, so nothing
+    // scrolls. Constraints propagate outward, so the layout hands the grid exactly this height.
+    min-height: root.content-height;
+    preferred-height: root.content-height;
+    vertical-stretch: 0;
+
+    for game[i] in root.games: GameCard {
+        cell-x: mod(i, root.cols) * (root.card-w + root.gap);
+        cell-y: floor(i * 1.0 / root.cols) * (root.card-w * 9 / 16 + root.gap);
+        cell-width: root.card-w;
+        dimmed: root.dim-non-running;
+        game: game;
+        clicked => { root.clicked(game.slug); }
+    }
+}

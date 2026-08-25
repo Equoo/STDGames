@@ -1,0 +1,108 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+import { TagPill, TagPillVariant } from "../primitives/tag_pill.slint";
+import { RunningBadge } from "running_badge.slint";
+import { GameCardData } from "../model.slint";
+
+// ← GameCard.svelte (`.game-card`).
+export component GameCard inherits Rectangle {
+    in property <GameCardData> game;
+    in property <bool> dimmed: false;
+    // Grid-cell slot this card occupies. `x`/`y`/`width` aren't bound to these directly because
+    // `.game-card:hover { transform: scale(1.02); }` grows the *whole card* around its own
+    // center, not just the background image inside it — so the card's real geometry has to be
+    // able to exceed its cell and stay centered on it, rather than being pinned to it exactly.
+    in property <length> cell-x;
+    in property <length> cell-y;
+    in property <length> cell-width;
+    callback clicked();
+
+    property <float> hover-scale: area.has-hover ? 1.02 : 1.0;
+    property <length> w: root.cell-width * root.hover-scale;
+    property <length> h: root.w * 9 / 16;
+
+    width: root.w;
+    height: root.h;
+    x: root.cell-x - (root.w - root.cell-width) / 2;
+    y: root.cell-y - (root.h - root.cell-width * 9 / 16) / 2;
+    animate width, height, x, y {
+        duration: 220ms;
+        easing: ease;
+    }
+
+    border-radius: 0.75 * Scale.unit;
+    border-width: 0.0625 * Scale.unit;
+    border-color: area.has-hover ? Theme.border-subtle : Theme.border-color;
+    background: Theme.bg-input;
+    clip: true;
+    opacity: root.dimmed && !root.game.is-running ? 0.4 : 1.0;
+    // `.game-card:hover { box-shadow: 0 0 1.2rem rgba(0,0,0,0.5); }` — zero offset, so this is a
+    // soft glow around the whole card rather than a directional drop shadow.
+    drop-shadow-color: rgba(0, 0, 0, 0.3);
+    drop-shadow-blur: area.has-hover ? 1.2 * Scale.unit : 0px;
+    animate opacity, border-color, drop-shadow-blur { duration: 220ms; }
+
+    states [
+        pressed when area.pressed: {
+            bg-img.width: root.width * 1.02;
+            bg-img.height: root.height * 1.02;
+            root.border-color: Theme.btn-hover-border-color;
+        }
+        hover when area.has-hover: {
+            bg-img.width: root.w * 1.1;
+            bg-img.height: root.h * 1.1;
+        }
+    ]
+
+    bg-img := Image {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        width: root.w;
+        height: root.h;
+        source: root.game.hero-thumb;
+        image-fit: cover;
+        animate width, height {
+            duration: 300ms;
+            easing: ease;
+        }
+    }
+
+    Rectangle {
+        background: @linear-gradient(0deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.2) 55%, transparent 100%);
+    }
+
+    VerticalLayout {
+        alignment: end;
+        padding: 0.9 * Scale.unit;
+        spacing: 0.35 * Scale.unit;
+
+        if root.game.tags.length > 0: HorizontalLayout {
+            spacing: 0.3 * Scale.unit;
+            alignment: start;
+            for tag in root.game.tags: TagPill {
+                text: tag;
+                variant: TagPillVariant.chip;
+            }
+        }
+
+        Text {
+            text: root.game.name;
+            font-family: Fonts.display;
+            font-size: 1 * Scale.unit;
+            letter-spacing: 0.05 * Scale.unit;
+            color: #ffffff;
+            overflow: elide;
+        }
+    }
+
+    if root.game.is-running: RunningBadge {
+        x: root.width - self.width - 0.6 * Scale.unit;
+        y: 0.6 * Scale.unit;
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

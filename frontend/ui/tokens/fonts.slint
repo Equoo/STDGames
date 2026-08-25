@@ -1,0 +1,13 @@
+import "../../assets/fonts/brunson/Brunson.ttf";
+import "../../assets/fonts/brunson/Brunson Rough.ttf";
+import "../../assets/fonts/inter/Inter-Regular.ttf";
+import "../../assets/fonts/inter/Inter-Medium.ttf";
+import "../../assets/fonts/inter/Inter-SemiBold.ttf";
+import "../../assets/fonts/inter/Inter-Bold.ttf";
+
+// Family name constants so call sites never hand-type a string that can drift from the .ttf metadata.
+export global Fonts {
+    out property <string> display: "Brunson";
+    out property <string> display-rough: "Brunson Rough";
+    out property <string> body: "Inter";
+}

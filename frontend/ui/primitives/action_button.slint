@@ -1,0 +1,41 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// `.action-btn` — small pill button used for reshuffle/community/etc actions.
+export component ActionButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    // A Rectangle has no intrinsic size, so inside a layout it stretches to fill its cell —
+    // which is why this rendered several times taller than its content. Pin the height to the
+    // label plus vertical padding and opt out of vertical stretch so layouts leave it alone.
+    height: label.preferred-height + 0.8 * Scale.unit;
+    vertical-stretch: 0;
+    horizontal-stretch: 0;
+    min-width: label.preferred-width + 1.8 * Scale.unit;
+
+    border-radius: self.height / 2;
+    border-width: 0.0625 * Scale.unit;
+    border-color: area.has-hover ? Theme.btn-hover-border-color : Theme.border-subtle;
+    background: area.pressed
+        ? Theme.btn-hover-bg-color.darker(0.2)
+        : (area.has-hover ? Theme.btn-hover-bg-color : Theme.bg-input);
+    animate background, border-color { duration: 180ms; }
+
+    label := Text {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        text: root.text;
+        color: Theme.text-primary;
+        font-family: Fonts.body;
+        font-size: 0.82 * Scale.unit;
+    }
+
+    area := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? MouseCursor.pointer : MouseCursor.not-allowed;
+        clicked => { root.clicked(); }
+    }
+}

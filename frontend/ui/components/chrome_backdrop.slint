@@ -1,0 +1,61 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+
+// Slint has no backdrop-filter (slint-ui/slint#2066), so there is nothing to blur the real
+// background *through*. The static blob background (`assets/bg_blurred_*.png`, a genuinely
+// Gaussian-blurred crop matching `background.slint`'s blob math) is the always-available base
+// layer; `dynamic-backdrop` — composited and blurred in Rust from whatever's actually behind the
+// topbar right now (grid thumbnails, hero image — see `backdrop.rs`) — draws on top of it once
+// available, offset by `-scroll-y` inside this clipped rect so it visibly tracks scrolling, the
+// same trick the hero's own parallax image already uses. `scroll-y` (from `AppWindow.current-
+// scroll-y`) is already zeroed for however much of each view's own scroll happens *before* its
+// content would actually reach this band — e.g. Library/Home's grid sits below the sticky
+// header, so their handlers subtract that gap; GamePreview's hero starts flush with the topbar,
+// so its scroll-y passes straight through. The dynamic layer is *rebuilt* only on a debounce
+// (`AppWindow.backdrop-dirty`, Rust-side `main.rs`), not live per frame — only this *positioning*
+// is live, which is cheap.
+export component ChromeBackdrop inherits Rectangle {
+    in property <image> dynamic-backdrop;
+    in property <length> scroll-y: 0px;
+
+    y: 0;
+    height: 7.125 * Scale.unit;
+    clip: true;
+
+    // Image {
+    //     source: Theme.dark ? @image-url("../../assets/bg_blurred_dark.png") : @image-url("../../assets/bg_blurred_light.png");
+    //     width: 100%;
+    //     height: 100%;
+    //     image-fit: cover;
+    // }
+
+    // DISABLED — see the long comment at the bottom of this file. Any child added here beyond
+    // the original four below (the static Image, the two veil Rectangles, the hairline) renders
+    // at the wrong screen position: a fixed offset unrelated to this component's own geometry,
+    // to scroll position, to which view is active, to the GPU vs software renderer, or to a
+    // stale build cache. Re-enable once that's understood; until then this falls back to the
+    // static blur only, which is known-good.
+    if root.dynamic-backdrop.width > 0: Image {
+        source: root.dynamic-backdrop;
+        y: -root.scroll-y + 7.125 * Scale.unit;
+        width: root.dynamic-backdrop.width * 1px;
+        height: root.dynamic-backdrop.height * 1px;
+    }
+
+    // Frost veil (`--bg-frosted-solid`, the value the CSS itself used for frosted panels) plus a
+    // slight extra top-weighted tint so the nav row reads a touch stronger than the header zone.
+    // Rectangle {
+    //     background: Theme.bg-frosted-solid;
+    // }
+    //
+    // Rectangle {
+    //     background: @linear-gradient(180deg, Theme.bg-topbar.transparentize(0.3) 0%, Theme.bg-topbar.transparentize(0.75) 100%);
+    // }
+
+    // Hairline bottom edge so the band reads as a distinct pane from the content scrolling past it.
+    // Rectangle {
+    //     y: parent.height - self.height;
+    //     height: 0.0625 * Scale.unit;
+    //     background: Theme.border-color;
+    // }
+}

@@ -1,0 +1,94 @@
+import { Scale } from "../tokens/scale.slint";
+import { CarouselMedia, CarouselMediaKind } from "../model.slint";
+
+// ← Carousel.svelte's coverflow. The imperative per-frame DOM style writes (`layoutItems()`)
+// become declarative bindings driven by `active-index` + `scroll-dir`, per Carousel.svelte:28-106.
+// Slint has no video-playback element, so video entries render as a static thumbnail + play
+// badge rather than actually playing (a Slint capability gap, same category as the
+// backdrop-filter/blend-mode gaps already noted for the CSS port).
+export component Carousel inherits Rectangle {
+    in property <[CarouselMedia]> media: [];
+    in-out property <int> active-index: 0;
+    property <int> scroll-dir: 1;
+
+    height: 31.25 * Scale.unit;
+    border-radius: 1.25 * Scale.unit;
+    clip: true;
+    drop-shadow-color: rgba(0, 0, 0, 0.2);
+    drop-shadow-blur: 2.5 * Scale.unit;
+    drop-shadow-offset-y: 1.25 * Scale.unit;
+
+    property <length> active-w: root.height * 16 / 9;
+    property <length> inactive-w: root.active-w * 0.4;
+    property <length> gap: 0.9375 * Scale.unit;
+    property <length> active-nin-w: root.active-w + root.inactive-w + root.gap;
+    property <length> preview-offset: (root.width - root.active-nin-w) / 2;
+    property <length> pivot-x: root.scroll-dir > 0
+        ? (root.width - root.active-w - root.preview-offset)
+        : root.preview-offset;
+
+    for item[idx] in root.media: Rectangle {
+        property <int> raw-delta: mod(idx - root.active-index + root.media.length, root.media.length);
+        property <int> delta: raw-delta * 2 > root.media.length ? raw-delta - root.media.length : raw-delta;
+        property <int> dist: abs(delta);
+        property <bool> is-active: delta == 0;
+
+        width: is-active ? root.active-w : root.inactive-w;
+        height: root.height;
+        x: is-active
+            ? root.pivot-x
+            : delta > 0
+                ? root.pivot-x + root.active-w + root.gap + (dist - 1) * (root.inactive-w + root.gap)
+                : root.pivot-x - dist * (root.gap + root.inactive-w);
+        opacity: dist <= 3 ? 1.0 : 0.0;
+        animate x, width { duration: 800ms; easing: cubic-bezier(0.22, 1, 0.36, 1); }
+        animate opacity { duration: 300ms; }
+
+        media-img := Image {
+            source: item.src;
+            width: 100%;
+            height: 100%;
+            image-fit: cover;
+        }
+
+        if item.kind == CarouselMediaKind.video: Rectangle {
+            background: rgba(0, 0, 0, 0.3);
+            opacity: item-area.has-hover ? 1.0 : 0.0;
+            animate opacity { duration: 300ms; }
+
+            Rectangle {
+                width: 3.75 * Scale.unit;
+                height: 3.75 * Scale.unit;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                border-radius: self.width / 2;
+                background: rgba(255, 255, 255, 0.9);
+
+                Path {
+                    width: 1.25 * Scale.unit;
+                    height: 1.25 * Scale.unit;
+                    x: (parent.width - self.width) / 2 + 0.1 * Scale.unit;
+                    y: (parent.height - self.height) / 2;
+                    viewbox-width: 24;
+                    viewbox-height: 24;
+                    fill: #333333;
+                    commands: "M5 3 L19 12 L5 21 Z";
+                }
+            }
+        }
+
+        item-area := TouchArea {
+            clicked => { root.active-index = idx; }
+        }
+    }
+
+    TouchArea {
+        scroll-event(event) => {
+            if (event.delta-y != 0px) {
+                root.scroll-dir = event.delta-y > 0px ? 1 : -1;
+                root.active-index = mod(root.active-index + root.scroll-dir + root.media.length, root.media.length);
+            }
+            accept
+        }
+    }
+}

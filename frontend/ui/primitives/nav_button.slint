@@ -1,0 +1,51 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// Topbar nav item (`.nav-btn`) incl. animated gradient underline + active state.
+export component NavButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> active: false;
+    callback clicked();
+
+    property <float> underline-scale: root.active ? 1.0 : (area.has-hover ? 0.5 : 0.0);
+    property <float> underline-opacity: root.active ? 1.0 : (area.has-hover ? 0.45 : 0.0);
+
+    background: area.pressed
+        ? rgba(255, 255, 255, 0.12)
+        : (area.has-hover ? rgba(255, 255, 255, 0.06) : transparent);
+    border-radius: 0.3 * Scale.unit;
+    animate background { duration: 200ms; }
+
+    HorizontalLayout {
+        padding-left: 0.9 * Scale.unit;
+        padding-right: 0.9 * Scale.unit;
+        alignment: center;
+
+        Text {
+            text: root.text;
+            font-family: Fonts.display;
+            font-size: 1 * Scale.unit;
+            letter-spacing: 0.125 * Scale.unit;
+            color: root.active ? Theme.text-primary : (area.has-hover ? Theme.text-primary : Theme.text-secondary);
+            vertical-alignment: center;
+            animate color { duration: 200ms; }
+        }
+    }
+
+    underline := Rectangle {
+        x: (root.width - self.width) / 2;
+        y: root.height - 0.3 * Scale.unit - self.height;
+        width: (root.width - 1 * Scale.unit) * root.underline-scale;
+        height: 0.15 * Scale.unit;
+        border-radius: 0.1 * Scale.unit;
+        opacity: root.underline-opacity;
+        background: @linear-gradient(90deg, rgba(0, 102, 255, 0.9) 0%, rgba(255, 0, 204, 0.9) 100%);
+        animate width, opacity { duration: 250ms; easing: ease-in-out; }
+    }
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

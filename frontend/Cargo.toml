@@ -1,0 +1,29 @@
+[package]
+name = "stdgames-launcher"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "stdgames-launcher"
+path = "src/main.rs"
+
+[dependencies]
+slint = "1.17.1"
+# `avif-native` decodes the AVIF promo banners Steam descriptions embed. Unlike `avif` (encode
+# only, pure-Rust `ravif`), decoding needs `dav1d` — a system dependency (`libdav1d` + a C
+# toolchain to build the `dav1d` crate's bindings via meson/ninja/nasm), not a pure-Rust codec.
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp", "avif-native"] }
+ureq = { version = "2.10", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+directories = "5"
+rand = "0.8"
+async-trait = "0.1"
+pollster = "0.4"
+
+[build-dependencies]
+slint-build = "1.17.1"
+
+[dev-dependencies]
+i-slint-backend-testing = "1.17.1"

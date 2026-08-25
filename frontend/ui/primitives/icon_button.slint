@@ -1,0 +1,41 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+
+// Shared chrome for `.toggle-btn` / `.fav-btn` / icon-only play buttons: a circular or square
+// hit target with hover/active background. The icon graphic itself is supplied by the caller
+// via @children (usually a `Path`), so this stays a pure "button shape" primitive.
+export enum IconButtonShape { circle, square }
+
+export component IconButton inherits Rectangle {
+    in property <IconButtonShape> shape: IconButtonShape.square;
+    in property <length> size: 2 * Scale.unit;
+    in property <bool> active: false;
+    in property <brush> active-color: rgba(255, 60, 100, 0.9);
+    in property <brush> idle-background: Theme.bg-card;
+    in property <brush> hover-background: rgba(0, 102, 255, 0.15);
+    callback clicked();
+
+    width: root.size;
+    height: root.size;
+    vertical-stretch: 0;
+    horizontal-stretch: 0;
+    border-radius: root.shape == IconButtonShape.circle ? root.size / 2 : 0.4 * Scale.unit;
+    border-width: 0.0625 * Scale.unit;
+    border-color: area.has-hover ? Theme.border-subtle : Theme.border-color;
+    background: area.has-hover ? root.hover-background : root.idle-background;
+    animate background, border-color { duration: 200ms; }
+
+    states [
+        pressed when area.pressed: {
+            root.width: root.size * 0.96;
+            root.height: root.size * 0.96;
+        }
+    ]
+
+    @children
+
+    area := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

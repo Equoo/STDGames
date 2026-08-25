@@ -1,0 +1,52 @@
+import { Theme } from "../tokens/palette.slint";
+
+// Deviation 1: the CSS blur layer only ever sits over a *static* blob background, so instead of
+// faking a live backdrop-filter blur, the blobs themselves are rendered already-soft via wide,
+// transparent-fading @radial-gradient brushes (Slint has no ellipse gradients, so each blob is
+// approximated as a circle sized to the ellipse's larger axis — visually indistinguishable once
+// blurred-looking). Ported from svelte/app.css:74-89.
+// Deviation 3: grain overlay baked as a tileable noise PNG instead of an SVG feTurbulence filter.
+export component Background inherits Rectangle {
+    background: Theme.dark ? #03030f : #f0ecf8;
+
+    // Blob 1: ellipse 85%/75% (dark) or 85%/70% (light) at 10% 20%
+    Rectangle {
+        width: root.width * 0.85;
+        height: root.height * 0.85;
+        x: root.width * 0.10 - self.width / 2;
+        y: root.height * 0.20 - self.height / 2;
+        background: Theme.dark
+            ? @radial-gradient(circle, rgba(20, 80, 255, 0.92) 0%, transparent 70%)
+            : @radial-gradient(circle, rgba(250, 175, 195, 0.92) 0%, transparent 63%);
+    }
+
+    // Blob 2: ellipse 78%/68% at 85% 60%
+    Rectangle {
+        width: root.width * 0.78;
+        height: root.height * 0.78;
+        x: root.width * 0.85 - self.width / 2;
+        y: root.height * 0.60 - self.height / 2;
+        background: Theme.dark
+            ? @radial-gradient(circle, rgba(200, 20, 170, 0.88) 0%, transparent 68%)
+            : @radial-gradient(circle, rgba(185, 155, 240, 0.88) 0%, transparent 63%);
+    }
+
+    // Blob 3: ellipse 65%/58% at 48% 95%
+    Rectangle {
+        width: root.width * 0.65;
+        height: root.height * 0.65;
+        x: root.width * 0.48 - self.width / 2;
+        y: root.height * 0.95 - self.height / 2;
+        background: Theme.dark
+            ? @radial-gradient(circle, rgba(80, 0, 200, 0.82) 0%, transparent 68%)
+            : @radial-gradient(circle, rgba(155, 205, 245, 0.82) 0%, transparent 62%);
+    }
+
+    grain := Image {
+        source: @image-url("../../assets/grain.png");
+        image-fit: cover;
+        width: root.width;
+        height: root.height;
+        opacity: Theme.grain-opacity;
+    }
+}

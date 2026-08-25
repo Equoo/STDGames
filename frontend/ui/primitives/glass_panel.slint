@@ -1,0 +1,25 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+
+// Translucent container primitive standing in for the CSS `.bg-panel` / `.bg-card` /
+// `.bg-frosted-solid` / `.bg-input` / `.bg-item` / `.bg-dropdown` / `.bg-topbar` background classes.
+export enum GlassVariant { panel, card, frosted-solid, input, item, dropdown, topbar }
+
+export component GlassPanel inherits Rectangle {
+    in property <GlassVariant> variant: GlassVariant.panel;
+    in property <length> radius: 0.625 * Scale.unit;
+    in property <bool> bordered: true;
+    in property <bool> subtle-border: false;
+
+    background: root.variant == GlassVariant.card ? Theme.bg-card
+        : root.variant == GlassVariant.frosted-solid ? Theme.bg-frosted-solid
+        : root.variant == GlassVariant.input ? Theme.bg-input
+        : root.variant == GlassVariant.item ? Theme.bg-item
+        : root.variant == GlassVariant.dropdown ? Theme.bg-dropdown
+        : root.variant == GlassVariant.topbar ? Theme.bg-topbar
+        : Theme.bg-panel;
+    border-radius: root.radius;
+    border-width: root.bordered ? 0.0625 * Scale.unit : 0px;
+    border-color: root.subtle-border ? Theme.border-subtle : Theme.border-color;
+    clip: true;
+}

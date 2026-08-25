@@ -1,0 +1,29 @@
+// Ported verbatim from svelte/app.css:20-71 (:root/[data-theme="dark"] and [data-theme="light"] blocks).
+export global Theme {
+    in-out property <bool> dark: true;
+
+    out property <brush> bg-frosted-solid: root.dark ? rgba(3, 3, 15, 0.7) : rgba(240, 236, 248, 0.6);
+    out property <brush> bg-overlay: root.dark ? rgba(0, 0, 0, 0.75) : rgba(255, 255, 255, 0.15);
+    out property <brush> bg-panel: root.dark ? rgba(0, 0, 0, 0.55) : rgba(255, 255, 255, 0.22);
+    out property <brush> bg-card: root.dark ? rgba(24, 24, 56, 0.9) : rgba(255, 255, 255, 0.35);
+    out property <brush> bg-input: root.dark ? rgba(20, 20, 30, 0.7) : rgba(255, 255, 255, 0.45);
+    out property <brush> bg-item: root.dark ? rgba(37, 66, 94, 0.48) : rgba(255, 255, 255, 0.3);
+    out property <brush> bg-dropdown: root.dark ? rgba(10, 10, 20, 0.95) : rgba(250, 246, 255, 0.96);
+    out property <brush> bg-topbar: root.dark ? rgba(0, 0, 0, 0.5) : rgba(255, 255, 255, 0.18);
+
+    out property <color> text-primary: root.dark ? #ffffff : #2d1b4e;
+    out property <color> text-secondary: root.dark ? rgba(255, 255, 255, 0.6) : rgba(45, 27, 78, 0.6);
+
+    out property <color> border-color: root.dark ? rgba(0, 102, 255, 0.212) : rgba(160, 110, 210, 0.25);
+    out property <color> border-subtle: root.dark ? rgba(0, 102, 255, 0.3) : rgba(160, 110, 210, 0.4);
+
+    out property <color> content-fade-start: root.dark ? rgba(3, 3, 15, 0) : rgba(240, 236, 248, 0);
+    out property <color> content-fade-mid: root.dark ? rgba(3, 3, 15, 0.55) : rgba(240, 236, 248, 0.55);
+    out property <color> content-fade-end: root.dark ? rgba(3, 3, 15, 0.97) : rgba(240, 236, 248, 0.97);
+
+    out property <color> btn-hover-bg-color: rgba(0, 102, 255, 0.2);
+    out property <color> btn-hover-border-color: root.dark ? rgba(121, 250, 0, 0.6) : rgba(255, 0, 204, 0.5);
+
+    // Grain overlay opacity (deviation 3): light theme keeps CSS's subtle 0.1, dark theme stays off.
+    out property <float> grain-opacity: root.dark ? 0.0 : 0.1;
+}

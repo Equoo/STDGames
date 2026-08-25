@@ -1,0 +1,35 @@
+import { Scale } from "../tokens/scale.slint";
+import { Theme } from "../tokens/palette.slint";
+import { Fonts } from "../tokens/fonts.slint";
+
+// `.page-headers` + `.page-title`. Sits directly on the shared `ChromeBackdrop` behind it
+// (`background: transparent` in the original CSS too) rather than having its own separate panel
+// — that shared backdrop is what makes the header read as part of one continuous bar with the
+// topbar instead of a disconnected floating pill. Any children passed at the use site land in
+// the right-hand side row (Library's filter/sort controls, etc).
+export component PageHeader inherits Rectangle {
+    in property <string> title;
+
+    height: 4 * Scale.unit;
+
+    HorizontalLayout {
+        padding-left: 1.75 * Scale.unit;
+        padding-right: 1.75 * Scale.unit;
+        alignment: space-between;
+
+        Text {
+            text: root.title;
+            font-family: Fonts.display;
+            font-size: 1.5 * Scale.unit;
+            letter-spacing: 0.3125 * Scale.unit;
+            color: Theme.text-primary;
+            vertical-alignment: center;
+        }
+
+        HorizontalLayout {
+            spacing: 0.5 * Scale.unit;
+            alignment: end;
+            @children
+        }
+    }
+}

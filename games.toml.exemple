@@ -44,23 +44,6 @@
 # overlays = [ "$GAMES_DIR/mygame" ] # optional, paths to overlay directories
 # start = [ "mygame.sh", "-arg1", "value1" ] # command to start the game
 
-[[games]]
-slug = "battlenet"
-status = "working"
-
-[games.metadata]
-name = "BattleNet"
-icon = "https://images.icon-icons.com/1508/PNG/512/battlenet_104070.png"
-hero = "https://imgs.search.brave.com/na3ZE3cZ5dyZEvp-1ocILQc5arebLFi0TDelE8NR9VA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pY29u/LWxpYnJhcnkuY29t/L2ltYWdlcy9iYXR0/bGVuZXQtaWNvbi9i/YXR0bGVuZXQtaWNv/bi0yNC5qcGc"
-cover = "https://lutris.net/media/games/screenshots/Battle.net_001.png"
-description = "this is battle.net launcher."
-tags = [ "Store" ]
-
-[games.launch]
-proton = "ge10.25"
-overlays = [ "$GAMES_DIR/battlenet" ]
-start = [ "Battle.net-Setup.exe" ]
-
 
 [[games]]
 slug = "hytale"

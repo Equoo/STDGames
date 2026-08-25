@@ -1,0 +1,82 @@
+import { ScrollView } from "std-widgets.slint";
+import { Scale } from "../tokens/scale.slint";
+import { PageHeader } from "../primitives/page_header.slint";
+import { TagPill, TagPillVariant } from "../primitives/tag_pill.slint";
+import { DropdownMenu } from "../primitives/dropdown_menu.slint";
+import { EntranceFx, EntranceKind } from "../primitives/entrance.slint";
+import { GameGrid } from "../components/game_grid.slint";
+import { GameCardData } from "../model.slint";
+
+// ← Library.svelte.
+export component LibraryView inherits Rectangle {
+    in property <[GameCardData]> games: [];
+    in property <string> active-tag: "";
+    in property <bool> sort-descending: true;
+    in property <bool> has-running: false;
+    callback tag-toggled(string);
+    callback sort-changed(bool);
+    callback game-clicked(string);
+
+    // Read by `ChromeBackdrop`'s dynamic blur (via `AppWindow.current-scroll-y`) to track this
+    // view's scroll position — see its doc comment.
+    out property <length> scroll-y: max(0px, -sv.viewport-y);
+
+    VerticalLayout {
+        padding-top: 3.125 * Scale.unit;
+
+        // Outside the ScrollView below, so it stays fixed in place — matching `.page-headers`'s
+        // `position: sticky; top: 0;` — while only the grid underneath it scrolls.
+        EntranceFx {
+            kind: EntranceKind.fly-left;
+            duration: 400ms;
+
+            PageHeader {
+                title: "Library";
+                width: 100%;
+
+                TagPill {
+                    text: "Multiplayer";
+                    variant: TagPillVariant.toggle;
+                    active: root.active-tag == "multiplayer";
+                    clicked => { root.tag-toggled("multiplayer"); }
+                }
+                TagPill {
+                    text: "Solo";
+                    variant: TagPillVariant.toggle;
+                    active: root.active-tag == "solo";
+                    clicked => { root.tag-toggled("solo"); }
+                }
+                DropdownMenu {
+                    label: "Sort by";
+                    options: ["Name A → Z", "Name Z → A"];
+                    selected(i) => { root.sort-changed(i == 0); }
+                }
+            }
+        }
+
+        sv := ScrollView {
+            VerticalLayout {
+                alignment: start;
+
+                EntranceFx {
+                    kind: EntranceKind.fade;
+
+                    // Inset lives on a nested layout, not on EntranceFx itself: EntranceFx
+                    // drives its own padding-left/top to animate the entrance, so setting those
+                    // here would clobber the animation.
+                    VerticalLayout {
+                        padding-left: 1.5 * Scale.unit;
+                        padding-right: 1.5 * Scale.unit;
+                        padding-bottom: 1.5 * Scale.unit;
+
+                        GameGrid {
+                            games: root.games;
+                            dim-non-running: root.has-running;
+                            clicked(slug) => { root.game-clicked(slug); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
