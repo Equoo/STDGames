@@ -25,5 +25,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Rust build artifacts
+target/
+**/target/
 target_docker
 docker/result/
