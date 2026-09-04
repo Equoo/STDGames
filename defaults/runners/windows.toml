@@ -1,0 +1,46 @@
+# Runner defaults for target = { kind = "windows" }. A game only needs to
+# declare `[modes.<name>] enabled = true` to pick up these layers; it writes
+# its own `layers = [...]` only to override a specific slot (e.g. pin a
+# different Proton version/build, or a different Sandbox profile) — note
+# that an override replaces the *whole* layer for that slot, params
+# included, not just the params it actually wants to change.
+#
+# Paths below are this deployment's real, already-installed resources (see
+# /sgoinfre/stdgames/.resources) — not something this workspace discovers on
+# its own; a different deployment's global.toml/runners/*.toml would point
+# these elsewhere.
+#
+# The Sandbox slot itself isn't listed here: every mode already gets the
+# "normal" bwrap profile from defaults/global.toml. "super-compat" below is
+# the one mode that needs something different, so it's the one that
+# overrides it.
+
+[modes.desktop]
+layers = [
+    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
+]
+
+[modes.steam-injected]
+layers = [
+    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
+    { id = "steamapi-emu" },
+]
+
+# Adds the Steam Linux Runtime (pressure-vessel) on top of "desktop", for
+# games that need scout/soldier-era compatibility libraries alongside Proton.
+[modes.sandboxed]
+layers = [
+    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
+    { id = "soldier", params = { depot_path = "/opt/steam-runtime/SteamLinuxRuntime_soldier" } },
+]
+
+# For sessions where the user cannot install anything on the host at all
+# (no Steam, no system packages — a locked-down shared machine): the
+# Sandbox slot is overridden to bind a self-contained Arch Linux image as
+# `/` instead of using host libraries.
+[modes.super-compat]
+layers = [
+    { id = "bwrap", params = { profile = "super-compat", image_root = "/opt/stdgames/images/archlinux-x86_64" } },
+    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
+    { id = "soldier", params = { depot_path = "/opt/steam-runtime/SteamLinuxRuntime_soldier" } },
+]

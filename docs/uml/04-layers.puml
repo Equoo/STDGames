@@ -1,0 +1,96 @@
+@startuml Layer_implementations_one_slot_each
+title Layer implementations (one slot each)
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 260
+
+package "stdg-layers-sandbox" {
+  class BwrapLayer {
+    +profile : SandboxProfile
+    +image_root : Option<PathBuf>
+    --
+    {static} +normal() : BwrapLayer
+    {static} +super_compat(image_root: PathBuf) : BwrapLayer
+  }
+  enum SandboxProfile <<enum>> {
+    Normal
+    SuperCompat
+  }
+}
+
+package "stdg-layers-runtime" {
+  class PressureVesselLayer {
+    +variant : PressureVesselVariant
+    +depot_path : PathBuf
+  }
+  enum PressureVesselVariant <<enum>> {
+    Soldier
+    Sniper
+  }
+}
+
+package "stdg-layers-compat" {
+  class ProtonLayer {
+    +version : String
+    +proton_path : PathBuf
+    +prefix_path : PathBuf
+    +steam_client_path : Option<PathBuf>
+  }
+  class WineLayer {
+    +version : String
+    +wine_path : PathBuf
+    +prefix_path : PathBuf
+    +steam_client_path : Option<PathBuf>
+  }
+}
+
+package "stdg-layers-steamapi" {
+  class SteamApiNativeLayer {
+    +app_id : String
+  }
+  class SteamApiEmuLayer <<stub>> {
+    +variant : EmuVariant
+  }
+  enum EmuVariant <<enum>> {
+    PlainReplace
+    OverNative
+  }
+}
+
+package "stdg-layers-supervision" {
+  class SupervisionLayer {
+    +cgroup_parent : PathBuf
+  }
+}
+
+' referenced from elsewhere, shown without members for context
+interface Layer <<trait>>
+class CommandSpec
+class LaunchCtx
+class Binding
+interface SessionGuard <<trait>>
+class Diagnostic
+
+' realizations (trait/interface implementations)
+BwrapLayer ..|> Layer
+PressureVesselLayer ..|> Layer
+ProtonLayer ..|> Layer
+WineLayer ..|> Layer
+SteamApiNativeLayer ..|> Layer
+SteamApiEmuLayer ..|> Layer
+SupervisionLayer ..|> Layer
+
+' associations
+PressureVesselLayer -- "1" PressureVesselVariant : variant
+BwrapLayer -- "1" SandboxProfile : profile
+SteamApiEmuLayer -- "1" EmuVariant : variant
+
+' dependencies (uses / produces)
+Layer ..> LaunchCtx
+Layer ..> CommandSpec
+Layer ..> Outcome
+Layer ..> Binding
+Layer ..> SessionGuard
+Layer ..> Diagnostic
+
+@enduml

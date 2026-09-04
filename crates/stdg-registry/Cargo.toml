@@ -1,0 +1,8 @@
+[package]
+name = "stdg-registry"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+stdg-core = { workspace = true }

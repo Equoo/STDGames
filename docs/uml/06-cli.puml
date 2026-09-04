@@ -1,0 +1,39 @@
+@startuml stdg_cli_wiring_and_the_explain_command
+title stdg-cli — wiring and the explain command
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 260
+
+package "stdg-cli" {
+  class RegistryWiring <<module>> {
+    {static} +build_registry() : Registry
+    {static} +load_emulator_manifests() : Vec<EmulatorManifest>
+  }
+  class Explain <<module>> {
+    {static} +run(game_id: String, mode_id: String) : Result<(), String>
+    {static} +find_game_config(game_id: GameId) : Option<PathBuf>
+    {static} +print_command(spec: CommandSpec) : ()
+  }
+  class Main <<module>> {
+    {static} +main() : ()
+    {static} +parse_explain_args(args: Vec<String>) : Option<(String, String)>
+  }
+}
+
+' referenced from elsewhere, shown without members for context
+class Registry
+class Planner <<module>>
+class LaunchCtx
+class EmulatorManifest
+class CommandSpec
+
+' dependencies (uses / produces)
+Explain ..> Planner
+Explain ..> Registry
+Explain ..> LaunchCtx
+RegistryWiring ..> Registry
+RegistryWiring ..> EmulatorManifest
+Main ..> Explain
+Main ..> RegistryWiring
+
+@enduml

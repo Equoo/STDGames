@@ -1,0 +1,19 @@
+# Global defaults: the lowest-precedence tier of the per-slot layer merge
+# (see docs on stdg_plan::cascade::GlobalDefaults). Applied to every mode of
+# every game, before runner- and game-specific layers override individual
+# slots.
+#
+# The Sandbox slot is mandatory (stdg_plan::validate::MANDATORY_SLOTS) —
+# there is no unsandboxed launch mode — so every deployment's global.toml is
+# expected to carry one; this is the "normal" profile (host libs, still
+# sandboxed for binds/overlays). A game or runner default overrides this
+# with `profile = "super-compat"` for locked-down sessions where the user
+# can't have anything installed on the host at all.
+#
+# Supervision is a good fit here too: nothing about a dedicated cgroup
+# session depends on the target kind, so every launch gets one unless a
+# game explicitly overrides the Supervision slot itself.
+baseline_layers = [
+    { id = "bwrap", params = { profile = "normal" } },
+    { id = "cgroup" },
+]

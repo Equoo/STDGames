@@ -1,0 +1,11 @@
+[package]
+name = "stdg-exec"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+stdg-core = { workspace = true }
+stdg-registry = { workspace = true }
+thiserror = { workspace = true }
+libc = "0.2"

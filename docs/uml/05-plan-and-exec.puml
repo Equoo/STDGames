@@ -1,0 +1,113 @@
+@startuml Planner_registry_and_executor
+title Planner, registry, and executor
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 260
+
+package "stdg-plan" {
+  class Planner <<module>> {
+    {static} +build_plan(game_id: GameId, mode_id: ModeId, global: GlobalDefaults, runner_defaults: RunnerDefaults, game: PartialGameConfig, catalog: LayerCatalog, runners: RunnerCatalog) : Result<Plan, CoreError>
+    {static} +resolve_config(game_id: GameId, global: GlobalDefaults, runner_defaults: RunnerDefaults, game: PartialGameConfig, mode: PartialModeConfig) : Result<ResolvedConfig, CoreError>
+    {static} +validate_plan(config: ResolvedConfig, layer_refs: Vec<LayerRef>, catalog: LayerCatalog) : Result<BTreeMap<Slot, LayerRef>, CoreError>
+  }
+  class GlobalDefaults {
+    +command_prefix : Option<Vec<String>>
+    +env : Option<BTreeMap<String, String>>
+    +baseline_layers : Vec<LayerRef>
+  }
+  class RunnerDefaults {
+    +command_prefix : Option<Vec<String>>
+    +env : Option<BTreeMap<String, String>>
+    +modes : BTreeMap<ModeId, ModeLayerDefaults>
+    --
+    +layers_for(mode_id: ModeId) : Vec<LayerRef>
+  }
+  class ModeLayerDefaults {
+    +layers : Vec<LayerRef>
+  }
+}
+
+package "stdg-registry" {
+  class Registry {
+    +layer_factories : BTreeMap<LayerId, LayerFactory>
+    +runners : Vec<Box<Runner>>
+    --
+    +register_layer(id: LayerId, factory: LayerFactory) : ()
+    +register_runner(runner: Box<Runner>) : ()
+  }
+}
+
+package "stdg-exec" {
+  class Pipeline <<module>> {
+    {static} +run_pipeline(registry: Registry, ctx: LaunchCtx) : Result<PipelineOutput, ExecError>
+  }
+  class PipelineOutput {
+    +outcome : Outcome
+    +bindings : Vec<Binding>
+    +guards : Vec<Box<SessionGuard>>
+  }
+  class CgroupSession {
+    +path : PathBuf
+    --
+    {static} +create(parent: Path, session_name: String) : io::Result<Option<CgroupSession>>
+    +add_pid(pid: u32) : io::Result<()>
+    +pids() : io::Result<Vec<u32>>
+    +kill_all() : io::Result<()>
+  }
+  class SessionTmpDir {
+    +path : PathBuf
+    --
+    {static} +create(session_dir: Path, name: String) : io::Result<SessionTmpDir>
+    +path() : Path
+  }
+  class Session <<module>> {
+    {static} +new_session_info(base_tmp_dir: Path) : SessionInfo
+  }
+  class Subreaper <<module>> {
+    {static} +set_child_subreaper() : io::Result<()>
+    {static} +is_child_subreaper() : io::Result<bool>
+  }
+  enum ExecError <<enum>> {
+    Core(CoreError)
+    Io(io::Error)
+    CgroupUnavailable(PathBuf)
+  }
+}
+
+' referenced from elsewhere, shown without members for context
+interface LayerCatalog <<trait>>
+interface RunnerCatalog <<trait>>
+class Plan
+class LaunchCtx
+interface Layer <<trait>>
+interface Runner <<trait>>
+interface SessionGuard <<trait>>
+enum CoreError <<enum>>
+enum Outcome <<enum>>
+class Binding
+
+' realizations (trait/interface implementations)
+Registry ..|> LayerCatalog
+Registry ..|> RunnerCatalog
+CgroupSession ..|> SessionGuard
+SessionTmpDir ..|> SessionGuard
+
+' associations
+RunnerDefaults *-- "*" ModeLayerDefaults : modes
+
+' dependencies (uses / produces)
+Planner ..> Plan
+Planner ..> LayerCatalog
+Planner ..> RunnerCatalog
+Planner ..> GlobalDefaults
+Planner ..> RunnerDefaults
+Pipeline ..> Registry
+Pipeline ..> LaunchCtx
+Pipeline ..> PipelineOutput
+SupervisionLayer ..> CgroupSession
+SupervisionLayer ..> Subreaper
+Explain ..> Planner
+Explain ..> Registry
+RegistryWiring ..> Registry
+
+@enduml

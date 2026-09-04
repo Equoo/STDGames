@@ -1,0 +1,92 @@
+@startuml stdg_core_config_cascade_and_errors
+title stdg-core — config cascade and errors
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 260
+
+package "stdg-core" {
+  class GameId {
+    +0 : String
+  }
+  class ModeId {
+    +0 : String
+  }
+  class RunnerId {
+    +0 : String
+  }
+  class LayerId {
+    +0 : String
+  }
+  class SessionId {
+    +0 : String
+  }
+  enum TargetKind <<enum>> {
+    NativeLinux
+    Windows
+    Rom(PlatformId)
+  }
+  class PlatformId {
+    +0 : String
+  }
+  class ResolvedConfig {
+    +game_id : GameId
+    +target : TargetKind
+    +root : PathBuf
+    +executable : PathBuf
+    +args : Vec<String>
+    +command_prefix : Vec<String>
+    +env : BTreeMap<String, String>
+  }
+  class PartialGameConfig {
+    +target : Option<TargetKind>
+    +root : Option<PathBuf>
+    +executable : Option<PathBuf>
+    +args : Option<Vec<String>>
+    +command_prefix : Option<Vec<String>>
+    +env : Option<BTreeMap<String, String>>
+    +modes : Option<BTreeMap<ModeId, PartialModeConfig>>
+  }
+  class PartialModeConfig {
+    +enabled : Option<bool>
+    +layers : Option<Vec<LayerRef>>
+    +args : Option<Vec<String>>
+    +env : Option<BTreeMap<String, String>>
+  }
+  enum CoreError <<enum>> {
+    SlotConflict { slot, first, second }
+    MissingCapability { layer, capability }
+    IncompatibleTarget { layer, target, reason }
+    NoRunnerForTarget(TargetKind)
+    UnknownRunner(RunnerId)
+    UnknownLayer(LayerId)
+    ModeDisabled(ModeId)
+    Preflight { layer, diagnostic }
+    Config(ConfigError)
+  }
+  enum ConfigError <<enum>> {
+    MissingField { game_id, field }
+    InvalidValue { field, reason }
+  }
+  class Diagnostic {
+    +severity : Severity
+    +message : String
+    +hint : Option<String>
+  }
+  enum Severity <<enum>> {
+    Warning
+    Error
+  }
+}
+
+' referenced from elsewhere, shown without members for context
+class LayerRef
+
+' associations
+ResolvedConfig -- "1" GameId : game_id
+ResolvedConfig -- "1" TargetKind : target
+PartialGameConfig o-- "*" PartialModeConfig : modes
+PartialGameConfig -- "0..1" TargetKind : target
+PartialModeConfig o-- "*" LayerRef : layers
+Diagnostic -- "1" Severity : severity
+
+@enduml

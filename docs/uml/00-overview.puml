@@ -1,0 +1,44 @@
+@startuml stdgames_overview
+title STDGames workspace — crate dependencies
+skinparam packageStyle rectangle
+
+package "stdg-core" as pkg_stdg_core
+package "stdg-plan" as pkg_stdg_plan
+package "stdg-registry" as pkg_stdg_registry
+package "stdg-exec" as pkg_stdg_exec
+package "stdg-runners-native" as pkg_stdg_runners_native
+package "stdg-runners-windows" as pkg_stdg_runners_windows
+package "stdg-runners-emulator" as pkg_stdg_runners_emulator
+package "stdg-layers-sandbox" as pkg_stdg_layers_sandbox
+package "stdg-layers-runtime" as pkg_stdg_layers_runtime
+package "stdg-layers-compat" as pkg_stdg_layers_compat
+package "stdg-layers-steamapi" as pkg_stdg_layers_steamapi
+package "stdg-layers-supervision" as pkg_stdg_layers_supervision
+package "stdg-cli" as pkg_stdg_cli
+
+pkg_stdg_plan ..> pkg_stdg_core
+pkg_stdg_registry ..> pkg_stdg_core
+pkg_stdg_exec ..> pkg_stdg_core
+pkg_stdg_exec ..> pkg_stdg_registry
+pkg_stdg_runners_native ..> pkg_stdg_core
+pkg_stdg_runners_windows ..> pkg_stdg_core
+pkg_stdg_runners_emulator ..> pkg_stdg_core
+pkg_stdg_layers_sandbox ..> pkg_stdg_core
+pkg_stdg_layers_runtime ..> pkg_stdg_core
+pkg_stdg_layers_compat ..> pkg_stdg_core
+pkg_stdg_layers_steamapi ..> pkg_stdg_core
+pkg_stdg_layers_supervision ..> pkg_stdg_core
+pkg_stdg_layers_supervision ..> pkg_stdg_exec
+pkg_stdg_cli ..> pkg_stdg_core
+pkg_stdg_cli ..> pkg_stdg_plan
+pkg_stdg_cli ..> pkg_stdg_registry
+pkg_stdg_cli ..> pkg_stdg_exec
+pkg_stdg_cli ..> pkg_stdg_runners_native
+pkg_stdg_cli ..> pkg_stdg_runners_windows
+pkg_stdg_cli ..> pkg_stdg_runners_emulator
+pkg_stdg_cli ..> pkg_stdg_layers_sandbox
+pkg_stdg_cli ..> pkg_stdg_layers_runtime
+pkg_stdg_cli ..> pkg_stdg_layers_compat
+pkg_stdg_cli ..> pkg_stdg_layers_steamapi
+pkg_stdg_cli ..> pkg_stdg_layers_supervision
+@enduml

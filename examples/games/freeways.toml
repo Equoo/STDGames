@@ -1,0 +1,26 @@
+# A real game from this deployment's library (/sgoinfre/stdgames/freeways),
+# used to validate the Compat/Runtime/Sandbox layers against an actual
+# installed Proton build and a real Steam client rather than a placeholder.
+# Ships its own steam_api.dll and steam_appid.txt (780210) — real Steam API,
+# no injection needed, matching [games.metadata] api.client = "steam" in
+# the previous launcher's games.toml for this same game.
+target = { kind = "windows" }
+root = "/sgoinfre/stdgames/freeways"
+executable = "Freeways.exe"
+args = []
+
+[modes.desktop]
+enabled = true
+layers = [
+    { id = "steamapi-native", params = { app_id = "780210" } },
+]
+
+# The previous launcher's games.toml pinned this specific game to GE-Proton9-23
+# rather than the runner's own default build — kept here to demonstrate a
+# real per-game Compat override, not just the runner default.
+[modes.steam]
+enabled = true
+layers = [
+    { id = "proton", params = { version = "GE-Proton9-23", proton_path = "/sgoinfre/stdgames/.resources/protons/ge9.23", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge9.23", steam_client_path = "/sgoinfre/steam/Steam" } },
+    { id = "steamapi-native", params = { app_id = "780210" } },
+]

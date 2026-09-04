@@ -1,0 +1,19 @@
+target = { kind = "windows" }
+root = "/games/example-windows"
+executable = "ExampleWindows.exe"
+args = []
+
+# All three modes' layers now come entirely from defaults/runners/windows.toml
+# and defaults/global.toml — this game doesn't deviate from the runner's
+# defaults for any of them, so there's nothing to override.
+[modes.desktop]
+enabled = true
+
+[modes.steam-injected]
+enabled = true
+
+[modes.sandboxed]
+enabled = true
+
+[modes.super-compat]
+enabled = true

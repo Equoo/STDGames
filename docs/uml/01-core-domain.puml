@@ -1,0 +1,153 @@
+@startuml stdg_core_runtime_domain_model
+title stdg-core — runtime domain model
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 260
+
+package "stdg-core" {
+  interface Layer <<trait>> {
+    +id() : LayerId
+    +slot() : Slot
+    +provides() : CapabilitySet
+    +requires() : CapabilitySet
+    +preflight(ctx: LaunchCtx) : Result<(), Diagnostic>
+    +container_needs() : Vec<Binding>
+    +prepare(ctx: LaunchCtx) : Result<Box<SessionGuard>, CoreError>
+    +patch(spec: CommandSpec, ctx: LaunchCtx) : Result<(), CoreError>
+    +wrap(inner: CommandSpec, ctx: LaunchCtx) : Result<Outcome, CoreError>
+  }
+  interface Runner <<trait>> {
+    +id() : RunnerId
+    +accepts(target: TargetKind) : bool
+    +build(ctx: LaunchCtx) : Result<CommandSpec, CoreError>
+  }
+  interface LayerCatalog <<trait>> {
+    +resolve_layer(r: LayerRef, config: ResolvedConfig) : Result<Box<Layer>, CoreError>
+    +known_layer_ids() : Vec<LayerId>
+  }
+  interface RunnerCatalog <<trait>> {
+    +find_for_target(target: TargetKind) : Option<Runner>
+    +resolve_runner(id: RunnerId) : Option<Runner>
+  }
+  interface SessionGuard <<trait>> {
+    +label() : String
+  }
+  class Plan {
+    +game_id : GameId
+    +mode_id : ModeId
+    +target : TargetKind
+    +runner : RunnerId
+    +slots : BTreeMap<Slot, LayerRef>
+    +config : ResolvedConfig
+    --
+    +layers_inside_out() : Iterator<(Slot, LayerRef)>
+  }
+  class LaunchCtx {
+    +plan : Plan
+    +session : SessionInfo
+    +bindings : Vec<Binding>
+    +dry_run : bool
+  }
+  class SessionInfo {
+    +id : SessionId
+    +tmp_dir : PathBuf
+  }
+  class CommandSpec {
+    +program : Option<PathValue>
+    +args : Vec<ArgValue>
+    +env : BTreeMap<String, EnvValue>
+    +cwd : Option<PathValue>
+    --
+    {static} +new(program: PathValue) : CommandSpec
+    +push_arg(arg: ArgValue) : ()
+    +push_arg_literal(s: String) : ()
+    +push_arg_path(p: PathValue) : ()
+    +set_env_literal(key: String, val: String) : ()
+    +set_env_path(key: String, val: PathValue) : ()
+    +wrapped_by(new_program: PathValue) : CommandSpec
+  }
+  class LayerRef {
+    +id : LayerId
+    +params : BTreeMap<String, String>
+    --
+    {static} +new(id: String) : LayerRef
+    +with_param(key: String, value: String) : LayerRef
+    +param(key: String) : Option<String>
+  }
+  class Binding {
+    +source : PathValue
+    +mode : BindMode
+    +purpose : BindPurpose
+  }
+  enum PathValue <<enum>> {
+    Host(PathBuf)
+    Translated { host: PathBuf, guest: PathBuf }
+  }
+  enum ArgValue <<enum>> {
+    Literal(String)
+    Path(PathValue)
+  }
+  enum EnvValue <<enum>> {
+    Literal(String)
+    Path(PathValue)
+    PathList (Vec<PathValue>, PathListSeparator)
+  }
+  class PathListSeparator {
+    +0 : char
+  }
+  enum BindMode <<enum>> {
+    ReadOnly
+    ReadWrite
+  }
+  class BindPurpose {
+    +0 : String
+  }
+  enum Outcome <<enum>> {
+    Direct(CommandSpec)
+  }
+  enum Slot <<enum>> {
+    Sandbox
+    Runtime
+    Compat
+    SteamApi
+    Supervision
+    Tooling
+  }
+  class Capability {
+    +name : &'static str
+  }
+  class CapabilitySet {
+    +items : BTreeSet<Capability>
+    --
+    {static} +of(caps: Iterator<Capability>) : CapabilitySet
+    +insert(cap: Capability) : ()
+    +contains(cap: Capability) : bool
+    +union(other: CapabilitySet) : CapabilitySet
+    +missing_from(provided: CapabilitySet) : CapabilitySet
+    +is_empty() : bool
+  }
+}
+
+' associations
+Plan *-- "0..6" LayerRef : slots
+LaunchCtx *-- "1" Plan : plan
+LaunchCtx *-- "1" SessionInfo : session
+LaunchCtx o-- "*" Binding : bindings
+CommandSpec *-- "*" ArgValue : args
+CommandSpec *-- "*" EnvValue : env
+Binding -- "1" PathValue : source
+Binding -- "1" BindMode : mode
+Binding -- "1" BindPurpose : purpose
+CapabilitySet *-- "*" Capability : items
+
+' dependencies (uses / produces)
+Layer ..> LaunchCtx
+Layer ..> CommandSpec
+Layer ..> Outcome
+Layer ..> Binding
+Layer ..> SessionGuard
+Runner ..> CommandSpec
+LayerCatalog ..> Layer
+RunnerCatalog ..> Runner
+
+@enduml

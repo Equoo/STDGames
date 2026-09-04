@@ -1,0 +1,51 @@
+@startuml Runner_implementations
+title Runner implementations
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam wrapWidth 260
+
+package "stdg-runners-native" {
+  class NativeLinuxRunner {
+  }
+}
+
+package "stdg-runners-windows" {
+  class WindowsRunner {
+  }
+}
+
+package "stdg-runners-emulator" {
+  class EmulatorRunner {
+    +manifests : Vec<EmulatorManifest>
+  }
+  class EmulatorManifest {
+    +id : String
+    +platforms : Vec<String>
+    +binary : String
+    +args : Vec<String>
+    +detect_paths : Vec<String>
+    --
+    {static} +from_toml_str(s: String) : Result<EmulatorManifest, Error>
+    +supports_platform(platform: String) : bool
+  }
+}
+
+' referenced from elsewhere, shown without members for context
+interface Runner <<trait>>
+class CommandSpec
+class LaunchCtx
+enum TargetKind <<enum>>
+
+' realizations (trait/interface implementations)
+NativeLinuxRunner ..|> Runner
+WindowsRunner ..|> Runner
+EmulatorRunner ..|> Runner
+
+' associations
+EmulatorRunner *-- "*" EmulatorManifest : manifests
+
+' dependencies (uses / produces)
+Runner ..> CommandSpec
+Runner ..> TargetKind
+
+@enduml

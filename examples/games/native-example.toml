@@ -1,0 +1,13 @@
+target = { kind = "native-linux" }
+root = "/games/example-native"
+executable = "example-native.bin"
+args = ["--fullscreen"]
+
+# No `layers` here: cgroup supervision already comes from defaults/global.toml.
+# app_id is inherently game-specific, so it's the one thing this mode still
+# has to declare itself.
+[modes.desktop]
+enabled = true
+layers = [
+    { id = "steamapi-native", params = { app_id = "480" } },
+]

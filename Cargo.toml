@@ -1,0 +1,40 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/stdg-core",
+    "crates/stdg-plan",
+    "crates/stdg-registry",
+    "crates/stdg-exec",
+    "crates/stdg-runners-native",
+    "crates/stdg-runners-windows",
+    "crates/stdg-runners-emulator",
+    "crates/stdg-layers-sandbox",
+    "crates/stdg-layers-runtime",
+    "crates/stdg-layers-compat",
+    "crates/stdg-layers-steamapi",
+    "crates/stdg-layers-supervision",
+    "crates/stdg-cli",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.87.0"
+
+[workspace.dependencies]
+stdg-core = { path = "crates/stdg-core" }
+stdg-plan = { path = "crates/stdg-plan" }
+stdg-registry = { path = "crates/stdg-registry" }
+stdg-exec = { path = "crates/stdg-exec" }
+stdg-runners-native = { path = "crates/stdg-runners-native" }
+stdg-runners-windows = { path = "crates/stdg-runners-windows" }
+stdg-runners-emulator = { path = "crates/stdg-runners-emulator" }
+stdg-layers-sandbox = { path = "crates/stdg-layers-sandbox" }
+stdg-layers-runtime = { path = "crates/stdg-layers-runtime" }
+stdg-layers-compat = { path = "crates/stdg-layers-compat" }
+stdg-layers-steamapi = { path = "crates/stdg-layers-steamapi" }
+stdg-layers-supervision = { path = "crates/stdg-layers-supervision" }
+
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+toml = "1.1"
+clap = { version = "4", features = ["derive"] }
