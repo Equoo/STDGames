@@ -37,7 +37,7 @@ impl fmt::Display for RunnerId {
     }
 }
 
-/// Identifier of a `Layer` registered in the registry (e.g. "proton", "bwrap").
+/// Identifier of a `Layer` registered in the registry (e.g. "proton", "conty").
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct LayerId(pub String);

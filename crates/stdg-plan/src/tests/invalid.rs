@@ -90,7 +90,7 @@ fn missing_required_field_is_rejected() {
 
 #[test]
 fn mode_without_a_sandbox_layer_anywhere_is_rejected() {
-    // No bwrap in global defaults, runner defaults, or the mode itself.
+    // No sandbox layer in global defaults, runner defaults, or the mode itself.
     let game = with_mode(base_game(TargetKind::NativeLinux), "desktop", mode_with_layers(&[]));
 
     let err = build_plan(

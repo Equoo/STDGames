@@ -1,0 +1,19 @@
+# A real game from this deployment's library (/sgoinfre/stdgames/freeways),
+# used to validate the Compat/Runtime/Sandbox layers against an actual
+# installed Proton build and a real Steam client rather than a placeholder.
+# Ships its own steam_api.dll and steam_appid.txt (780210) — real Steam API,
+# no injection needed, matching [games.metadata] api.client = "steam" in
+# the previous launcher's games.toml for this same game.
+target = { kind = "windows" }
+root = "/home/equo/.local/share/Steam/steamapps/common/REPO/"
+executable = "REPO.exe"
+# executable = "/usr/bin/bash"
+args = []
+
+[modes.steam]
+enabled = true
+layers = [{ id = "steamapi-native", params = { app_id = "780210" } }]
+# { id = "soldier", params = { depot_path = "/home/equo/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/" } },
+
+[modes.steamemu]
+enabled = true

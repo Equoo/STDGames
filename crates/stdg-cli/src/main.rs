@@ -7,7 +7,11 @@ mod run;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "stdgames", version, about = "STDGames launch runtime — debug CLI")]
+#[command(
+    name = "stdgames",
+    version,
+    about = "STDGames launch runtime — debug CLI"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -49,7 +53,7 @@ fn main() {
                 std::process::exit(1);
             }
         }
-        Command::Run { game, mode } => match run::run(&game, &mode) {
+        Command::Run { game, mode } => match run::run(&game, &mode, false) {
             Ok(code) => std::process::exit(code),
             Err(e) => {
                 eprintln!("error: {e}");

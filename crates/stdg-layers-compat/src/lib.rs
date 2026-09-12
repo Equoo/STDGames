@@ -36,7 +36,12 @@ impl SessionGuard for NoCleanupGuard {
 /// Builds the `<entry_point>/proton run <exe> <args...>` invocation shared
 /// by Proton and this deployment's "Wine" builds alike (both ship the same
 /// `proton` script; see the module docs).
-fn wrap_via_proton_script(entry_point: &Path, prefix_path: &Path, steam_client_path: Option<&Path>, inner: CommandSpec) -> CommandSpec {
+fn wrap_via_proton_script(
+    entry_point: &Path,
+    prefix_path: &Path,
+    steam_client_path: Option<&Path>,
+    inner: CommandSpec,
+) -> CommandSpec {
     let mut spec = CommandSpec::new(PathValue::Host(entry_point.join("proton")));
     spec.push_arg_literal("run");
     if let Some(program) = &inner.program {
@@ -48,10 +53,19 @@ fn wrap_via_proton_script(entry_point: &Path, prefix_path: &Path, steam_client_p
     spec.cwd = inner.cwd;
     spec.env = inner.env;
 
-    spec.set_env_path("STEAM_COMPAT_DATA_PATH", PathValue::Host(prefix_path.to_path_buf()));
+    spec.set_env_path(
+        "STEAM_COMPAT_DATA_PATH",
+        PathValue::Host(prefix_path.to_path_buf()),
+    );
     spec.set_env_path("WINEPREFIX", PathValue::Host(prefix_path.to_path_buf()));
-    if let Some(steam_client_path) = steam_client_path.map(Path::to_path_buf).or_else(find_steam_client_install) {
-        spec.set_env_path("STEAM_COMPAT_CLIENT_INSTALL_PATH", PathValue::Host(steam_client_path));
+    if let Some(steam_client_path) = steam_client_path
+        .map(Path::to_path_buf)
+        .or_else(find_steam_client_install)
+    {
+        spec.set_env_path(
+            "STEAM_COMPAT_CLIENT_INSTALL_PATH",
+            PathValue::Host(steam_client_path),
+        );
     }
 
     spec
@@ -71,10 +85,15 @@ fn find_steam_client_install() -> Option<PathBuf> {
 /// The Sandbox layer only binds what it's told to via `ctx.bindings`, built
 /// from `container_needs()` up the pipeline — the Proton/Wine install, the
 /// prefix, and the Steam client install all live outside the paths the
-/// Sandbox layer binds on its own (`/usr`, the game's own root), so without
-/// this bwrap would isolate the sandbox right past them: `execvp` on the
-/// entry-point script would see nothing there at all.
-fn container_needs_for(entry_point: &Path, prefix_path: &Path, steam_client_path: Option<&Path>, purpose_prefix: &str) -> Vec<Binding> {
+/// Sandbox layer binds on its own (Conty's own userspace, the game's own
+/// root), so without this Conty would isolate the sandbox right past them:
+/// `execvp` on the entry-point script would see nothing there at all.
+fn container_needs_for(
+    entry_point: &Path,
+    prefix_path: &Path,
+    steam_client_path: Option<&Path>,
+    purpose_prefix: &str,
+) -> Vec<Binding> {
     let mut needs = vec![
         Binding {
             source: PathValue::Host(entry_point.to_path_buf()),
@@ -87,7 +106,10 @@ fn container_needs_for(entry_point: &Path, prefix_path: &Path, steam_client_path
             purpose: BindPurpose(format!("{purpose_prefix}-prefix")),
         },
     ];
-    if let Some(steam_client_path) = steam_client_path.map(Path::to_path_buf).or_else(find_steam_client_install) {
+    if let Some(steam_client_path) = steam_client_path
+        .map(Path::to_path_buf)
+        .or_else(find_steam_client_install)
+    {
         needs.push(Binding {
             source: PathValue::Host(steam_client_path),
             mode: BindMode::ReadOnly,
@@ -106,11 +128,18 @@ fn preflight_entry_point(entry_point: &Path, kind: &str) -> Result<(), Diagnosti
     Ok(())
 }
 
-fn prepare_prefix(layer_id: &str, prefix_path: &Path, ctx: &LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
+fn prepare_prefix(
+    layer_id: &str,
+    prefix_path: &Path,
+    ctx: &LaunchCtx,
+) -> Result<Box<dyn SessionGuard>, CoreError> {
     if !ctx.dry_run {
         std::fs::create_dir_all(prefix_path).map_err(|e| CoreError::LayerFailure {
             layer: LayerId(layer_id.to_string()),
-            reason: format!("could not create compat prefix at {}: {e}", prefix_path.display()),
+            reason: format!(
+                "could not create compat prefix at {}: {e}",
+                prefix_path.display()
+            ),
         })?;
     }
     Ok(Box::new(NoCleanupGuard))
@@ -145,7 +174,12 @@ impl Layer for ProtonLayer {
     }
 
     fn container_needs(&self) -> Vec<Binding> {
-        container_needs_for(&self.proton_path, &self.prefix_path, self.steam_client_path.as_deref(), "proton")
+        container_needs_for(
+            &self.proton_path,
+            &self.prefix_path,
+            self.steam_client_path.as_deref(),
+            "proton",
+        )
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
@@ -190,7 +224,12 @@ impl Layer for WineLayer {
     }
 
     fn container_needs(&self) -> Vec<Binding> {
-        container_needs_for(&self.wine_path, &self.prefix_path, self.steam_client_path.as_deref(), "wine")
+        container_needs_for(
+            &self.wine_path,
+            &self.prefix_path,
+            self.steam_client_path.as_deref(),
+            "wine",
+        )
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {

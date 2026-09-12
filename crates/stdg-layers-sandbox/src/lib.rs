@@ -1,26 +1,34 @@
-//! Sandbox slot: bwrap.
+//! Sandbox slot: Conty.
 //!
 //! Mandatory in every mode (see `stdg_plan::validate::MANDATORY_SLOTS`) —
-//! there is no unsandboxed launch, only a choice of profile:
+//! there is no unsandboxed launch.
 //!
-//!   - [`SandboxProfile::Normal`]: bind the host's own `/usr` (and its
-//!     `bin`/`sbin`/`lib*` layout) read-only. The game sees the host's own
-//!     libraries; the namespace still isolates the process and gives inner
-//!     layers (a Wine prefix, an injected SteamApi library...) a controlled
-//!     place to land via `ctx.bindings`, without ever writing into the
-//!     game's own install directory.
-//!   - [`SandboxProfile::SuperCompat`]: bind a self-contained root
-//!     filesystem image (an Arch Linux install, in practice) as `/` instead
-//!     of the host's. For sessions where the user cannot install anything
-//!     themselves — no Steam, no system packages, a locked-down shared
-//!     machine — this ships everything the game or its compat layers need
-//!     without depending on what the host has.
+//! This layer wraps the inner command in [Conty][conty], a single-file
+//! container runtime that bundles its own (Arch Linux) userspace and, on
+//! every run, sets up the user/pid/uts namespaces, `/proc`, `/dev`, the GPU
+//! devices and the X11/Wayland/PulseAudio sockets itself. That makes the old
+//! "bind the host's `/usr`" vs. "bind a self-contained image as `/`" profile
+//! split unnecessary: every launch now runs against Conty's bundled root
+//! filesystem, so nothing on the host needs to be installed or mirrored.
 //!
-//! Every flag and ordering decision below was checked against a real
-//! `bwrap` rather than guessed — see `tests.rs`, whose end-to-end test is
-//! skipped automatically wherever `bwrap` isn't on `PATH`.
+//! What this layer still owns is the **bind wiring**:
+//!
+//!   - the game's own install directory, read-write, since saves/config
+//!     commonly live next to the binary;
+//!   - whatever inner layers declared they need across the container
+//!     boundary via `Layer::container_needs()` / `ctx.bindings` — an
+//!     injected library, a Wine prefix, an IPC socket...
+//!
+//! Both become Conty `--bind` / `--ro-bind` arguments, which Conty forwards
+//! straight through to bubblewrap.
+//!
+//! Extra isolation (a throwaway home, no dbus, no network) is delegated to
+//! Conty's own `SANDBOX` / `SANDBOX_LEVEL` mechanism via [`ContyLayer::sandbox_level`]
+//! rather than reproduced here.
+//!
+//! [conty]: https://github.com/Kron4ek/Conty
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use stdg_core::capability::capabilities;
 use stdg_core::{
@@ -28,56 +36,72 @@ use stdg_core::{
     Outcome, PathValue, Slot,
 };
 
-/// Host environment passed through to every profile: display/audio so a
-/// game can actually render and produce sound, and identity variables that
-/// Python, Wine, and Proton's own bookkeeping assume are set to something
-/// real (paired with `bind_home` actually binding the directory `HOME`
-/// names). Missing on a headless or Wayland-only host is fine — the
-/// corresponding bwrap `-try` bind/var is simply skipped.
-const PASSTHROUGH_ENV_VARS: [&str; 7] = [
-    "DISPLAY",
-    "WAYLAND_DISPLAY",
-    "XDG_RUNTIME_DIR",
-    "PULSE_SERVER",
-    "HOME",
-    "USER",
-    "LOGNAME",
-];
+/// Dynamic-linker variables that must never reach the game with a value
+/// inherited from the launcher's own environment. Conty does not
+/// `--clearenv`, so we drop these explicitly; an inner layer that genuinely
+/// needs one (Proton/Wine setting `LD_LIBRARY_PATH`) puts it back through
+/// `inner.env`, which is applied afterwards and wins.
+const STRIP_ENV_VARS: [&str; 2] = ["LD_LIBRARY_PATH", "LD_PRELOAD"];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SandboxProfile {
-    Normal,
-    SuperCompat,
+/// Candidate names for the Conty executable, tried in order on `PATH` when
+/// no explicit `conty_path` is configured.
+const CONTY_BINARY_NAMES: [&str; 2] = ["conty", "conty.sh"];
+
+pub struct ContyLayer {
+    /// Path to the Conty executable (typically a `conty.sh`). When `None`,
+    /// it is looked up on `PATH` (`conty`, then `conty.sh`). Either way the
+    /// result is checked in `preflight`.
+    pub conty_path: Option<PathBuf>,
+    /// When set, Conty runs with `SANDBOX=1` and this `SANDBOX_LEVEL`
+    /// (`1` isolates user files, `2` also hides processes/dbus, `3` also
+    /// drops network and X11 — see Conty's docs). `None` leaves Conty at its
+    /// default: no throwaway home on top of the namespace it always creates.
+    pub sandbox_level: Option<u8>,
+    /// Maps to Conty's `BASE_DIR` — where it unpacks its helpers and mounts
+    /// the image. `None` uses Conty's default (`/tmp`).
+    pub base_dir: Option<PathBuf>,
 }
 
-pub struct BwrapLayer {
-    pub profile: SandboxProfile,
-    /// Root of the self-contained image used by [`SandboxProfile::SuperCompat`].
-    /// Ignored for `Normal`; required (and checked in `preflight`) for
-    /// `SuperCompat`. Must already be an unpacked directory — this layer
-    /// does not fetch or extract an image itself.
-    pub image_root: Option<PathBuf>,
-}
-
-impl BwrapLayer {
-    pub fn normal() -> Self {
+impl ContyLayer {
+    /// Conty resolved from `PATH`, no extra sandbox, default base dir.
+    pub fn new() -> Self {
         Self {
-            profile: SandboxProfile::Normal,
-            image_root: None,
+            conty_path: None,
+            sandbox_level: None,
+            base_dir: None,
         }
     }
 
-    pub fn super_compat(image_root: PathBuf) -> Self {
+    /// Conty at an explicit path.
+    pub fn at(conty_path: PathBuf) -> Self {
         Self {
-            profile: SandboxProfile::SuperCompat,
-            image_root: Some(image_root),
+            conty_path: Some(conty_path),
+            sandbox_level: None,
+            base_dir: None,
         }
+    }
+
+    /// The Conty executable to invoke: the configured path if any, else the
+    /// first of [`CONTY_BINARY_NAMES`] found on `PATH`.
+    fn resolve(&self) -> Option<PathBuf> {
+        if let Some(path) = &self.conty_path {
+            return Some(path.clone());
+        }
+        CONTY_BINARY_NAMES
+            .iter()
+            .find_map(|name| find_on_path(name))
     }
 }
 
-impl Layer for BwrapLayer {
+impl Default for ContyLayer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Layer for ContyLayer {
     fn id(&self) -> LayerId {
-        LayerId("bwrap".to_string())
+        LayerId("conty".to_string())
     }
 
     fn slot(&self) -> Slot {
@@ -89,56 +113,56 @@ impl Layer for BwrapLayer {
     }
 
     fn preflight(&self, _ctx: &LaunchCtx) -> Result<(), Diagnostic> {
-        if find_bwrap().is_none() {
-            return Err(Diagnostic::error("bwrap was not found on PATH")
-                .with_hint("install bubblewrap (package `bubblewrap` on most distros)"));
-        }
-        if self.profile == SandboxProfile::SuperCompat {
-            match &self.image_root {
-                Some(path) if path.is_dir() => {}
-                Some(path) => {
-                    return Err(Diagnostic::error(format!(
-                        "super-compat image root {} does not exist or is not a directory",
-                        path.display()
-                    )));
-                }
-                None => {
-                    return Err(Diagnostic::error("profile=super-compat requires an `image_root` parameter"));
+        match &self.conty_path {
+            Some(path) if path.is_file() => {}
+            Some(path) => {
+                return Err(Diagnostic::error(format!(
+                    "conty executable {} does not exist or is not a file",
+                    path.display()
+                ))
+                .with_hint("point `conty_path` at this deployment's Conty build"));
+            }
+            None => {
+                if CONTY_BINARY_NAMES
+                    .iter()
+                    .all(|name| find_on_path(name).is_none())
+                {
+                    return Err(Diagnostic::error("conty was not found on PATH").with_hint(
+                        "install Conty (https://github.com/Kron4ek/Conty) or set `conty_path`",
+                    ));
                 }
             }
         }
+
+        if let Some(level) = self.sandbox_level {
+            if !(1..=3).contains(&level) {
+                return Err(Diagnostic::error(format!(
+                    "conty sandbox_level must be 1, 2 or 3 (got {level})"
+                )));
+            }
+        }
+
         Ok(())
     }
 
     fn wrap(&self, inner: CommandSpec, ctx: &LaunchCtx) -> Result<Outcome, CoreError> {
-        let bwrap_path = find_bwrap().unwrap_or_else(|| PathBuf::from("bwrap"));
-        let mut spec = CommandSpec::new(PathValue::Host(bwrap_path));
+        let conty = self.resolve().unwrap_or_else(|| PathBuf::from("conty"));
+        let mut spec = CommandSpec::new(PathValue::Host(conty));
 
-        // Namespace shape: full isolation except network (games need it for
-        // online features/Steam), supervised so an orphaned sandbox can't
-        // outlive the launcher.
-        spec.push_arg_literal("--unshare-all");
-        spec.push_arg_literal("--share-net");
-        spec.push_arg_literal("--die-with-parent");
-        spec.push_arg_literal("--proc");
-        spec.push_arg_literal("/proc");
-        spec.push_arg_literal("--dev");
-        spec.push_arg_literal("/dev");
-        spec.push_arg_literal("--tmpfs");
-        spec.push_arg_literal("/tmp");
-
-        match self.profile {
-            SandboxProfile::Normal => bind_host_userspace(&mut spec),
-            SandboxProfile::SuperCompat => {
-                let image_root = self
-                    .image_root
-                    .clone()
-                    .expect("checked by preflight before wrap is ever called");
-                spec.push_arg_literal("--ro-bind");
-                spec.push_arg_path(PathValue::Host(image_root));
-                spec.push_arg_literal("/");
-            }
+        // Conty is configured through environment variables on the wrapper
+        // process itself, not through arguments. Keep it quiet (the game's
+        // own stdout/stderr is untouched) and forward the sandbox knobs.
+        spec.set_env_literal("QUIET_MODE", "1");
+        if let Some(level) = self.sandbox_level {
+            spec.set_env_literal("SANDBOX", "1");
+            spec.set_env_literal("SANDBOX_LEVEL", level.to_string());
         }
+        if let Some(base_dir) = &self.base_dir {
+            spec.set_env_path("BASE_DIR", PathValue::Host(base_dir.clone()));
+        }
+
+        // Everything from here on is a bubblewrap argument that Conty
+        // appends verbatim to its own internal `bwrap` invocation.
 
         // The game's own files: read-write, since saves/config commonly
         // live alongside the install directory.
@@ -146,12 +170,9 @@ impl Layer for BwrapLayer {
         spec.push_arg_path(PathValue::Host(ctx.plan.config.root.clone()));
         spec.push_arg_path(PathValue::Host(ctx.plan.config.root.clone()));
 
-        bind_gpu_and_display(&mut spec);
-        bind_home(&mut spec);
-
         // Whatever inner layers declared they need across the container
-        // boundary (an injected library, an IPC socket...) — this is what
-        // `Layer::container_needs()` exists to feed.
+        // boundary (an injected library, a Wine prefix, an IPC socket...) —
+        // this is what `Layer::container_needs()` exists to feed.
         for binding in &ctx.bindings {
             let flag = match binding.mode {
                 BindMode::ReadOnly => "--ro-bind",
@@ -181,104 +202,26 @@ impl Layer for BwrapLayer {
     }
 }
 
-/// Locates `bwrap` on `PATH` the same way a shell would, since `CommandSpec`
-/// always carries an absolute or explicit program path rather than relying
-/// on the executor to search `PATH` itself.
-fn find_bwrap() -> Option<PathBuf> {
+/// Locates a binary on `PATH` the same way a shell would, since `CommandSpec`
+/// always carries an explicit program path rather than relying on the
+/// executor to search `PATH` itself.
+fn find_on_path(name: &str) -> Option<PathBuf> {
     let path_var = std::env::var_os("PATH")?;
-    std::env::split_paths(&path_var).map(|dir| dir.join("bwrap")).find(|p| p.is_file())
+    std::env::split_paths(&path_var)
+        .map(|dir| dir.join(name))
+        .find(|p| p.is_file())
 }
 
-/// Binds the host's own `/usr` read-only and mirrors whatever `/bin`,
-/// `/sbin`, `/lib*` layout the host actually has: a symlink into `/usr` on a
-/// merged-usr host (the common case today), or a real bind of the
-/// standalone directory on an older split layout.
-fn bind_host_userspace(spec: &mut CommandSpec) {
-    spec.push_arg_literal("--ro-bind");
-    spec.push_arg_literal("/usr");
-    spec.push_arg_literal("/usr");
-
-    for (dest, usr_relative) in [
-        ("/bin", "usr/bin"),
-        ("/sbin", "usr/sbin"),
-        ("/lib", "usr/lib"),
-        ("/lib32", "usr/lib32"),
-        ("/lib64", "usr/lib64"),
-        ("/libx32", "usr/libx32"),
-    ] {
-        let host_path = Path::new(dest);
-        if host_path.is_symlink() {
-            spec.push_arg_literal("--symlink");
-            spec.push_arg_literal(usr_relative);
-            spec.push_arg_literal(dest);
-        } else if host_path.is_dir() {
-            spec.push_arg_literal("--ro-bind");
-            spec.push_arg_literal(dest);
-            spec.push_arg_literal(dest);
-        }
-        // Neither a symlink nor a directory: this host has no such path
-        // (e.g. no /libx32 without multilib) — nothing to mirror.
-    }
-}
-
-/// GPU device access and display/audio sockets, common to both profiles.
-/// The `-try` bwrap flags make every one of these a no-op instead of an
-/// error when the source doesn't exist (headless host, Wayland-only,
-/// PipeWire instead of PulseAudio...).
-fn bind_gpu_and_display(spec: &mut CommandSpec) {
-    spec.push_arg_literal("--dev-bind-try");
-    spec.push_arg_literal("/dev/dri");
-    spec.push_arg_literal("/dev/dri");
-
-    spec.push_arg_literal("--ro-bind-try");
-    spec.push_arg_literal("/tmp/.X11-unix");
-    spec.push_arg_literal("/tmp/.X11-unix");
-
-    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
-        spec.push_arg_literal("--bind-try");
-        spec.push_arg_literal(runtime_dir.clone());
-        spec.push_arg_literal(runtime_dir);
-    }
-}
-
-/// Binds the host's `$HOME` read-write. Plenty of what runs inside the
-/// sandbox — Python's own `pathlib.Path.home()`, Wine, Proton's own
-/// bookkeeping — assumes a real, writable home directory exists, not just
-/// that the `HOME` variable is set to some string; setting the variable
-/// without binding the directory it names leaves lookups like `~/.cache`
-/// resolving to a path that doesn't exist inside the sandbox at all.
-///
-/// This does expose the real host home directory rather than a private
-/// synthetic one scoped to the session — an accepted simplification for
-/// now (consistent with `Normal` already reusing the host's own `/usr`),
-/// not a deliberate security stance; a session-scoped fake `$HOME` would be
-/// the harder-isolation follow-up.
-fn bind_home(spec: &mut CommandSpec) {
-    if let Ok(home) = std::env::var("HOME") {
-        spec.push_arg_literal("--bind-try");
-        spec.push_arg_literal(home.clone());
-        spec.push_arg_literal(home);
-    }
-}
-
-/// Starts from a clean environment rather than inheriting the launcher's
-/// own — sandboxing is meant to isolate, and a stray host env var is exactly
-/// the kind of thing it should stop leaking into the game. Only a small,
-/// deliberate set gets reintroduced: a sane `PATH`, host display/audio
-/// wiring, and whatever the inner layers themselves set on `inner.env`
-/// (e.g. SteamAppId) — which, being the most specific, is applied last.
+/// Conty inherits the launcher's environment and passes it into the
+/// container (it does not `--clearenv`). We don't fight that wholesale, but
+/// we do drop the dynamic-linker variables that must not leak from the host
+/// ([`STRIP_ENV_VARS`]), then apply whatever the inner layers set on
+/// `inner.env` (a Proton/Wine `LD_LIBRARY_PATH`, `SteamAppId`...) last — so
+/// the deliberate value wins over both the host and Conty's own defaults.
 fn set_environment(spec: &mut CommandSpec, inner: &CommandSpec) {
-    spec.push_arg_literal("--clearenv");
-    spec.push_arg_literal("--setenv");
-    spec.push_arg_literal("PATH");
-    spec.push_arg_literal("/usr/bin:/bin:/usr/sbin:/sbin");
-
-    for var in PASSTHROUGH_ENV_VARS {
-        if let Ok(val) = std::env::var(var) {
-            spec.push_arg_literal("--setenv");
-            spec.push_arg_literal(var);
-            spec.push_arg_literal(val);
-        }
+    for var in STRIP_ENV_VARS {
+        spec.push_arg_literal("--unsetenv");
+        spec.push_arg_literal(var);
     }
 
     for (key, value) in &inner.env {

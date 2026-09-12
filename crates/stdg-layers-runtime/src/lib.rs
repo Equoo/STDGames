@@ -14,7 +14,7 @@
 //! explicitly out of scope for this workspace (no installed-games
 //! detection, no Steam manifest parsing).
 //!
-//! Unlike `stdg-layers-sandbox`'s bwrap layer, nothing here was checked
+//! Unlike `stdg-layers-sandbox`'s Conty layer, nothing here was checked
 //! against a real depot: `pressure-vessel-wrap` isn't installed in this dev
 //! environment (it only ships as part of an installed Steam Linux Runtime),
 //! so this is built from the documented `run` script contract, not verified
@@ -22,7 +22,7 @@
 //! when the depot isn't where it's configured to be.
 //!
 //! pressure-vessel creates its own bwrap sandbox internally, independent of
-//! `stdg-layers-sandbox`'s. That's intentional, not a bug to route around:
+//! `stdg-layers-sandbox`'s Conty. That's intentional, not a bug to route around:
 //! nested unprivileged sandboxes are a normal, supported pattern (Flatpak
 //! runs pressure-vessel-wrapped games inside its own sandbox the same way).
 
@@ -95,7 +95,7 @@ impl Layer for PressureVesselLayer {
         // binds on its own.
         vec![Binding {
             source: PathValue::Host(self.depot_path.clone()),
-            mode: BindMode::ReadOnly,
+            mode: BindMode::ReadWrite,
             purpose: BindPurpose(format!("{}-depot", self.variant.layer_id())),
         }]
     }

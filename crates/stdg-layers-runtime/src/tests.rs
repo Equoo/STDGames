@@ -1,4 +1,4 @@
-//! Structural tests only: unlike `stdg-layers-sandbox`'s bwrap layer, there
+//! Structural tests only: unlike `stdg-layers-sandbox`'s Conty layer, there
 //! is no `pressure-vessel-wrap` in this dev environment to actually run
 //! against (it ships only as part of an installed Steam Linux Runtime).
 //! These check the invocation shape built from the depot's documented `run`

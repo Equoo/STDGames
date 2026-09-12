@@ -5,15 +5,16 @@
 #
 # The Sandbox slot is mandatory (stdg_plan::validate::MANDATORY_SLOTS) —
 # there is no unsandboxed launch mode — so every deployment's global.toml is
-# expected to carry one; this is the "normal" profile (host libs, still
-# sandboxed for binds/overlays). A game or runner default overrides this
-# with `profile = "super-compat"` for locked-down sessions where the user
-# can't have anything installed on the host at all.
+# expected to carry one. It's filled by Conty (github.com/Kron4ek/Conty), a
+# single-file container runtime that brings its own userspace; a game or
+# runner can override the slot to pass `sandbox_level` (Conty's SANDBOX_LEVEL,
+# 1-3) for locked-down sessions. `conty_path` is this deployment's real,
+# already-installed Conty build — a different deployment points it elsewhere.
 #
 # Supervision is a good fit here too: nothing about a dedicated cgroup
 # session depends on the target kind, so every launch gets one unless a
 # game explicitly overrides the Supervision slot itself.
 baseline_layers = [
-    { id = "bwrap", params = { profile = "normal" } },
-    { id = "cgroup" },
+	{ id = "conty", params = { conty_path = "/home/equo/Documents/STDGames/conty.sh" } },
+	{ id = "cgroup" },
 ]

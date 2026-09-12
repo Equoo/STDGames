@@ -62,8 +62,8 @@ pub struct FakeCatalog;
 impl LayerCatalog for FakeCatalog {
     fn resolve_layer(&self, r: &LayerRef, _config: &ResolvedConfig) -> Result<Box<dyn Layer>, CoreError> {
         let layer: Box<dyn Layer> = match r.id.0.as_str() {
-            "bwrap" => Box::new(ToyLayer {
-                id: "bwrap",
+            "conty" => Box::new(ToyLayer {
+                id: "conty",
                 slot: Slot::Sandbox,
                 provides: CapabilitySet::of([capabilities::SANDBOXED]),
                 requires: CapabilitySet::new(),
@@ -112,7 +112,7 @@ impl LayerCatalog for FakeCatalog {
     }
 
     fn known_layer_ids(&self) -> Vec<LayerId> {
-        ["bwrap", "soldier", "proton", "wine", "steamapi-native", "steamapi-emu", "cgroup"]
+        ["conty", "soldier", "proton", "wine", "steamapi-native", "steamapi-emu", "cgroup"]
             .into_iter()
             .map(|s| LayerId(s.to_string()))
             .collect()
@@ -198,7 +198,7 @@ pub fn mode_with_layers(layers: &[LayerRef]) -> PartialModeConfig {
 /// instead of `GlobalDefaults::default()`.
 pub fn default_globals() -> crate::cascade::GlobalDefaults {
     crate::cascade::GlobalDefaults {
-        baseline_layers: vec![LayerRef::new("bwrap")],
+        baseline_layers: vec![LayerRef::new("conty")],
         ..Default::default()
     }
 }

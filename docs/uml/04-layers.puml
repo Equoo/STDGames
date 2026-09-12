@@ -5,16 +5,13 @@ skinparam classAttributeIconSize 0
 skinparam wrapWidth 260
 
 package "stdg-layers-sandbox" {
-  class BwrapLayer {
-    +profile : SandboxProfile
-    +image_root : Option<PathBuf>
+  class ContyLayer {
+    +conty_path : Option<PathBuf>
+    +sandbox_level : Option<u8>
+    +base_dir : Option<PathBuf>
     --
-    {static} +normal() : BwrapLayer
-    {static} +super_compat(image_root: PathBuf) : BwrapLayer
-  }
-  enum SandboxProfile <<enum>> {
-    Normal
-    SuperCompat
+    {static} +new() : ContyLayer
+    {static} +at(conty_path: PathBuf) : ContyLayer
   }
 }
 
@@ -72,7 +69,7 @@ interface SessionGuard <<trait>>
 class Diagnostic
 
 ' realizations (trait/interface implementations)
-BwrapLayer ..|> Layer
+ContyLayer ..|> Layer
 PressureVesselLayer ..|> Layer
 ProtonLayer ..|> Layer
 WineLayer ..|> Layer
@@ -82,7 +79,6 @@ SupervisionLayer ..|> Layer
 
 ' associations
 PressureVesselLayer -- "1" PressureVesselVariant : variant
-BwrapLayer -- "1" SandboxProfile : profile
 SteamApiEmuLayer -- "1" EmuVariant : variant
 
 ' dependencies (uses / produces)

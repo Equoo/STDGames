@@ -10,12 +10,13 @@ use stdg_core::{ArgValue, CommandSpec, SessionGuard};
 use crate::error::ExecError;
 
 /// Builds a `std::process::Command` from a `CommandSpec`. The outer
-/// process's own environment isn't cleared here: for a plan whose Sandbox
-/// layer emitted its own `--clearenv`/`--setenv` bwrap arguments, that
-/// already isolates the *sandboxed* process's environment, so inheriting
-/// the launcher's environment for the (short-lived, immediately-exec'd)
-/// wrapper process itself is harmless — `CommandSpec.env` entries are still
-/// applied on top, taking precedence.
+/// process's own environment isn't cleared here: the Sandbox layer (Conty)
+/// controls the *sandboxed* process's environment itself — dropping the
+/// dynamic-linker vars and re-applying the inner layers' own via bwrap
+/// `--unsetenv`/`--setenv` arguments — so inheriting the launcher's
+/// environment for the (short-lived, immediately-exec'd) wrapper process is
+/// harmless. `CommandSpec.env` entries (e.g. Conty's own `SANDBOX`,
+/// `QUIET_MODE`) are still applied on top, taking precedence.
 pub fn to_std_command(spec: &CommandSpec) -> Result<Command, ExecError> {
     let program = spec.program.as_ref().ok_or(ExecError::MissingProgram)?;
     let mut cmd = Command::new(program.effective());

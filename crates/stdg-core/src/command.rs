@@ -10,7 +10,7 @@ pub enum ArgValue {
 
 impl ArgValue {
     /// Flattens to the literal string a process actually receives as this
-    /// argument. Shared by `explain`'s display and any layer (e.g. bwrap)
+    /// argument. Shared by `explain`'s display and any layer (e.g. Conty)
     /// that needs to re-emit an inner command's args as plain strings.
     pub fn render(&self) -> String {
         match self {

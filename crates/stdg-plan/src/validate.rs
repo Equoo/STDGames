@@ -5,9 +5,9 @@ use stdg_core::{CapabilitySet, CoreError, LayerCatalog, LayerId, LayerRef, Resol
 use crate::SlotMap;
 
 /// Slots every plan must fill, regardless of mode: there is no "unsandboxed"
-/// launch. A game or runner is still free to choose *which* sandbox profile
-/// (see `stdg-layers-sandbox`), just not to skip the slot entirely — see
-/// `check_mandatory_slots`.
+/// launch. A game or runner is still free to tune the sandbox layer's
+/// parameters (see `stdg-layers-sandbox`), just not to skip the slot
+/// entirely — see `check_mandatory_slots`.
 const MANDATORY_SLOTS: &[Slot] = &[Slot::Sandbox];
 
 /// Resolves `tiers` (increasing precedence — e.g. `[global.baseline_layers,

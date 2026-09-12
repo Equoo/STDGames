@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Dependency inversion boundary: `stdg-plan` validates a `Plan` through
-/// these traits without ever linking the real implementations (bwrap,
+/// these traits without ever linking the real implementations (Conty,
 /// Proton...). Planner tests supply a fake catalog.
 pub trait LayerCatalog {
     fn resolve_layer(&self, r: &LayerRef, config: &ResolvedConfig) -> Result<Box<dyn Layer>, CoreError>;

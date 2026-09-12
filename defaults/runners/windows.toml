@@ -11,36 +11,26 @@
 # these elsewhere.
 #
 # The Sandbox slot itself isn't listed here: every mode already gets the
-# "normal" bwrap profile from defaults/global.toml. "super-compat" below is
-# the one mode that needs something different, so it's the one that
-# overrides it.
-
-[modes.desktop]
-layers = [
-    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
-]
-
-[modes.steam-injected]
-layers = [
-    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
-    { id = "steamapi-emu" },
-]
+# baseline Conty layer from defaults/global.toml. "super-compat" below is
+# the one mode that asks for something different (a stricter Conty sandbox
+# level), so it's the one that overrides it.
 
 # Adds the Steam Linux Runtime (pressure-vessel) on top of "desktop", for
 # games that need scout/soldier-era compatibility libraries alongside Proton.
-[modes.sandboxed]
+[modes.steam]
 layers = [
-    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
-    { id = "soldier", params = { depot_path = "/opt/steam-runtime/SteamLinuxRuntime_soldier" } },
+	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
 ]
 
-# For sessions where the user cannot install anything on the host at all
-# (no Steam, no system packages — a locked-down shared machine): the
-# Sandbox slot is overridden to bind a self-contained Arch Linux image as
-# `/` instead of using host libraries.
-[modes.super-compat]
+# Emulates the Steam API instead of talking to a real Steam client: the
+# SteamApi slot's PlainReplace variant bind-mounts `replacement_lib_path`
+# (an already-built emulator, e.g. Goldberg SteamEmu — this layer never
+# builds or downloads one) directly over the game's own steam_api64.dll, at
+# the same on-disk path Wine loads it from. Set `target_lib_relpath` too if
+# a game's own copy isn't named "steam_api64.dll" (the PlainReplace
+# default; see stdg-cli/src/registry.rs).
+[modes.steamemu]
 layers = [
-    { id = "bwrap", params = { profile = "super-compat", image_root = "/opt/stdgames/images/archlinux-x86_64" } },
-    { id = "proton", params = { version = "GE-Proton10-25", proton_path = "/sgoinfre/stdgames/.resources/protons/ge10.25", prefix_path = "/sgoinfre/dderny/.stdgames_saves/ge10.25", steam_client_path = "/sgoinfre/steam/Steam" } },
-    { id = "soldier", params = { depot_path = "/opt/steam-runtime/SteamLinuxRuntime_soldier" } },
+	{ id = "steamapi-emu", params = { replacement_lib_path = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
+	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
 ]

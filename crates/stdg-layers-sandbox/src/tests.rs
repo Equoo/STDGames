@@ -1,8 +1,8 @@
-//! The `normal` profile test actually shells out to `bwrap` and checks the
-//! sandboxed process really ran (skipped automatically if `bwrap` isn't on
-//! `PATH`, e.g. in a container that doesn't have it installed). The
-//! `super-compat` profile is checked structurally instead: without a real
-//! rootfs image to bind, there's nothing runnable inside it to execute.
+//! The end-to-end test actually shells out to Conty and checks the
+//! sandboxed process really ran; it is skipped automatically when no Conty
+//! executable is on `PATH` (the usual case in CI, since Conty is a large
+//! self-contained image rather than a package). Everything else is checked
+//! structurally against the arguments the layer emits.
 
 use std::collections::BTreeMap;
 use std::os::unix::fs::PermissionsExt;
@@ -10,11 +10,11 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use stdg_core::{
-    ArgValue, BindMode, BindPurpose, Binding, CommandSpec, GameId, LaunchCtx, Layer, ModeId, Plan,
-    PathValue, ResolvedConfig, RunnerId, SessionId, SessionInfo, TargetKind,
+    ArgValue, BindMode, BindPurpose, Binding, CommandSpec, GameId, LaunchCtx, Layer, ModeId,
+    PathValue, Plan, ResolvedConfig, RunnerId, SessionId, SessionInfo, TargetKind,
 };
 
-use crate::{BwrapLayer, SandboxProfile};
+use crate::{CONTY_BINARY_NAMES, ContyLayer};
 
 fn test_ctx(root: PathBuf) -> LaunchCtx {
     let config = ResolvedConfig {
@@ -45,27 +45,33 @@ fn test_ctx(root: PathBuf) -> LaunchCtx {
     }
 }
 
-fn bwrap_available() -> bool {
-    std::env::var_os("PATH")
-        .map(|p| std::env::split_paths(&p).any(|dir| dir.join("bwrap").is_file()))
-        .unwrap_or(false)
+fn conty_on_path() -> Option<PathBuf> {
+    let path_var = std::env::var_os("PATH")?;
+    std::env::split_paths(&path_var)
+        .flat_map(|dir| CONTY_BINARY_NAMES.iter().map(move |n| dir.join(n)))
+        .find(|p| p.is_file())
 }
 
 #[test]
-fn normal_profile_actually_runs_a_command_through_bwrap() {
-    if !bwrap_available() {
-        eprintln!("skipping: bwrap not found on PATH");
+fn actually_runs_a_command_through_conty() {
+    let Some(_conty) = conty_on_path() else {
+        eprintln!("skipping: no conty executable found on PATH");
         return;
-    }
+    };
 
-    let tmp = std::env::temp_dir().join(format!("stdg-bwrap-test-{}", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("stdg-conty-test-{}", std::process::id()));
     std::fs::create_dir_all(&tmp).expect("create test dir");
     let script = tmp.join("run.sh");
-    std::fs::write(&script, "#!/bin/sh\necho sandboxed-ok\necho \"MY_TEST_VAR=$MY_TEST_VAR\"\n").expect("write script");
-    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).expect("chmod script");
+    std::fs::write(
+        &script,
+        "#!/bin/sh\necho sandboxed-ok\necho \"MY_TEST_VAR=$MY_TEST_VAR\"\n",
+    )
+    .expect("write script");
+    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755))
+        .expect("chmod script");
 
     let ctx = test_ctx(tmp.clone());
-    let layer = BwrapLayer::normal();
+    let layer = ContyLayer::new();
 
     let mut inner = CommandSpec::new(PathValue::Host(script));
     inner.cwd = Some(PathValue::Host(tmp.clone()));
@@ -74,23 +80,66 @@ fn normal_profile_actually_runs_a_command_through_bwrap() {
     let outcome = layer.wrap(inner, &ctx).expect("wrap should succeed");
     let spec = outcome.into_command();
 
-    let program = spec.program.as_ref().expect("program set").effective().to_path_buf();
+    let program = spec
+        .program
+        .as_ref()
+        .expect("program set")
+        .effective()
+        .to_path_buf();
     let args: Vec<String> = spec.args.iter().map(ArgValue::render).collect();
 
-    let output = Command::new(program).args(&args).output().expect("failed to actually run bwrap");
+    let mut command = Command::new(program);
+    command.args(&args);
+    for (key, value) in &spec.env {
+        command.env(key, value.render());
+    }
+    let output = command.output().expect("failed to actually run conty");
 
     std::fs::remove_dir_all(&tmp).ok();
 
     assert!(
         output.status.success(),
-        "bwrap exited with {:?}\nstdout: {}\nstderr: {}",
+        "conty exited with {:?}\nstdout: {}\nstderr: {}",
         output.status,
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("sandboxed-ok"), "stdout was: {stdout}");
-    assert!(stdout.contains("MY_TEST_VAR=42"), "env var did not cross into the sandbox: {stdout}");
+    assert!(
+        stdout.contains("MY_TEST_VAR=42"),
+        "env var did not cross into the sandbox: {stdout}"
+    );
+}
+
+#[test]
+fn the_game_root_is_bound_read_write() {
+    let ctx = test_ctx(PathBuf::from("/games/test-game"));
+    let layer = ContyLayer::new();
+
+    let outcome = layer
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/games/test-game/bin"))),
+            &ctx,
+        )
+        .expect("wrap ok");
+    let args: Vec<String> = outcome
+        .into_command()
+        .args
+        .iter()
+        .map(ArgValue::render)
+        .collect();
+
+    let pos = args
+        .windows(3)
+        .position(|w| w == ["--bind", "/games/test-game", "/games/test-game"])
+        .expect("game root bound read-write at the same path");
+    // ...and it comes before the `--` that starts the command.
+    let sep = args
+        .iter()
+        .position(|a| a == "--")
+        .expect("command separator present");
+    assert!(pos < sep);
 }
 
 #[test]
@@ -102,9 +151,19 @@ fn container_needs_bindings_become_bind_flags() {
         purpose: BindPurpose("steamapi-emu-dll".to_string()),
     });
 
-    let layer = BwrapLayer::normal();
-    let outcome = layer.wrap(CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))), &ctx).expect("wrap ok");
-    let args: Vec<String> = outcome.into_command().args.iter().map(ArgValue::render).collect();
+    let layer = ContyLayer::new();
+    let outcome = layer
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))),
+            &ctx,
+        )
+        .expect("wrap ok");
+    let args: Vec<String> = outcome
+        .into_command()
+        .args
+        .iter()
+        .map(ArgValue::render)
+        .collect();
 
     let pos = args
         .iter()
@@ -114,40 +173,93 @@ fn container_needs_bindings_become_bind_flags() {
 }
 
 #[test]
-fn super_compat_profile_binds_the_image_root_as_slash_and_skips_host_usr() {
+fn sandbox_level_becomes_conty_env_vars() {
     let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
-    let layer = BwrapLayer::super_compat(PathBuf::from("/opt/stdgames/images/archlinux"));
+    let layer = ContyLayer {
+        sandbox_level: Some(2),
+        ..ContyLayer::new()
+    };
 
-    let outcome = layer
-        .wrap(CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))), &ctx)
-        .expect("wrap ok");
-    let args: Vec<String> = outcome.into_command().args.iter().map(ArgValue::render).collect();
+    let spec = layer
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))),
+            &ctx,
+        )
+        .expect("wrap ok")
+        .into_command();
 
-    let image_pos = args
-        .iter()
-        .position(|a| a == "/opt/stdgames/images/archlinux")
-        .expect("image root bound");
-    assert_eq!(args[image_pos - 1], "--ro-bind");
-    assert_eq!(args[image_pos + 1], "/");
-
-    // The host's own /usr is never bound in this profile: the image is
-    // supposed to be self-contained.
-    assert!(!args.windows(2).any(|w| w[0] == "--ro-bind" && w[1] == "/usr"));
+    assert_eq!(
+        spec.env.get("SANDBOX").map(|v| v.render()).as_deref(),
+        Some("1")
+    );
+    assert_eq!(
+        spec.env.get("SANDBOX_LEVEL").map(|v| v.render()).as_deref(),
+        Some("2")
+    );
 }
 
 #[test]
-fn preflight_rejects_super_compat_without_an_image_root() {
+fn no_sandbox_level_leaves_conty_at_its_default() {
     let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
-    let layer = BwrapLayer {
-        profile: SandboxProfile::SuperCompat,
-        image_root: None,
-    };
+    let spec = ContyLayer::new()
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))),
+            &ctx,
+        )
+        .expect("wrap ok")
+        .into_command();
+
+    assert!(!spec.env.contains_key("SANDBOX"));
+    assert!(!spec.env.contains_key("SANDBOX_LEVEL"));
+}
+
+#[test]
+fn linker_vars_are_stripped_but_inner_env_wins() {
+    let mut ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
+    ctx.bindings.clear();
+
+    let mut inner = CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin")));
+    inner.set_env_literal("LD_LIBRARY_PATH", "/proton/lib");
+
+    let args: Vec<String> = ContyLayer::new()
+        .wrap(inner, &ctx)
+        .expect("wrap ok")
+        .into_command()
+        .args
+        .iter()
+        .map(ArgValue::render)
+        .collect();
+
+    let unset = args
+        .windows(2)
+        .position(|w| w == ["--unsetenv", "LD_LIBRARY_PATH"])
+        .expect("host LD_LIBRARY_PATH unset");
+    let set = args
+        .windows(3)
+        .position(|w| w == ["--setenv", "LD_LIBRARY_PATH", "/proton/lib"])
+        .expect("inner LD_LIBRARY_PATH set");
+    assert!(
+        unset < set,
+        "the deliberate value must be applied after the strip"
+    );
+}
+
+#[test]
+fn preflight_rejects_a_nonexistent_conty_path() {
+    let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
+    let layer = ContyLayer::at(PathBuf::from("/does/not/exist/conty.sh"));
     assert!(layer.preflight(&ctx).is_err());
 }
 
 #[test]
-fn preflight_rejects_super_compat_with_a_nonexistent_image_root() {
+fn preflight_rejects_an_out_of_range_sandbox_level() {
     let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
-    let layer = BwrapLayer::super_compat(PathBuf::from("/does/not/exist/anywhere"));
+    let layer = ContyLayer {
+        conty_path: conty_on_path(),
+        sandbox_level: Some(4),
+        base_dir: None,
+    };
+    // Only meaningful when a conty binary is available to get past the
+    // executable check; otherwise both checks fail and the assert still holds.
     assert!(layer.preflight(&ctx).is_err());
 }

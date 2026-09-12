@@ -6,13 +6,20 @@
 //! Proton prefix directory gets created if missing...), and the final
 //! command is genuinely executed, blocking until it exits.
 
+use std::path::PathBuf;
+
 use stdg_core::LaunchCtx;
-use stdg_exec::{run_pipeline, spawn_and_wait, DisplayCommand};
+use stdg_exec::{DisplayCommand, run_pipeline, spawn_and_wait};
 
 use crate::loading::load_plan;
 
-pub fn run(game_id_str: &str, mode_id_str: &str) -> Result<i32, String> {
-    let (registry, plan) = load_plan(game_id_str, mode_id_str)?;
+pub fn run(game_id_str: &str, mode_id_str: &str, is_sh_mode: bool) -> Result<i32, String> {
+    let (registry, mut plan) = load_plan(game_id_str, mode_id_str)?;
+
+    if is_sh_mode {
+        plan.config.executable = PathBuf::from("/bin/bash");
+        plan.config.args = vec![];
+    }
 
     println!("launching {} ({})", plan.game_id, plan.mode_id);
 

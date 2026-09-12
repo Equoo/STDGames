@@ -75,7 +75,7 @@ fn game_mode_override_replaces_runner_default_for_same_slot() {
 fn global_baseline_layer_applies_alongside_runner_and_game_layers() {
     let game = with_mode(base_game(TargetKind::Windows), "desktop", mode_with_layers(&[]));
     let global = GlobalDefaults {
-        baseline_layers: vec![LayerRef::new("bwrap"), LayerRef::new("cgroup")],
+        baseline_layers: vec![LayerRef::new("conty"), LayerRef::new("cgroup")],
         ..GlobalDefaults::default()
     };
     let runner_defaults = runner_defaults_for("desktop", &[LayerRef::new("proton")]);

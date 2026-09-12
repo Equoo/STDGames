@@ -109,7 +109,7 @@ fn layers_inside_out_is_ordered_innermost_to_outermost() {
 
     // Application order is innermost to outermost: Supervision (cgroup)
     // wraps closest to the runner, then SteamApi, then Compat, then Sandbox
-    // (the mandatory bwrap layer from the global baseline) outermost.
+    // (the mandatory Conty layer from the global baseline) outermost.
     let order: Vec<Slot> = plan.layers_inside_out().map(|(slot, _)| slot).collect();
     assert_eq!(order, vec![Slot::Supervision, Slot::SteamApi, Slot::Compat, Slot::Sandbox]);
 }
