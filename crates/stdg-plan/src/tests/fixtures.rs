@@ -1,7 +1,4 @@
-//! Test-only catalog and toy layers/runners. None of this links a real
-//! runner or layer crate: it exists to exercise `stdg-plan` in isolation,
-//! proving the planner is testable without anything that could actually
-//! launch a process.
+//! Test-only catalog and toy layers/runners.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -13,6 +10,7 @@ use stdg_core::{
     RunnerCatalog, RunnerId, Slot, TargetKind,
 };
 
+#[derive(Debug)]
 pub struct ToyLayer {
     pub id: &'static str,
     pub slot: Slot,
@@ -38,6 +36,7 @@ impl Layer for ToyLayer {
     }
 }
 
+#[derive(Debug)]
 pub struct ToyRunner {
     pub id: &'static str,
     pub target: TargetKind,
@@ -53,14 +52,20 @@ impl Runner for ToyRunner {
     }
 
     fn build(&self, _ctx: &LaunchCtx) -> Result<CommandSpec, CoreError> {
-        Ok(CommandSpec::new(PathValue::Host(PathBuf::from("/bin/true"))))
+        Ok(CommandSpec::new(PathValue::Host(PathBuf::from(
+            "/bin/true",
+        ))))
     }
 }
 
 pub struct FakeCatalog;
 
 impl LayerCatalog for FakeCatalog {
-    fn resolve_layer(&self, r: &LayerRef, _config: &ResolvedConfig) -> Result<Box<dyn Layer>, CoreError> {
+    fn resolve_layer(
+        &self,
+        r: &LayerRef,
+        _config: &ResolvedConfig,
+    ) -> Result<Box<dyn Layer>, CoreError> {
         let layer: Box<dyn Layer> = match r.id.0.as_str() {
             "conty" => Box::new(ToyLayer {
                 id: "conty",
@@ -96,8 +101,7 @@ impl LayerCatalog for FakeCatalog {
                 id: "steamapi-emu",
                 slot: Slot::SteamApi,
                 provides: CapabilitySet::of([capabilities::STEAM_HANDSHAKE]),
-                // The injected steam_api.dll swap only makes sense for a
-                // binary running under a Windows ABI (Proton/Wine).
+                // DLL swap needs the Windows ABI.
                 requires: CapabilitySet::of([capabilities::WINDOWS_ABI]),
             }),
             "cgroup" => Box::new(ToyLayer {
@@ -112,10 +116,18 @@ impl LayerCatalog for FakeCatalog {
     }
 
     fn known_layer_ids(&self) -> Vec<LayerId> {
-        ["conty", "soldier", "proton", "wine", "steamapi-native", "steamapi-emu", "cgroup"]
-            .into_iter()
-            .map(|s| LayerId(s.to_string()))
-            .collect()
+        [
+            "conty",
+            "soldier",
+            "proton",
+            "wine",
+            "steamapi-native",
+            "steamapi-emu",
+            "cgroup",
+        ]
+        .into_iter()
+        .map(|s| LayerId(s.to_string()))
+        .collect()
     }
 }
 
@@ -176,7 +188,11 @@ pub fn base_game(target: TargetKind) -> PartialGameConfig {
     }
 }
 
-pub fn with_mode(mut game: PartialGameConfig, id: &str, mode: PartialModeConfig) -> PartialGameConfig {
+pub fn with_mode(
+    mut game: PartialGameConfig,
+    id: &str,
+    mode: PartialModeConfig,
+) -> PartialGameConfig {
     game.modes
         .get_or_insert_with(BTreeMap::new)
         .insert(mode_id(id), mode);
@@ -192,10 +208,7 @@ pub fn mode_with_layers(layers: &[LayerRef]) -> PartialModeConfig {
     }
 }
 
-/// What a real deployment's `defaults/global.toml` always carries: the
-/// mandatory Sandbox slot. Tests that aren't specifically exercising the
-/// mandatory-slot check itself should build their `Plan`s against this
-/// instead of `GlobalDefaults::default()`.
+/// Baseline with the mandatory Sandbox slot.
 pub fn default_globals() -> crate::cascade::GlobalDefaults {
     crate::cascade::GlobalDefaults {
         baseline_layers: vec![LayerRef::new("conty")],

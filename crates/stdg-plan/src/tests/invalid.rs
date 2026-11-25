@@ -49,15 +49,15 @@ fn missing_capability_is_rejected() {
 
 #[test]
 fn dll_injection_on_a_native_linux_game_is_rejected() {
-    // A native Linux target has no Compat layer to provide WINDOWS_ABI, so
-    // the DLL-swap SteamApi variant can never be satisfied for this target.
+    // Native targets have no Compat layer, so `WINDOWS_ABI` is missing.
     let game = with_mode(
         base_game(TargetKind::NativeLinux),
         "desktop-injected",
         mode_with_layers(&[LayerRef::new("steamapi-emu")]),
     );
 
-    let err = plan_for(&game, "desktop-injected").expect_err("must reject DLL injection on native Linux");
+    let err =
+        plan_for(&game, "desktop-injected").expect_err("must reject DLL injection on native Linux");
     assert!(matches!(err, CoreError::MissingCapability { .. }));
 }
 
@@ -65,7 +65,10 @@ fn dll_injection_on_a_native_linux_game_is_rejected() {
 fn undeclared_mode_is_rejected() {
     let game = base_game(TargetKind::NativeLinux);
     let err = plan_for(&game, "does-not-exist").expect_err("must reject undeclared mode");
-    assert_eq!(err.to_string(), CoreError::ModeDisabled(ModeId("does-not-exist".to_string())).to_string());
+    assert_eq!(
+        err.to_string(),
+        CoreError::ModeDisabled(ModeId("does-not-exist".to_string())).to_string()
+    );
 }
 
 #[test]
@@ -91,7 +94,11 @@ fn missing_required_field_is_rejected() {
 #[test]
 fn mode_without_a_sandbox_layer_anywhere_is_rejected() {
     // No sandbox layer in global defaults, runner defaults, or the mode itself.
-    let game = with_mode(base_game(TargetKind::NativeLinux), "desktop", mode_with_layers(&[]));
+    let game = with_mode(
+        base_game(TargetKind::NativeLinux),
+        "desktop",
+        mode_with_layers(&[]),
+    );
 
     let err = build_plan(
         &game_id(),
@@ -104,7 +111,10 @@ fn mode_without_a_sandbox_layer_anywhere_is_rejected() {
     )
     .expect_err("must reject a plan with no Sandbox layer in any tier");
 
-    assert!(matches!(err, CoreError::MissingMandatorySlot(stdg_core::Slot::Sandbox)));
+    assert!(matches!(
+        err,
+        CoreError::MissingMandatorySlot(stdg_core::Slot::Sandbox)
+    ));
 }
 
 #[test]

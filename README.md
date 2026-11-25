@@ -1,0 +1,64 @@
+# STDGames launcher runtime
+
+Plans and launches games (native Linux, Windows through Proton/Wine, ROMs
+through emulators) inside a Conty sandbox, with optional Steam Linux
+Runtime, Steam API emulation and cgroup supervision layers.
+
+A launch is a **plan**: one *runner* builds the base command, and at most one
+*layer* per *slot* (Sandbox, Runtime, Compat, SteamApi, Supervision,
+Tooling) wraps it. Plans are resolved from a cascade of TOML files:
+`defaults/global.toml` → `defaults/runners/<runner>.toml` → the game's own
+file → the selected mode.
+
+## Layout
+
+| Crate | Role |
+| --- | --- |
+| `stdg-core` | Data model and traits, no I/O |
+| `stdg-plan` | Config cascade and plan validation |
+| `stdg-registry` | Runner/layer catalog |
+| `stdg-exec` | Pipeline execution, process spawning, cgroups |
+| `stdg-runners-*` | Native, Windows and emulator runners |
+| `stdg-layers-*` | Sandbox, runtime, compat, Steam API and supervision layers |
+| `stdg-cli` | The `stdgames` binary |
+
+
+## Build
+
+The toolchain is pinned in `rust-toolchain.toml`; `rustup` installs it on
+first use.
+
+```sh
+cargo build --release
+```
+
+## Run
+
+From the repository root (paths are resolved relative to it):
+
+```sh
+# Print the resolved plan without launching anything
+cargo run -p stdg-cli -- explain --game windows-example --mode desktop
+
+# Launch for real
+cargo run -p stdg-cli -- run --game repo --mode steam
+
+# Open a shell inside the fully wrapped environment instead of the game
+cargo run -p stdg-cli -- run --game repo --mode steam --shell
+```
+
+Game configs are looked up in `games/` then `examples/games/`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). CI runs exactly:
+
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo nextest run --workspace --all-features
+cargo test --doc --workspace
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+cargo deny check
+cargo machete
+```

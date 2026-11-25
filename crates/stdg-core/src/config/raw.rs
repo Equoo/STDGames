@@ -4,24 +4,34 @@ use serde::Deserialize;
 
 use crate::{ids::ModeId, layer::LayerRef, target::TargetKind};
 
-/// One layer of the resolution cascade: global defaults -> runner defaults
-/// -> game config -> mode override. `Option<T>` only ever appears here;
-/// everything downstream sees a `ResolvedConfig` with no `Option`.
+/// One tier of the config cascade.
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct PartialGameConfig {
+    /// What kind of game this is.
     pub target: Option<TargetKind>,
+    /// Install directory.
     pub root: Option<PathBuf>,
+    /// Executable (or ROM), relative to `root`.
     pub executable: Option<PathBuf>,
+    /// Extra arguments.
     pub args: Option<Vec<String>>,
+    /// Programs prepended to the command (e.g. `gamemoderun`).
     pub command_prefix: Option<Vec<String>>,
+    /// Extra environment variables.
     pub env: Option<BTreeMap<String, String>>,
+    /// Per-mode overrides.
     pub modes: Option<BTreeMap<ModeId, PartialModeConfig>>,
 }
 
+/// One mode's override of the game configuration.
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct PartialModeConfig {
+    /// `Some(false)` disables the mode.
     pub enabled: Option<bool>,
+    /// Per-slot layer overrides.
     pub layers: Option<Vec<LayerRef>>,
+    /// Arguments appended to the game's.
     pub args: Option<Vec<String>>,
+    /// Environment variables merged over the game's.
     pub env: Option<BTreeMap<String, String>>,
 }

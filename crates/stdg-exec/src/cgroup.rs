@@ -1,7 +1,4 @@
-//! Home-grown supervision, no external `reaper` binary: a dedicated cgroup
-//! v2 leaf per session, so every descendant of the launched process —
-//! including orphaned Wine helper processes reparented away from it — can
-//! be found and killed together.
+//! Per-session cgroup v2 leaf, so the whole process tree can be killed.
 
 use std::{
     fs, io,
@@ -10,17 +7,14 @@ use std::{
 
 use stdg_core::SessionGuard;
 
+/// A per-session cgroup v2 leaf, killed and removed on drop.
+#[derive(Debug)]
 pub struct CgroupSession {
     path: PathBuf,
 }
 
 impl CgroupSession {
-    /// `parent` must be a delegated cgroup v2 directory the caller already
-    /// has write access to (typically the user's systemd --user scope,
-    /// e.g. `/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice`).
-    /// Returns `Ok(None)` — not an error — when cgroup v2 delegation is not
-    /// usable here, so the caller can fall back to
-    /// `subreaper::set_child_subreaper`.
+    /// `parent` must be a delegated, writable cgroup v2 directory.
     pub fn create(parent: &Path, session_name: &str) -> io::Result<Option<Self>> {
         if !is_cgroup_v2_delegated(parent) {
             return Ok(None);
@@ -30,27 +24,56 @@ impl CgroupSession {
         Ok(Some(Self { path }))
     }
 
+    /// Moves process `pid` into this cgroup.
     pub fn add_pid(&self, pid: u32) -> io::Result<()> {
         fs::write(self.path.join("cgroup.procs"), pid.to_string())
     }
 
+    /// The processes currently in this cgroup.
     pub fn pids(&self) -> io::Result<Vec<u32>> {
         let content = fs::read_to_string(self.path.join("cgroup.procs"))?;
-        Ok(content.lines().filter_map(|line| line.trim().parse().ok()).collect())
+        content
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .map(|line| {
+                line.trim().parse().map_err(|e| {
+                    io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        format!("bad pid {line:?} in cgroup.procs: {e}"),
+                    )
+                })
+            })
+            .collect()
     }
 
-    /// Sends SIGKILL to every process still in the cgroup. Best-effort: a
-    /// process that exited between the read and the kill is not an error.
+    /// Sends SIGKILL to every process still in the cgroup.
     pub fn kill_all(&self) -> io::Result<()> {
         for pid in self.pids()? {
-            // SAFETY: kill() is called with a plain pid_t and a signal
-            // number, no memory is shared with the kernel.
-            unsafe {
-                libc::kill(pid as libc::pid_t, libc::SIGKILL);
-            }
+            kill(pid, libc::SIGKILL)?;
         }
         Ok(())
     }
+}
+
+/// Sends `signal` to `pid`. A process that no longer exists is not an error.
+#[expect(unsafe_code, reason = "libc::kill has no safe std equivalent")]
+fn kill(pid: u32, signal: libc::c_int) -> io::Result<()> {
+    let pid = libc::pid_t::try_from(pid).map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("pid {pid} out of range"),
+        )
+    })?;
+    // SAFETY: kill() takes two integers and shares no memory.
+    let rc = unsafe { libc::kill(pid, signal) };
+    if rc == 0 {
+        return Ok(());
+    }
+    let err = io::Error::last_os_error();
+    if err.raw_os_error() == Some(libc::ESRCH) {
+        return Ok(());
+    }
+    Err(err)
 }
 
 fn is_cgroup_v2_delegated(parent: &Path) -> bool {
@@ -59,19 +82,30 @@ fn is_cgroup_v2_delegated(parent: &Path) -> bool {
 
 impl Drop for CgroupSession {
     fn drop(&mut self) {
-        let _ = self.kill_all();
-        let _ = fs::remove_dir(&self.path);
+        // Drop can't propagate errors, so log them.
+        if let Err(e) = self.kill_all() {
+            tracing::warn!(
+                "could not kill processes in cgroup {}: {e}",
+                self.path.display()
+            );
+        }
+        if let Err(e) = fs::remove_dir(&self.path) {
+            tracing::warn!("could not remove cgroup {}: {e}", self.path.display());
+        }
     }
 }
 
 impl SessionGuard for CgroupSession {
-    fn label(&self) -> &str {
+    fn label(&self) -> &'static str {
         "cgroup-session"
     }
 
     fn adopt_pid(&self, pid: u32) {
         if let Err(e) = self.add_pid(pid) {
-            eprintln!("warning: could not add pid {pid} to cgroup {}: {e}", self.path.display());
+            tracing::warn!(
+                "could not add pid {pid} to cgroup {}: {e}",
+                self.path.display()
+            );
         }
     }
 }

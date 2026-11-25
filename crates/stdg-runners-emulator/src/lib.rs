@@ -1,7 +1,4 @@
-//! Real, generic runner for anything ROM-based. Behavior is entirely driven
-//! by `EmulatorManifest`s handed in at construction (typically loaded from
-//! `*.toml` files by the caller — this crate does not itself discover or
-//! parse files on disk, to keep loading a `stdg-cli` concern).
+//! Real, generic runner for anything ROM-based.
 
 mod manifest;
 
@@ -11,17 +8,22 @@ pub use manifest::EmulatorManifest;
 
 use stdg_core::{CommandSpec, CoreError, LaunchCtx, PathValue, Runner, RunnerId, TargetKind};
 
+/// Runs ROMs through the first manifest supporting their platform.
+#[derive(Debug)]
 pub struct EmulatorRunner {
     manifests: Vec<EmulatorManifest>,
 }
 
 impl EmulatorRunner {
+    /// A runner backed by `manifests`, tried in order.
     pub fn new(manifests: Vec<EmulatorManifest>) -> Self {
         Self { manifests }
     }
 
     fn manifest_for(&self, platform: &str) -> Option<&EmulatorManifest> {
-        self.manifests.iter().find(|m| m.supports_platform(platform))
+        self.manifests
+            .iter()
+            .find(|m| m.supports_platform(platform))
     }
 }
 
@@ -39,9 +41,8 @@ impl Runner for EmulatorRunner {
 
     fn build(&self, ctx: &LaunchCtx) -> Result<CommandSpec, CoreError> {
         let config = &ctx.plan.config;
-        let platform = match &ctx.plan.target {
-            TargetKind::Rom(platform) => platform,
-            _ => return Err(CoreError::NoRunnerForTarget(ctx.plan.target.clone())),
+        let TargetKind::Rom(platform) = &ctx.plan.target else {
+            return Err(CoreError::NoRunnerForTarget(ctx.plan.target.clone()));
         };
         let manifest = self
             .manifest_for(&platform.0)
@@ -67,3 +68,6 @@ impl Runner for EmulatorRunner {
         Ok(spec)
     }
 }
+
+#[cfg(test)]
+mod tests;

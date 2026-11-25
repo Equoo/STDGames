@@ -1,15 +1,13 @@
 //! Windows target runner.
-//!
-//! A Windows game is never runnable on its own: it always needs a Compat
-//! layer (Proton or Wine) to actually execute. This runner only builds the
-//! bare, un-wrapped invocation of the game's executable — the Compat layer
-//! (`stdg-layers-compat`, currently a stub) is what turns that into
-//! `proton run <exe>` / `wine <exe>` via `Layer::wrap`.
 
 use std::path::PathBuf;
 
-use stdg_core::{ArgValue, CommandSpec, CoreError, LaunchCtx, PathValue, Runner, RunnerId, TargetKind};
+use stdg_core::{
+    ArgValue, CommandSpec, CoreError, LaunchCtx, PathValue, Runner, RunnerId, TargetKind,
+};
 
+/// Runner for [`TargetKind::Windows`].
+#[derive(Debug)]
 pub struct WindowsRunner;
 
 impl Runner for WindowsRunner {
@@ -37,3 +35,6 @@ impl Runner for WindowsRunner {
         Ok(spec)
     }
 }
+
+#[cfg(test)]
+mod tests;

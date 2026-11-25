@@ -1,10 +1,13 @@
-//! Real, simple runner: a native Linux game is just its executable, run
-//! directly from its root directory with the configured args and prefix.
+//! Native Linux runner: runs the executable from the game root.
 
 use std::path::PathBuf;
 
-use stdg_core::{ArgValue, CommandSpec, CoreError, LaunchCtx, PathValue, Runner, RunnerId, TargetKind};
+use stdg_core::{
+    ArgValue, CommandSpec, CoreError, LaunchCtx, PathValue, Runner, RunnerId, TargetKind,
+};
 
+/// Runner for [`TargetKind::NativeLinux`].
+#[derive(Debug)]
 pub struct NativeLinuxRunner;
 
 impl Runner for NativeLinuxRunner {
@@ -44,3 +47,6 @@ impl Runner for NativeLinuxRunner {
         Ok(spec)
     }
 }
+
+#[cfg(test)]
+mod tests;

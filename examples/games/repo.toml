@@ -17,3 +17,6 @@ layers = [{ id = "steamapi-native", params = { app_id = "780210" } }]
 
 [modes.steamemu]
 enabled = true
+
+[modes.onlinefix]
+enabled = true

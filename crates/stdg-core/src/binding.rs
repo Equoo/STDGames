@@ -1,18 +1,23 @@
+//! Container paths and bind mounts.
+
 use std::path::{Path, PathBuf};
 
-/// A path that may need translation when crossing the container boundary
-/// (pressure-vessel). Never a raw `String` once a path can survive that
-/// crossing.
+/// A path that may differ inside the container.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PathValue {
     /// Valid on the host side only — no known/needed translation.
     Host(PathBuf),
-    /// The layer that produced this path already knows how it appears on
-    /// both sides of the container boundary.
-    Translated { host: PathBuf, guest: PathBuf },
+    /// Known on both sides of the container boundary.
+    Translated {
+        /// Where the file lives on the host.
+        host: PathBuf,
+        /// Where the containerised process sees it.
+        guest: PathBuf,
+    },
 }
 
 impl PathValue {
+    /// The host-side path, whichever variant this is.
     pub fn host(&self) -> &Path {
         match self {
             PathValue::Host(p) => p,
@@ -20,8 +25,7 @@ impl PathValue {
         }
     }
 
-    /// The path to use from the point of view of the process that consumes
-    /// this value: `guest` when translated, `host` otherwise.
+    /// The path as seen by the consuming process.
     pub fn effective(&self) -> &Path {
         match self {
             PathValue::Host(p) => p,
@@ -30,20 +34,26 @@ impl PathValue {
     }
 }
 
+/// How a path is mounted into the container.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindMode {
+    /// Mounted read-only.
     ReadOnly,
+    /// Mounted read-write.
     ReadWrite,
 }
 
-/// Free-form label used for `explain` output and logs (e.g. "steamapi-emu-dll").
+/// Label shown in `explain` and logs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BindPurpose(pub String);
 
 /// Something a layer declares it needs to cross the container boundary.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Binding {
+    /// What to mount, and where it appears inside the container.
     pub source: PathValue,
+    /// Read-only or read-write.
     pub mode: BindMode,
+    /// Why the layer needs it, for diagnostics.
     pub purpose: BindPurpose,
 }

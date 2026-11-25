@@ -1,3 +1,5 @@
+//! Newtype identifiers.
+
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
@@ -13,9 +15,7 @@ impl fmt::Display for GameId {
     }
 }
 
-/// Identifier of a launch mode (e.g. "desktop", "steam-injected"). Purely
-/// conventional: the four user-facing modes are not variants of this
-/// library, only `ModeId`s configured in TOML.
+/// Identifier of a launch mode (e.g. "desktop", "steam-injected").
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct ModeId(pub String);
@@ -37,7 +37,7 @@ impl fmt::Display for RunnerId {
     }
 }
 
-/// Identifier of a `Layer` registered in the registry (e.g. "proton", "conty").
+/// Registered layer id (e.g. "proton").
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct LayerId(pub String);

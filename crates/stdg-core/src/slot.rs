@@ -1,14 +1,19 @@
-/// Mutually exclusive slots, in wrapping order (outermost first). `Sandbox`
-/// invokes `Runtime`, which invokes `Compat`, which invokes `SteamApi`,
-/// which invokes `Supervision`, which invokes `Tooling`, which finally execs
-/// the command built by the `Runner`.
+//! Layer slots and their wrapping order.
+
+/// Mutually exclusive slots, in wrapping order (outermost first).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Slot {
+    /// Container isolation (Conty).
     Sandbox,
+    /// Steam Linux Runtime (pressure-vessel).
     Runtime,
+    /// Windows compatibility (Proton, Wine).
     Compat,
+    /// Steam API handling (native or emulated).
     SteamApi,
+    /// Process supervision (cgroup).
     Supervision,
+    /// Extra tooling (overlays, profilers...).
     Tooling,
 }
 
@@ -23,9 +28,7 @@ impl Slot {
         Slot::Tooling,
     ];
 
-    /// Application order for `patch`/`wrap`: innermost to outermost. Each
-    /// layer's `wrap` receives a command already touched by every layer
-    /// closer to the runner.
+    /// Application order for `patch`/`wrap`: innermost to outermost.
     pub fn application_order() -> impl Iterator<Item = Slot> {
         Self::ORDER.into_iter().rev()
     }

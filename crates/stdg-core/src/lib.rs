@@ -1,8 +1,22 @@
-//! Core types and traits for the STDGames launch runtime.
+//! Core types and traits for the `STDGames` launch runtime.
 //!
 //! This crate performs no I/O and spawns no processes. It defines the data
 //! model shared by the planner (`stdg-plan`), the executor (`stdg-exec`),
 //! and every runner/layer implementation crate.
+//!
+//! A launch is a [`Plan`]: one [`Runner`] building the base command, wrapped
+//! by at most one [`Layer`] per [`Slot`].
+//!
+//! ```
+//! use stdg_core::{CommandSpec, PathValue};
+//!
+//! let mut spec = CommandSpec::new(PathValue::Host("/games/g/game".into()));
+//! spec.push_arg_literal("--fullscreen");
+//! let wrapped = spec.wrapped_by(PathValue::Host("/usr/bin/gamemoderun".into()));
+//! assert_eq!(wrapped.args.len(), 2);
+//! ```
+//!
+//! This crate has no feature flags.
 
 pub mod binding;
 pub mod capability;
@@ -25,7 +39,7 @@ pub use capability::{Capability, CapabilitySet};
 pub use catalog::{LayerCatalog, RunnerCatalog};
 pub use command::{ArgValue, CommandSpec, EnvValue, PathListSeparator};
 pub use config::{PartialGameConfig, PartialModeConfig, ResolvedConfig};
-pub use ctx::{LaunchCtx, SessionInfo};
+pub use ctx::{LaunchCtx, RunKind, SessionInfo};
 pub use error::{ConfigError, CoreError, Diagnostic, Result, Severity};
 pub use guard::SessionGuard;
 pub use ids::{GameId, LayerId, ModeId, RunnerId, SessionId};
@@ -35,3 +49,6 @@ pub use plan::Plan;
 pub use runner::Runner;
 pub use slot::Slot;
 pub use target::{PlatformId, TargetKind};
+
+#[cfg(test)]
+mod tests;

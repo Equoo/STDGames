@@ -23,9 +23,7 @@ fn native_linux_mode_with_no_extra_layers_still_gets_the_mandatory_sandbox() {
     )
     .expect("plan should build");
 
-    // Nothing in this mode asks for a Compat/Runtime/SteamApi layer, but the
-    // Sandbox slot is never actually empty: it comes from the global
-    // baseline unless something more specific overrides it.
+    // Sandbox comes from the global baseline.
     assert_eq!(plan.slots.len(), 1);
     assert!(plan.slots.contains_key(&Slot::Sandbox));
     assert_eq!(plan.runner.0, "native-linux");
@@ -59,8 +57,7 @@ fn windows_desktop_mode_assigns_compat_slot() {
 
 #[test]
 fn steam_injected_mode_assigns_compat_and_steamapi_slots() {
-    // The "with Steam, injected" mode differs from "with Steam" only in the
-    // SteamApi slot: same Compat layer, different SteamApi layer.
+    // Only the `SteamApi` slot differs.
     let game = with_mode(
         base_game(TargetKind::Windows),
         "steam-injected",
@@ -107,9 +104,15 @@ fn layers_inside_out_is_ordered_innermost_to_outermost() {
     )
     .expect("plan should build");
 
-    // Application order is innermost to outermost: Supervision (cgroup)
-    // wraps closest to the runner, then SteamApi, then Compat, then Sandbox
-    // (the mandatory Conty layer from the global baseline) outermost.
+    // Innermost first: Supervision, SteamApi, Compat, Sandbox.
     let order: Vec<Slot> = plan.layers_inside_out().map(|(slot, _)| slot).collect();
-    assert_eq!(order, vec![Slot::Supervision, Slot::SteamApi, Slot::Compat, Slot::Sandbox]);
+    assert_eq!(
+        order,
+        vec![
+            Slot::Supervision,
+            Slot::SteamApi,
+            Slot::Compat,
+            Slot::Sandbox
+        ]
+    );
 }

@@ -1,14 +1,16 @@
-//! Real, simple layer: no DLL swap, no injected library — the game's own
-//! Steam API resolves normally. All this layer does is set the environment
-//! variables the Steam client's handshake looks for and, best-effort, warn
-//! if `steamclient.so` is nowhere to be found.
+//! `SteamApi` slot using the real Steam client.
 
 use std::path::{Path, PathBuf};
 
 use stdg_core::capability::capabilities;
-use stdg_core::{CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx, Layer, LayerId, Slot};
+use stdg_core::{
+    CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx, Layer, LayerId, Slot,
+};
 
+/// Lets the game talk to the real Steam client.
+#[derive(Debug)]
 pub struct SteamApiNativeLayer {
+    /// The game's Steam app id, exported as `SteamAppId`/`SteamGameId`.
     pub app_id: String,
 }
 
@@ -26,7 +28,7 @@ impl Layer for SteamApiNativeLayer {
     }
 
     fn preflight(&self, ctx: &LaunchCtx) -> Result<(), Diagnostic> {
-        if ctx.dry_run {
+        if ctx.is_dry_run() {
             return Ok(());
         }
         if !likely_steamclient_locations().iter().any(|p| p.exists()) {
@@ -62,22 +64,16 @@ fn likely_steamclient_locations() -> Vec<PathBuf> {
     paths
 }
 
-/// Best-effort check for whether the Steam client is currently running,
-/// by scanning `/proc` for a process named exactly `steam` — the name
-/// Valve's client sets for its main process, as opposed to helpers like
-/// `steamwebhelper` or `steamerrorreporter`.
-///
-/// This is deliberately process-table based rather than tied to a single
-/// install layout (native package, Flatpak, snap all differ in `$HOME`
-/// layout, but all end up as a `steam`-named process), and it fails closed
-/// (reports "not running") if `/proc` can't be read at all, e.g. on a
-/// non-Linux host.
+/// Whether a process named `steam` is running.
 fn steam_client_is_running() -> bool {
     let Ok(entries) = std::fs::read_dir("/proc") else {
         return false;
     };
     entries.flatten().any(|entry| {
-        let is_pid_dir = entry.file_name().to_str().is_some_and(|n| n.chars().all(|c| c.is_ascii_digit()));
+        let is_pid_dir = entry
+            .file_name()
+            .to_str()
+            .is_some_and(|n| n.chars().all(|c| c.is_ascii_digit()));
         is_pid_dir
             && std::fs::read_to_string(entry.path().join("comm"))
                 .is_ok_and(|comm| comm.trim() == "steam")

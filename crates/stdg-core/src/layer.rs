@@ -1,3 +1,5 @@
+//! The `Layer` trait and its configuration-side reference.
+
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
@@ -14,17 +16,18 @@ use crate::{
     slot::Slot,
 };
 
-/// Unresolved reference to a layer plus its parameters (e.g. a Proton
-/// version). This is the shape a mode uses to declare its layers in
-/// configuration.
+/// A layer id plus its parameters, as written in config.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LayerRef {
+    /// Which layer.
     pub id: LayerId,
+    /// Free-form `key = value` parameters, interpreted by the layer.
     #[serde(default)]
     pub params: BTreeMap<String, String>,
 }
 
 impl LayerRef {
+    /// A reference to layer `id` with no parameters.
     pub fn new(id: impl Into<String>) -> Self {
         Self {
             id: LayerId(id.into()),
@@ -32,67 +35,58 @@ impl LayerRef {
         }
     }
 
+    /// Adds or replaces one parameter.
+    #[must_use]
     pub fn with_param(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.params.insert(key.into(), value.into());
         self
     }
 
+    /// The value of parameter `key`, if set.
     pub fn param(&self, key: &str) -> Option<&str> {
         self.params.get(key).map(String::as_str)
     }
 }
 
-/// Something that wraps or modifies the runner. Assigned by the mode, one
-/// slot at a time. Hooks not marked mandatory carry a default
-/// implementation, so a simple layer only has to write `id`, `slot`, and one
-/// of `patch`/`wrap`.
-pub trait Layer: Send + Sync {
+/// Something that wraps or modifies the runner.
+pub trait Layer: Send + Sync + std::fmt::Debug {
+    /// The id this layer is registered under.
     fn id(&self) -> LayerId;
+    /// The one slot this layer occupies.
     fn slot(&self) -> Slot;
 
+    /// Capabilities this layer brings to the plan.
     fn provides(&self) -> CapabilitySet {
         CapabilitySet::default()
     }
 
+    /// Capabilities some other layer of the plan must provide.
     fn requires(&self) -> CapabilitySet {
         CapabilitySet::default()
     }
 
-    /// Pre-launch checks (binary present, compatible version...). May
-    /// perform read-only I/O; never invoked expecting mutation during a dry
-    /// run.
-    fn preflight(&self, ctx: &LaunchCtx) -> Result<(), Diagnostic> {
-        let _ = ctx;
+    /// Pre-launch checks (binary present, compatible version...).
+    fn preflight(&self, _ctx: &LaunchCtx) -> Result<(), Diagnostic> {
         Ok(())
     }
 
-    /// What this layer needs to cross the container boundary. Pure: derived
-    /// from the layer's own fields (built from `LayerRef` + `ResolvedConfig`
-    /// at construction time), never from a `prepare` side effect.
+    /// What this layer needs to cross the container boundary.
     fn container_needs(&self) -> Vec<Binding> {
         Vec::new()
     }
 
-    /// Filesystem/process side effects (RAII). The returned guard cleans up
-    /// in its `Drop`. During a dry run (`ctx.dry_run`), an implementation
-    /// must avoid real mutation and return a no-op guard.
-    fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
-        let _ = ctx;
+    /// Filesystem/process side effects (RAII).
+    fn prepare(&self, _ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
         Ok(Box::new(NullGuard))
     }
 
-    /// Modifies `spec` in place without changing the root program (adding
-    /// args/env). E.g. SteamApi::Native sets `SteamAppId` in the environment.
-    fn patch(&self, spec: &mut CommandSpec, ctx: &LaunchCtx) -> Result<(), CoreError> {
-        let _ = (spec, ctx);
+    /// Adds args/env to `spec` without changing its program.
+    fn patch(&self, _spec: &mut CommandSpec, _ctx: &LaunchCtx) -> Result<(), CoreError> {
         Ok(())
     }
 
-    /// Restructures the command (e.g. Proton turns `<exe>` into an argument
-    /// of `proton run`). Receives the command already patched by every layer
-    /// closer to the runner.
-    fn wrap(&self, inner: CommandSpec, ctx: &LaunchCtx) -> Result<Outcome, CoreError> {
-        let _ = ctx;
+    /// Wraps the command (e.g. `proton run <exe>`).
+    fn wrap(&self, inner: CommandSpec, _ctx: &LaunchCtx) -> Result<Outcome, CoreError> {
         Ok(Outcome::Direct(inner))
     }
 }

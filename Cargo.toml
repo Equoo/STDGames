@@ -1,24 +1,26 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/stdg-core",
-    "crates/stdg-plan",
-    "crates/stdg-registry",
-    "crates/stdg-exec",
-    "crates/stdg-runners-native",
-    "crates/stdg-runners-windows",
-    "crates/stdg-runners-emulator",
-    "crates/stdg-layers-sandbox",
-    "crates/stdg-layers-runtime",
-    "crates/stdg-layers-compat",
-    "crates/stdg-layers-steamapi",
-    "crates/stdg-layers-supervision",
-    "crates/stdg-cli",
+	"crates/stdg-core",
+	"crates/stdg-plan",
+	"crates/stdg-registry",
+	"crates/stdg-exec",
+	"crates/stdg-runners-native",
+	"crates/stdg-runners-windows",
+	"crates/stdg-runners-emulator",
+	"crates/stdg-layers-sandbox",
+	"crates/stdg-layers-runtime",
+	"crates/stdg-layers-compat",
+	"crates/stdg-layers-steamapi",
+	"crates/stdg-layers-supervision",
+	"crates/stdg-cli",
 ]
 
 [workspace.package]
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.87.0"
+publish = false
 
 [workspace.dependencies]
 stdg-core = { path = "crates/stdg-core" }
@@ -36,5 +38,49 @@ stdg-layers-supervision = { path = "crates/stdg-layers-supervision" }
 
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
-toml = "1.1"
+toml = { version = "1.1", default-features = false, features = [
+	"std",
+	"serde",
+	"parse",
+] }
 clap = { version = "4", features = ["derive"] }
+libc = "0.2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+	"fmt",
+	"ansi",
+	"std",
+] }
+tempfile = "3"
+
+[workspace.lints.rust]
+# `deny`, not `forbid`: stdg-exec needs two libc calls.
+unsafe_code = "deny"
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+undocumented_unsafe_blocks = "warn"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow" # error types are self-describing
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev.package."*"]
+opt-level = 2

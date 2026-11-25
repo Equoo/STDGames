@@ -34,3 +34,9 @@ layers = [
 	{ id = "steamapi-emu", params = { replacement_lib_path = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
 	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
 ]
+
+[modes.onlinefix]
+layers = [
+	{ id = "steamapi-onlinefix", params = { replacement_lib_path = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
+	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
+]

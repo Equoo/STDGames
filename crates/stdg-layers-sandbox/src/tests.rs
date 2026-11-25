@@ -1,8 +1,4 @@
-//! The end-to-end test actually shells out to Conty and checks the
-//! sandboxed process really ran; it is skipped automatically when no Conty
-//! executable is on `PATH` (the usual case in CI, since Conty is a large
-//! self-contained image rather than a package). Everything else is checked
-//! structurally against the arguments the layer emits.
+//! Tests for the Conty layer; the end-to-end one needs Conty on `PATH`.
 
 use std::collections::BTreeMap;
 use std::os::unix::fs::PermissionsExt;
@@ -11,10 +7,10 @@ use std::process::Command;
 
 use stdg_core::{
     ArgValue, BindMode, BindPurpose, Binding, CommandSpec, GameId, LaunchCtx, Layer, ModeId,
-    PathValue, Plan, ResolvedConfig, RunnerId, SessionId, SessionInfo, TargetKind,
+    PathValue, Plan, ResolvedConfig, RunKind, RunnerId, SessionId, SessionInfo, TargetKind,
 };
 
-use crate::{CONTY_BINARY_NAMES, ContyLayer};
+use crate::{CONTY_BINARY_NAMES, ContyLayer, SandboxLevel};
 
 fn test_ctx(root: PathBuf) -> LaunchCtx {
     let config = ResolvedConfig {
@@ -38,10 +34,10 @@ fn test_ctx(root: PathBuf) -> LaunchCtx {
         plan,
         session: SessionInfo {
             id: SessionId("test-session".to_string()),
-            tmp_dir: std::env::temp_dir(),
+            tmp_dir: PathBuf::from("/nonexistent/session"),
         },
         bindings: Vec::new(),
-        dry_run: false,
+        run_kind: RunKind::Live,
     }
 }
 
@@ -53,14 +49,15 @@ fn conty_on_path() -> Option<PathBuf> {
 }
 
 #[test]
+#[ignore = "needs a real Conty on PATH; run with `cargo test -- --ignored`"]
 fn actually_runs_a_command_through_conty() {
     let Some(_conty) = conty_on_path() else {
         eprintln!("skipping: no conty executable found on PATH");
         return;
     };
 
-    let tmp = std::env::temp_dir().join(format!("stdg-conty-test-{}", std::process::id()));
-    std::fs::create_dir_all(&tmp).expect("create test dir");
+    let tmp_dir = tempfile::tempdir().expect("create test dir");
+    let tmp = tmp_dir.path().to_path_buf();
     let script = tmp.join("run.sh");
     std::fs::write(
         &script,
@@ -94,8 +91,6 @@ fn actually_runs_a_command_through_conty() {
         command.env(key, value.render());
     }
     let output = command.output().expect("failed to actually run conty");
-
-    std::fs::remove_dir_all(&tmp).ok();
 
     assert!(
         output.status.success(),
@@ -176,7 +171,7 @@ fn container_needs_bindings_become_bind_flags() {
 fn sandbox_level_becomes_conty_env_vars() {
     let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
     let layer = ContyLayer {
-        sandbox_level: Some(2),
+        sandbox_level: Some(SandboxLevel::Processes),
         ..ContyLayer::new()
     };
 
@@ -189,11 +184,17 @@ fn sandbox_level_becomes_conty_env_vars() {
         .into_command();
 
     assert_eq!(
-        spec.env.get("SANDBOX").map(|v| v.render()).as_deref(),
+        spec.env
+            .get("SANDBOX")
+            .map(stdg_core::EnvValue::render)
+            .as_deref(),
         Some("1")
     );
     assert_eq!(
-        spec.env.get("SANDBOX_LEVEL").map(|v| v.render()).as_deref(),
+        spec.env
+            .get("SANDBOX_LEVEL")
+            .map(stdg_core::EnvValue::render)
+            .as_deref(),
         Some("2")
     );
 }
@@ -252,14 +253,18 @@ fn preflight_rejects_a_nonexistent_conty_path() {
 }
 
 #[test]
-fn preflight_rejects_an_out_of_range_sandbox_level() {
+fn sandbox_level_parses_only_conty_levels() {
+    assert_eq!("1".parse(), Ok(SandboxLevel::UserFiles));
+    assert_eq!(" 3 ".parse(), Ok(SandboxLevel::Network));
+    assert!("0".parse::<SandboxLevel>().is_err());
+    assert!("4".parse::<SandboxLevel>().is_err());
+    assert!("high".parse::<SandboxLevel>().is_err());
+}
+
+#[test]
+fn preflight_accepts_an_existing_conty_path() {
     let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
-    let layer = ContyLayer {
-        conty_path: conty_on_path(),
-        sandbox_level: Some(4),
-        base_dir: None,
-    };
-    // Only meaningful when a conty binary is available to get past the
-    // executable check; otherwise both checks fail and the assert still holds.
-    assert!(layer.preflight(&ctx).is_err());
+    let fake = tempfile::NamedTempFile::new().expect("temp file");
+    let layer = ContyLayer::at(fake.path().to_path_buf());
+    assert!(layer.preflight(&ctx).is_ok());
 }

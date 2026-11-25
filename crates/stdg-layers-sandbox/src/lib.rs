@@ -1,34 +1,8 @@
-//! Sandbox slot: Conty.
-//!
-//! Mandatory in every mode (see `stdg_plan::validate::MANDATORY_SLOTS`) —
-//! there is no unsandboxed launch.
-//!
-//! This layer wraps the inner command in [Conty][conty], a single-file
-//! container runtime that bundles its own (Arch Linux) userspace and, on
-//! every run, sets up the user/pid/uts namespaces, `/proc`, `/dev`, the GPU
-//! devices and the X11/Wayland/PulseAudio sockets itself. That makes the old
-//! "bind the host's `/usr`" vs. "bind a self-contained image as `/`" profile
-//! split unnecessary: every launch now runs against Conty's bundled root
-//! filesystem, so nothing on the host needs to be installed or mirrored.
-//!
-//! What this layer still owns is the **bind wiring**:
-//!
-//!   - the game's own install directory, read-write, since saves/config
-//!     commonly live next to the binary;
-//!   - whatever inner layers declared they need across the container
-//!     boundary via `Layer::container_needs()` / `ctx.bindings` — an
-//!     injected library, a Wine prefix, an IPC socket...
-//!
-//! Both become Conty `--bind` / `--ro-bind` arguments, which Conty forwards
-//! straight through to bubblewrap.
-//!
-//! Extra isolation (a throwaway home, no dbus, no network) is delegated to
-//! Conty's own `SANDBOX` / `SANDBOX_LEVEL` mechanism via [`ContyLayer::sandbox_level`]
-//! rather than reproduced here.
-//!
-//! [conty]: https://github.com/Kron4ek/Conty
+//! Sandbox slot: wraps the command in [Conty](https://github.com/Kron4ek/Conty).
 
+use std::fmt;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use stdg_core::capability::capabilities;
 use stdg_core::{
@@ -36,34 +10,73 @@ use stdg_core::{
     Outcome, PathValue, Slot,
 };
 
-/// Dynamic-linker variables that must never reach the game with a value
-/// inherited from the launcher's own environment. Conty does not
-/// `--clearenv`, so we drop these explicitly; an inner layer that genuinely
-/// needs one (Proton/Wine setting `LD_LIBRARY_PATH`) puts it back through
-/// `inner.env`, which is applied afterwards and wins.
+/// Host linker vars dropped before the inner env is applied.
 const STRIP_ENV_VARS: [&str; 2] = ["LD_LIBRARY_PATH", "LD_PRELOAD"];
 
-/// Candidate names for the Conty executable, tried in order on `PATH` when
-/// no explicit `conty_path` is configured.
+/// Conty names looked up on `PATH` when `conty_path` is unset.
 const CONTY_BINARY_NAMES: [&str; 2] = ["conty", "conty.sh"];
 
+/// Conty's `SANDBOX_LEVEL`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SandboxLevel {
+    /// `1`: throwaway home.
+    UserFiles,
+    /// `2`: also hides processes and dbus.
+    Processes,
+    /// `3`: also no network or X11.
+    Network,
+}
+
+impl SandboxLevel {
+    /// The value Conty expects in `SANDBOX_LEVEL`.
+    pub fn as_conty_value(self) -> &'static str {
+        match self {
+            SandboxLevel::UserFiles => "1",
+            SandboxLevel::Processes => "2",
+            SandboxLevel::Network => "3",
+        }
+    }
+}
+
+/// A `sandbox_level` that is not `1`, `2` or `3`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InvalidSandboxLevel(pub String);
+
+impl fmt::Display for InvalidSandboxLevel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "sandbox level must be 1, 2 or 3 (got {:?})", self.0)
+    }
+}
+
+impl std::error::Error for InvalidSandboxLevel {}
+
+impl FromStr for SandboxLevel {
+    type Err = InvalidSandboxLevel;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "1" => Ok(SandboxLevel::UserFiles),
+            "2" => Ok(SandboxLevel::Processes),
+            "3" => Ok(SandboxLevel::Network),
+            other => Err(InvalidSandboxLevel(other.to_string())),
+        }
+    }
+}
+
+/// Wraps the command in Conty.
+#[derive(Debug)]
 pub struct ContyLayer {
-    /// Path to the Conty executable (typically a `conty.sh`). When `None`,
-    /// it is looked up on `PATH` (`conty`, then `conty.sh`). Either way the
-    /// result is checked in `preflight`.
+    /// Conty executable; looked up on `PATH` when `None`.
     pub conty_path: Option<PathBuf>,
-    /// When set, Conty runs with `SANDBOX=1` and this `SANDBOX_LEVEL`
-    /// (`1` isolates user files, `2` also hides processes/dbus, `3` also
-    /// drops network and X11 — see Conty's docs). `None` leaves Conty at its
-    /// default: no throwaway home on top of the namespace it always creates.
-    pub sandbox_level: Option<u8>,
-    /// Maps to Conty's `BASE_DIR` — where it unpacks its helpers and mounts
-    /// the image. `None` uses Conty's default (`/tmp`).
+    /// Extra isolation; `None` keeps Conty's default.
+    pub sandbox_level: Option<SandboxLevel>,
+    /// Conty's `BASE_DIR`; `None` means `/tmp`.
     pub base_dir: Option<PathBuf>,
 }
 
 impl ContyLayer {
     /// Conty resolved from `PATH`, no extra sandbox, default base dir.
+    #[must_use]
     pub fn new() -> Self {
         Self {
             conty_path: None,
@@ -73,6 +86,7 @@ impl ContyLayer {
     }
 
     /// Conty at an explicit path.
+    #[must_use]
     pub fn at(conty_path: PathBuf) -> Self {
         Self {
             conty_path: Some(conty_path),
@@ -81,8 +95,6 @@ impl ContyLayer {
         }
     }
 
-    /// The Conty executable to invoke: the configured path if any, else the
-    /// first of [`CONTY_BINARY_NAMES`] found on `PATH`.
     fn resolve(&self) -> Option<PathBuf> {
         if let Some(path) = &self.conty_path {
             return Some(path.clone());
@@ -134,14 +146,6 @@ impl Layer for ContyLayer {
             }
         }
 
-        if let Some(level) = self.sandbox_level {
-            if !(1..=3).contains(&level) {
-                return Err(Diagnostic::error(format!(
-                    "conty sandbox_level must be 1, 2 or 3 (got {level})"
-                )));
-            }
-        }
-
         Ok(())
     }
 
@@ -149,30 +153,21 @@ impl Layer for ContyLayer {
         let conty = self.resolve().unwrap_or_else(|| PathBuf::from("conty"));
         let mut spec = CommandSpec::new(PathValue::Host(conty));
 
-        // Conty is configured through environment variables on the wrapper
-        // process itself, not through arguments. Keep it quiet (the game's
-        // own stdout/stderr is untouched) and forward the sandbox knobs.
+        // Conty reads its settings from its own environment.
         spec.set_env_literal("QUIET_MODE", "1");
         if let Some(level) = self.sandbox_level {
             spec.set_env_literal("SANDBOX", "1");
-            spec.set_env_literal("SANDBOX_LEVEL", level.to_string());
+            spec.set_env_literal("SANDBOX_LEVEL", level.as_conty_value());
         }
         if let Some(base_dir) = &self.base_dir {
             spec.set_env_path("BASE_DIR", PathValue::Host(base_dir.clone()));
         }
 
-        // Everything from here on is a bubblewrap argument that Conty
-        // appends verbatim to its own internal `bwrap` invocation.
-
-        // The game's own files: read-write, since saves/config commonly
-        // live alongside the install directory.
+        // Remaining args go straight to bwrap. Game root is read-write for saves.
         spec.push_arg_literal("--bind");
         spec.push_arg_path(PathValue::Host(ctx.plan.config.root.clone()));
         spec.push_arg_path(PathValue::Host(ctx.plan.config.root.clone()));
 
-        // Whatever inner layers declared they need across the container
-        // boundary (an injected library, a Wine prefix, an IPC socket...) —
-        // this is what `Layer::container_needs()` exists to feed.
         for binding in &ctx.bindings {
             let flag = match binding.mode {
                 BindMode::ReadOnly => "--ro-bind",
@@ -202,9 +197,6 @@ impl Layer for ContyLayer {
     }
 }
 
-/// Locates a binary on `PATH` the same way a shell would, since `CommandSpec`
-/// always carries an explicit program path rather than relying on the
-/// executor to search `PATH` itself.
 fn find_on_path(name: &str) -> Option<PathBuf> {
     let path_var = std::env::var_os("PATH")?;
     std::env::split_paths(&path_var)
@@ -212,12 +204,7 @@ fn find_on_path(name: &str) -> Option<PathBuf> {
         .find(|p| p.is_file())
 }
 
-/// Conty inherits the launcher's environment and passes it into the
-/// container (it does not `--clearenv`). We don't fight that wholesale, but
-/// we do drop the dynamic-linker variables that must not leak from the host
-/// ([`STRIP_ENV_VARS`]), then apply whatever the inner layers set on
-/// `inner.env` (a Proton/Wine `LD_LIBRARY_PATH`, `SteamAppId`...) last — so
-/// the deliberate value wins over both the host and Conty's own defaults.
+/// Strips host linker vars, then applies `inner.env` so it wins.
 fn set_environment(spec: &mut CommandSpec, inner: &CommandSpec) {
     for var in STRIP_ENV_VARS {
         spec.push_arg_literal("--unsetenv");

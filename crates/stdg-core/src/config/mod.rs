@@ -1,3 +1,5 @@
+//! Raw (partial) and resolved game configuration.
+
 mod raw;
 mod resolved;
 

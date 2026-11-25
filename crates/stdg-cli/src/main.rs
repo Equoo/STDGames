@@ -1,12 +1,21 @@
+//! `stdgames`: debug CLI for the `STDGames` launch runtime.
+
 mod defaults;
 mod explain;
 mod loading;
 mod registry;
 mod run;
 
+use std::process::ExitCode;
+
 use clap::{Parser, Subcommand};
 
-#[derive(Parser)]
+use crate::run::Program;
+
+const GAME_HELP: &str = "Game id: looks up games/<id>.toml, then examples/games/<id>.toml";
+const MODE_HELP: &str = "Mode id: must be declared and enabled in the game's config";
+
+#[derive(Debug, Parser)]
 #[command(
     name = "stdgames",
     version,
@@ -17,48 +26,44 @@ struct Cli {
     command: Command,
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 enum Command {
-    /// Resolve and print the full plan for a game/mode pair — final
-    /// command, environment, container bindings, and layer order — without
-    /// launching anything.
+    /// Print the resolved plan without launching anything.
     Explain {
-        /// Game id: looks up games/<id>.toml, then examples/games/<id>.toml
-        #[arg(long)]
+        #[arg(long, help = GAME_HELP)]
         game: String,
-        /// Mode id: must be declared and enabled in the game's config
-        #[arg(long)]
+        #[arg(long, help = MODE_HELP)]
         mode: String,
     },
-    /// Resolve the plan and actually launch it: runs every layer's real
-    /// `prepare`/`patch`/`wrap`, then spawns the final command and waits
-    /// for it to exit.
+    /// Resolve the plan and launch it.
     Run {
-        /// Game id: looks up games/<id>.toml, then examples/games/<id>.toml
-        #[arg(long)]
+        #[arg(long, help = GAME_HELP)]
         game: String,
-        /// Mode id: must be declared and enabled in the game's config
-        #[arg(long)]
+        #[arg(long, help = MODE_HELP)]
         mode: String,
+        /// Open a shell in the wrapped environment instead of the game.
+        #[arg(long)]
+        shell: bool,
     },
 }
 
-fn main() {
-    let cli = Cli::parse();
+fn main() -> ExitCode {
+    tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
+        .without_time()
+        .init();
 
-    match cli.command {
-        Command::Explain { game, mode } => {
-            if let Err(e) = explain::run(&game, &mode) {
-                eprintln!("error: {e}");
-                std::process::exit(1);
-            }
+    let cli = Cli::parse();
+    let result = match cli.command {
+        Command::Explain { game, mode } => explain::run(&game, &mode).map(|()| ExitCode::SUCCESS),
+        Command::Run { game, mode, shell } => {
+            let program = if shell { Program::Shell } else { Program::Game };
+            run::run(&game, &mode, program).map(ExitCode::from)
         }
-        Command::Run { game, mode } => match run::run(&game, &mode, false) {
-            Ok(code) => std::process::exit(code),
-            Err(e) => {
-                eprintln!("error: {e}");
-                std::process::exit(1);
-            }
-        },
-    }
+    };
+
+    result.unwrap_or_else(|e| {
+        tracing::error!("{e:#}");
+        ExitCode::FAILURE
+    })
 }

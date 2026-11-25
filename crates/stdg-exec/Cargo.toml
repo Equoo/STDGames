@@ -1,11 +1,19 @@
 [package]
 name = "stdg-exec"
-version = "0.1.0"
+version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+publish.workspace = true
 
 [dependencies]
 stdg-core = { workspace = true }
 stdg-registry = { workspace = true }
 thiserror = { workspace = true }
-libc = "0.2"
+libc = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

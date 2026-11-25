@@ -1,27 +1,25 @@
+//! Runs every layer of a plan in order to build the final command.
+
 use stdg_core::{
-    Binding, CommandSpec, CoreError, LaunchCtx, LayerCatalog, Outcome, RunnerCatalog, Severity,
-    SessionGuard,
+    Binding, CommandSpec, CoreError, LaunchCtx, LayerCatalog, Outcome, RunnerCatalog, SessionGuard,
+    Severity,
 };
 use stdg_registry::Registry;
 
 use crate::error::ExecError;
 
+/// The result of [`run_pipeline`].
+#[derive(Debug)]
 pub struct PipelineOutput {
+    /// The final, fully wrapped command.
     pub outcome: Outcome,
+    /// Every container binding the layers requested.
     pub bindings: Vec<Binding>,
-    /// Kept alive for the lifetime of the launched process; dropping this
-    /// vector runs every layer's cleanup (tmpdir removal, cgroup teardown...).
+    /// Dropping these runs every layer's cleanup.
     pub guards: Vec<Box<dyn SessionGuard>>,
 }
 
-/// Runs every layer in `ctx.plan` in application order (innermost to
-/// outermost), threading the command spec and the accumulated container
-/// bindings through `preflight -> prepare -> container_needs -> patch ->
-/// wrap`.
-///
-/// When `ctx.dry_run` is set, layers are expected to skip real side effects
-/// in `prepare` (see `Layer::prepare`'s contract) — `explain` relies on this
-/// to produce an accurate plan without touching the filesystem.
+/// Runs every layer of `ctx.plan`, innermost first.
 pub fn run_pipeline(registry: &Registry, mut ctx: LaunchCtx) -> Result<PipelineOutput, ExecError> {
     let runner = registry
         .resolve_runner(&ctx.plan.runner)
@@ -40,12 +38,23 @@ pub fn run_pipeline(registry: &Registry, mut ctx: LaunchCtx) -> Result<PipelineO
         let layer = registry.resolve_layer(&layer_ref, &ctx.plan.config)?;
 
         if let Err(diagnostic) = layer.preflight(&ctx) {
-            if diagnostic.severity == Severity::Error {
-                return Err(CoreError::Preflight {
-                    layer: layer.id(),
-                    diagnostic,
+            match diagnostic.severity {
+                Severity::Error => {
+                    return Err(CoreError::Preflight {
+                        layer: layer.id(),
+                        diagnostic,
+                    }
+                    .into());
                 }
-                .into());
+                Severity::Warning => tracing::warn!(
+                    "{}: {}{}",
+                    layer.id(),
+                    diagnostic.message,
+                    diagnostic
+                        .hint
+                        .map(|h| format!(" (hint: {h})"))
+                        .unwrap_or_default()
+                ),
             }
         }
 

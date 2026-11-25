@@ -1,3 +1,5 @@
+//! Lookup traits the planner validates plans against.
+
 use crate::{
     config::ResolvedConfig,
     error::CoreError,
@@ -7,15 +9,22 @@ use crate::{
     target::TargetKind,
 };
 
-/// Dependency inversion boundary: `stdg-plan` validates a `Plan` through
-/// these traits without ever linking the real implementations (Conty,
-/// Proton...). Planner tests supply a fake catalog.
+/// Lets `stdg-plan` validate plans without linking real layers.
 pub trait LayerCatalog {
-    fn resolve_layer(&self, r: &LayerRef, config: &ResolvedConfig) -> Result<Box<dyn Layer>, CoreError>;
+    /// Builds the layer `r` names, for the game described by `config`.
+    fn resolve_layer(
+        &self,
+        r: &LayerRef,
+        config: &ResolvedConfig,
+    ) -> Result<Box<dyn Layer>, CoreError>;
+    /// Every layer id this catalog can resolve.
     fn known_layer_ids(&self) -> Vec<LayerId>;
 }
 
+/// Lookup of the registered [`Runner`]s.
 pub trait RunnerCatalog {
+    /// The first runner that accepts `target`.
     fn find_for_target(&self, target: &TargetKind) -> Option<&dyn Runner>;
+    /// The runner registered under `id`.
     fn resolve_runner(&self, id: &RunnerId) -> Option<&dyn Runner>;
 }

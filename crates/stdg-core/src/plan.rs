@@ -1,3 +1,5 @@
+//! The planner's output.
+
 use std::collections::BTreeMap;
 
 use crate::{
@@ -8,15 +10,20 @@ use crate::{
     target::TargetKind,
 };
 
-/// Planner output: fully resolved and validated, ready for `stdg-exec` or
-/// for `explain` display. No `Option` fields here.
+/// A validated, fully resolved launch plan.
 #[derive(Debug, Clone)]
 pub struct Plan {
+    /// The game being launched.
     pub game_id: GameId,
+    /// The mode it is launched in.
     pub mode_id: ModeId,
+    /// The game's target kind.
     pub target: TargetKind,
+    /// The runner building the base command.
     pub runner: RunnerId,
+    /// At most one layer per slot.
     pub slots: BTreeMap<Slot, LayerRef>,
+    /// The fully resolved configuration.
     pub config: ResolvedConfig,
 }
 
