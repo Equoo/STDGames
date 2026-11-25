@@ -42,9 +42,11 @@ pub fn build_plan(
     let vars = expand::expand_config(&mut config, mode_id, &runner_id, &env)?;
 
     // Later tiers override earlier ones per slot.
-    let mut tiers: [Vec<LayerRef>; 3] = [
+    let mut tiers: [Vec<LayerRef>; 5] = [
         global.baseline_layers.clone(),
+        runner_defaults.layers.clone(),
         runner_defaults.layers_for(mode_id),
+        game.layers.clone().unwrap_or_default(),
         mode.layers.unwrap_or_default(),
     ];
     for layer_ref in tiers.iter_mut().flatten() {

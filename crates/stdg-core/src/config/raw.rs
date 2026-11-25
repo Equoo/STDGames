@@ -9,6 +9,8 @@ use crate::{ids::ModeId, layer::LayerRef, target::TargetKind};
 pub struct PartialGameConfig {
     /// What kind of game this is.
     pub target: Option<TargetKind>,
+    /// Steam app id, used by the Steam API layers and `${game.app_id}`.
+    pub app_id: Option<String>,
     /// Install directory.
     pub root: Option<PathBuf>,
     /// Executable (or ROM), relative to `root`.
@@ -19,6 +21,8 @@ pub struct PartialGameConfig {
     pub command_prefix: Option<Vec<String>>,
     /// Extra environment variables.
     pub env: Option<BTreeMap<String, String>>,
+    /// Layers for every mode of this game.
+    pub layers: Option<Vec<LayerRef>>,
     /// Per-mode overrides.
     pub modes: Option<BTreeMap<ModeId, PartialModeConfig>>,
 }

@@ -12,6 +12,7 @@ use crate::{ProtonLayer, WineLayer};
 
 fn test_ctx() -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("test-game".to_string()),
         target: TargetKind::Windows,
         root: PathBuf::from("/games/test-game"),

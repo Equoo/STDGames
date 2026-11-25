@@ -71,7 +71,7 @@ fn container_needs_for(
     let mut needs = vec![
         Binding {
             source: PathValue::Host(entry_point.to_path_buf()),
-            mode: BindMode::ReadOnly,
+            mode: BindMode::ReadWrite,
             purpose: BindPurpose(format!("{purpose_prefix}-install")),
         },
         Binding {

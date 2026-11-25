@@ -1,7 +1,8 @@
 //! `${...}` variable expansion in config strings.
 //!
 //! - `${env:NAME}`: environment variable; a leading `~` means `${env:HOME}`.
-//! - `${game.id}`, `${game.root}`, `${game.executable}`, `${mode.id}`, `${runner.id}`.
+//! - `${game.id}`, `${game.app_id}`, `${game.root}`, `${game.executable}`, `${mode.id}`, `${runner.id}`.
+//! - `${launcher.cwd}`, `${launcher.dir}`: launcher working dir and executable dir.
 //! - `$$`: a literal `$`.
 
 use std::path::PathBuf;
@@ -12,10 +13,16 @@ use stdg_core::{ConfigError, CoreError, LayerRef, ModeId, ResolvedConfig, Runner
 pub struct Vars<'a> {
     /// `${game.id}`.
     pub game_id: String,
+    /// `${game.app_id}`.
+    pub game_app_id: Option<String>,
     /// `${game.root}`; `None` while expanding `root` itself.
     pub game_root: Option<String>,
     /// `${game.executable}`; `None` while expanding `root` or `executable`.
     pub game_executable: Option<String>,
+    /// `${launcher.cwd}`.
+    pub launcher_cwd: Option<String>,
+    /// `${launcher.dir}`.
+    pub launcher_dir: Option<String>,
     /// `${mode.id}`.
     pub mode_id: String,
     /// `${runner.id}`.
@@ -28,8 +35,11 @@ impl std::fmt::Debug for Vars<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Vars")
             .field("game_id", &self.game_id)
+            .field("game_app_id", &self.game_app_id)
             .field("game_root", &self.game_root)
             .field("game_executable", &self.game_executable)
+            .field("launcher_cwd", &self.launcher_cwd)
+            .field("launcher_dir", &self.launcher_dir)
             .field("mode_id", &self.mode_id)
             .field("runner_id", &self.runner_id)
             .finish_non_exhaustive()
@@ -46,8 +56,11 @@ impl Vars<'_> {
             "game.id" => Some(&self.game_id),
             "mode.id" => Some(&self.mode_id),
             "runner.id" => Some(&self.runner_id),
+            "game.app_id" => self.game_app_id.as_ref(),
             "game.root" => self.game_root.as_ref(),
             "game.executable" => self.game_executable.as_ref(),
+            "launcher.cwd" => self.launcher_cwd.as_ref(),
+            "launcher.dir" => self.launcher_dir.as_ref(),
             _ => return Err(format!("unknown variable `${{{name}}}`")),
         };
         value
@@ -115,8 +128,13 @@ pub(crate) fn expand_config<'a>(
 ) -> Result<Vars<'a>, CoreError> {
     let mut vars = Vars {
         game_id: config.game_id.0.clone(),
+        game_app_id: config.app_id.clone(),
         game_root: None,
         game_executable: None,
+        launcher_cwd: std::env::current_dir().ok().map(|p| path_str(&p)),
+        launcher_dir: std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(path_str)),
         mode_id: mode_id.0.clone(),
         runner_id: runner_id.0.clone(),
         env,
@@ -171,8 +189,11 @@ mod tests {
     fn vars() -> Vars<'static> {
         Vars {
             game_id: "repo".to_string(),
+            game_app_id: Some("480".to_string()),
             game_root: Some("/srv/games/repo".to_string()),
             game_executable: Some("REPO.exe".to_string()),
+            launcher_cwd: Some("/work".to_string()),
+            launcher_dir: Some("/opt/stdgames".to_string()),
             mode_id: "steam".to_string(),
             runner_id: "windows".to_string(),
             env: &fake_env,
@@ -188,6 +209,22 @@ mod tests {
         assert_eq!(
             expand("${game.root}/${game.executable} on ${runner.id}", &vars()).as_deref(),
             Ok("/srv/games/repo/REPO.exe on windows")
+        );
+    }
+
+    #[test]
+    fn expands_launcher_dirs() {
+        assert_eq!(
+            expand("${launcher.cwd}/a:${launcher.dir}/b", &vars()).as_deref(),
+            Ok("/work/a:/opt/stdgames/b")
+        );
+    }
+
+    #[test]
+    fn expands_app_id() {
+        assert_eq!(
+            expand("steam://rungameid/${game.app_id}", &vars()).as_deref(),
+            Ok("steam://rungameid/480")
         );
     }
 
@@ -224,6 +261,7 @@ mod tests {
     #[test]
     fn expand_config_resolves_root_before_dependent_fields() {
         let mut config = ResolvedConfig {
+            app_id: None,
             game_id: GameId("repo".to_string()),
             target: TargetKind::Windows,
             root: PathBuf::from("${env:GAMES}/${game.id}"),

@@ -3,6 +3,7 @@
 use std::{
     fs, io,
     path::{Path, PathBuf},
+    time::{Duration, Instant},
 };
 
 use stdg_core::SessionGuard;
@@ -46,12 +47,36 @@ impl CgroupSession {
             .collect()
     }
 
-    /// Sends SIGKILL to every process still in the cgroup.
+    /// Kills every process still in the cgroup.
     pub fn kill_all(&self) -> io::Result<()> {
+        if fs::write(self.path.join("cgroup.kill"), "1").is_ok() {
+            return Ok(());
+        }
         for pid in self.pids()? {
             kill(pid, libc::SIGKILL)?;
         }
         Ok(())
+    }
+
+    /// Waits until the cgroup has no process left, up to `timeout`.
+    pub fn wait_empty(&self, timeout: Duration) -> bool {
+        let deadline = Instant::now() + timeout;
+        loop {
+            if !self.is_populated() {
+                return true;
+            }
+            if Instant::now() >= deadline {
+                return false;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    fn is_populated(&self) -> bool {
+        fs::read_to_string(self.path.join("cgroup.events")).map_or_else(
+            |_| self.pids().is_ok_and(|p| !p.is_empty()),
+            |events| events.lines().any(|l| l == "populated 1"),
+        )
     }
 }
 
@@ -88,6 +113,10 @@ impl Drop for CgroupSession {
                 "could not kill processes in cgroup {}: {e}",
                 self.path.display()
             );
+        }
+        // Killed processes must be reaped before the dir can go.
+        if !self.wait_empty(Duration::from_secs(5)) {
+            tracing::warn!("processes in cgroup {} did not exit", self.path.display());
         }
         if let Err(e) = fs::remove_dir(&self.path) {
             tracing::warn!("could not remove cgroup {}: {e}", self.path.display());

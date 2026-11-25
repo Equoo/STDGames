@@ -14,6 +14,7 @@ use crate::{
 
 fn test_ctx() -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("test-game".to_string()),
         target: TargetKind::Windows,
         root: PathBuf::from("/games/test-game"),
@@ -83,7 +84,28 @@ fn layer(
         replace_lib: !libs.is_empty(),
         libs,
         overlay,
+        app_id: None,
     }
+}
+
+#[test]
+fn replace_patch_exports_app_id_when_set() {
+    let ctx = test_ctx();
+    let mut spec = stdg_core::CommandSpec::new(PathValue::Host(PathBuf::from("/g/game.exe")));
+    layer(ReplaceKind::Emu, Vec::new(), None)
+        .patch(&mut spec, &ctx)
+        .expect("patch should succeed");
+    assert!(!spec.env.contains_key("SteamAppId"));
+
+    let mut with_id = layer(ReplaceKind::Emu, Vec::new(), None);
+    with_id.app_id = Some("480".to_string());
+    with_id
+        .patch(&mut spec, &ctx)
+        .expect("patch should succeed");
+    assert_eq!(
+        spec.env.get("SteamGameId").map(EnvValue::render).as_deref(),
+        Some("480")
+    );
 }
 
 fn lib(replacement: Option<PathBuf>) -> LibReplace {

@@ -178,12 +178,14 @@ pub fn mode_id(name: &str) -> ModeId {
 
 pub fn base_game(target: TargetKind) -> PartialGameConfig {
     PartialGameConfig {
+        app_id: None,
         target: Some(target),
         root: Some(PathBuf::from("/games/toy-game")),
         executable: Some(PathBuf::from("toy-game.bin")),
         args: Some(vec![]),
         command_prefix: None,
         env: None,
+        layers: None,
         modes: None,
     }
 }

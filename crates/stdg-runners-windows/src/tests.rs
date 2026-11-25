@@ -10,6 +10,7 @@ use crate::WindowsRunner;
 
 fn ctx() -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("g".to_string()),
         target: TargetKind::Windows,
         root: PathBuf::from("/games/g"),

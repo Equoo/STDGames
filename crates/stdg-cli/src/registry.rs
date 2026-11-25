@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use stdg_core::{ConfigError, CoreError, Layer, LayerId, LayerRef, ResolvedConfig};
 use stdg_layers_compat::{ProtonLayer, WineLayer};
 use stdg_layers_runtime::{PressureVesselLayer, PressureVesselVariant};
-use stdg_layers_sandbox::{ContyLayer, SandboxLevel};
+use stdg_layers_sandbox::{ContyLayer, SandboxLevel, UserNs};
 use stdg_layers_steamapi::{
     Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
     find_steam_api_libs,
@@ -35,10 +35,17 @@ pub(crate) fn build_registry() -> Registry {
                     .map_err(|e| invalid_param(r, "sandbox_level", s, &e))
             })
             .transpose()?;
+        let userns = if bool_param(r, "userns", false)? {
+            let current = UserNs::current().map_err(|e| invalid_param(r, "userns", "true", &e))?;
+            Some(current)
+        } else {
+            None
+        };
         Ok(Box::new(ContyLayer {
             conty_path: r.param("conty_path").map(PathBuf::from),
             sandbox_level,
             base_dir: r.param("base_dir").map(PathBuf::from),
+            userns,
         }))
     });
 
@@ -72,10 +79,12 @@ pub(crate) fn build_registry() -> Registry {
         }))
     });
 
-    register(&mut registry, "steamapi-native", |r, _| {
-        Ok(Box::new(SteamApiNativeLayer {
-            app_id: required(r, "app_id")?.to_string(),
-        }))
+    register(&mut registry, "steamapi-native", |r, c| {
+        let app_id = app_id(r, c).ok_or_else(|| ConfigError::MissingLayerParam {
+            layer: r.id.clone(),
+            param: "app_id",
+        })?;
+        Ok(Box::new(SteamApiNativeLayer { app_id }))
     });
     register(&mut registry, "steamapi-emu", |r, c| {
         steamapi_replace(r, c, ReplaceKind::Emu)
@@ -178,7 +187,15 @@ fn steamapi_replace(r: &LayerRef, c: &ResolvedConfig, kind: ReplaceKind) -> Laye
         replace_lib,
         libs,
         overlay,
+        app_id: app_id(r, c),
     }))
+}
+
+/// The layer's `app_id` param, else the game's.
+fn app_id(r: &LayerRef, c: &ResolvedConfig) -> Option<String> {
+    r.param("app_id")
+        .map(str::to_string)
+        .or_else(|| c.app_id.clone())
 }
 
 /// `$XDG_DATA_HOME/stdgames/overlays/<game>/<layer>` (or `~/.local/share/...`).
@@ -248,6 +265,7 @@ mod tests {
 
     fn config(root: &Path) -> ResolvedConfig {
         ResolvedConfig {
+            app_id: None,
             game_id: GameId("g".to_string()),
             target: TargetKind::Windows,
             root: root.to_path_buf(),
@@ -294,6 +312,7 @@ mod tests {
         let registry = build_registry();
         let refs = [
             LayerRef::new("conty").with_param("sandbox_level", "2"),
+            LayerRef::new("conty").with_param("userns", "true"),
             LayerRef::new("soldier").with_param("depot_path", "/d"),
             LayerRef::new("sniper").with_param("depot_path", "/d"),
             LayerRef::new("proton")
@@ -313,6 +332,16 @@ mod tests {
                 .unwrap_or_else(|e| panic!("{} should resolve: {e}", r.id));
             assert_eq!(layer.id(), r.id);
         }
+    }
+
+    #[test]
+    fn steamapi_native_falls_back_to_game_app_id() {
+        let registry = build_registry();
+        let r = LayerRef::new("steamapi-native");
+        let mut c = config(Path::new("/nonexistent"));
+        assert!(registry.resolve_layer(&r, &c).is_err());
+        c.app_id = Some("480".to_string());
+        assert!(registry.resolve_layer(&r, &c).is_ok());
     }
 
     fn resolve(r: &LayerRef, root: &Path) -> Vec<stdg_core::Binding> {

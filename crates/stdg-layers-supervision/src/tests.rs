@@ -11,6 +11,7 @@ use crate::{SupervisionLayer, unified_cgroup_path};
 
 fn ctx(run_kind: RunKind) -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("g".to_string()),
         target: TargetKind::NativeLinux,
         root: PathBuf::from("/games/g"),

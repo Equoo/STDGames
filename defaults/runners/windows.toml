@@ -1,39 +1,23 @@
-# Runner defaults for target = { kind = "windows" }. A game only needs to
-# declare `[modes.<name>] enabled = true` to pick up these layers; it writes
-# its own `layers = [...]` only to override a specific slot (e.g. pin a
-# different Proton version/build, or a different Sandbox profile) — note
-# that an override replaces the *whole* layer for that slot, params
-# included, not just the params it actually wants to change.
-#
-# Paths below are this deployment's real, already-installed resources (see
-# /sgoinfre/stdgames/.resources) — not something this workspace discovers on
-# its own; a different deployment's global.toml/runners/*.toml would point
-# these elsewhere.
-#
-# The Sandbox slot itself isn't listed here: every mode already gets the
-# baseline Conty layer from defaults/global.toml. "super-compat" below is
-# the one mode that asks for something different (a stricter Conty sandbox
-# level), so it's the one that overrides it.
+# Runner defaults for target = { kind = "windows" }.
+# Tiers, lowest first: global, runner, runner mode, game, game mode.
+# Same layer id in a higher tier merges params; another id replaces the slot.
 
-# Adds the Steam Linux Runtime (pressure-vessel) on top of "desktop", for
-# games that need scout/soldier-era compatibility libraries alongside Proton.
-[modes.steam]
+# Every mode.
 layers = [
-	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
+	{ id = "proton", params = { version = "10.0", proton_path = "${launcher.cwd}/examples/protons/10.0", prefix_path = "/tmp/feur/prefix" } },
 ]
 
-# Replaces every steam_api64.dll / steam_api.dll found in the game with the
-# matching-arch library below. Add `overlay_dir` to also overlay files.
+# Native Steam API.
+[modes.steam]
+
+# Replaces steam_api64.dll / steam_api.dll; add `overlay_dir` to also overlay files.
 [modes.steamemu]
 layers = [
-	{ id = "steamapi-emu", params = { lib_x64 = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
-	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
+	{ id = "steamapi-emu", params = { lib_x64 = "${launcher.cwd}/examples/steamemu/steam_api64.dll", lib_x86 = "${launcher.cwd}/examples/steamemu/steam_api.dll" } },
 ]
 
-# Overlays `overlay_dir` on the game dir; writes go to
-# ~/.local/share/stdgames/overlays/<game>/. Add `lib_x64` to also replace the library.
+# Overlays `overlay_dir` on the game dir; add `lib_x64` to also replace the library.
 [modes.onlinefix]
 layers = [
-	{ id = "steamapi-onlinefix", params = { overlay_dir = "~/Documents/STDGames/onlinefix/${game.id}" } },
-	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
+	{ id = "steamapi-onlinefix", params = { overlay_dir = "${launcher.cwd}/examples/spacewar/onlinefix/" } },
 ]

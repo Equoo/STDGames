@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 
 use stdg_core::capability::capabilities;
 use stdg_core::{
-    BindMode, BindPurpose, Binding, CapabilitySet, CoreError, Diagnostic, LaunchCtx, Layer,
-    LayerId, PathValue, SessionGuard, Slot, TargetKind,
+    BindMode, BindPurpose, Binding, CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx,
+    Layer, LayerId, PathValue, SessionGuard, Slot, TargetKind,
 };
 
 /// Which preset this layer is.
@@ -166,6 +166,8 @@ pub struct SteamApiReplaceLayer {
     pub libs: Vec<LibReplace>,
     /// Optional overlay.
     pub overlay: Option<Overlay>,
+    /// Exported to the game when set.
+    pub app_id: Option<String>,
 }
 
 #[derive(Debug)]
@@ -257,6 +259,13 @@ impl Layer for SteamApiReplaceLayer {
             }
         }
         needs
+    }
+
+    fn patch(&self, spec: &mut CommandSpec, _ctx: &LaunchCtx) -> Result<(), CoreError> {
+        if let Some(app_id) = &self.app_id {
+            crate::set_app_id_env(spec, app_id);
+        }
+        Ok(())
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {

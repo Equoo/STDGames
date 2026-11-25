@@ -10,10 +10,11 @@ use stdg_core::{
     PathValue, Plan, ResolvedConfig, RunKind, RunnerId, SessionId, SessionInfo, TargetKind,
 };
 
-use crate::{CONTY_BINARY_NAMES, ContyLayer, SandboxLevel};
+use crate::{CONTY_BINARY_NAMES, ContyLayer, SandboxLevel, UserNs};
 
 fn test_ctx(root: PathBuf) -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("test-game".to_string()),
         target: TargetKind::NativeLinux,
         root,
@@ -242,6 +243,77 @@ fn linker_vars_are_stripped_but_inner_env_wins() {
     assert!(
         unset < set,
         "the deliberate value must be applied after the strip"
+    );
+}
+
+#[test]
+fn userns_runs_conty_through_unshare_and_maps_the_user_back() {
+    let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
+    let layer = ContyLayer {
+        userns: Some(UserNs {
+            uid: 1000,
+            gid: 100,
+        }),
+        ..ContyLayer::at(PathBuf::from("/opt/conty.sh"))
+    };
+    let spec = layer
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))),
+            &ctx,
+        )
+        .expect("wrap ok")
+        .into_command();
+
+    let program = spec.program.as_ref().map(|p| p.effective().to_path_buf());
+    assert!(program.is_some_and(|p| p.ends_with("unshare")));
+    let args: Vec<String> = spec.args.iter().map(ArgValue::render).collect();
+    assert_eq!(
+        args[..9],
+        [
+            "--map-root-user",
+            "--mount",
+            "--",
+            "/opt/conty.sh",
+            "--unshare-user",
+            "--uid",
+            "1000",
+            "--gid",
+            "100"
+        ]
+    );
+    assert_eq!(
+        spec.env
+            .get("ALLOW_ROOT")
+            .map(stdg_core::EnvValue::render)
+            .as_deref(),
+        Some("1")
+    );
+}
+
+#[test]
+fn inner_command_records_its_exit_code() {
+    let ctx = test_ctx(PathBuf::from("/nonexistent-game-root"));
+    let spec = ContyLayer::new()
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/game/bin"))),
+            &ctx,
+        )
+        .expect("wrap ok")
+        .into_command();
+
+    let status_file = ctx.session.tmp_dir.join("conty/status");
+    assert_eq!(spec.status_file.as_deref(), Some(status_file.as_path()));
+    let args: Vec<String> = spec.args.iter().map(ArgValue::render).collect();
+    let sep = args.iter().position(|a| a == "--").expect("-- separator");
+    assert_eq!(
+        args[sep + 1..],
+        [
+            "/bin/sh",
+            "-c",
+            r#""$@"; echo $? > "$0""#,
+            &status_file.display().to_string(),
+            "/game/bin"
+        ]
     );
 }
 

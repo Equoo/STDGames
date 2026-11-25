@@ -121,6 +121,7 @@ mod tests {
 
     fn config() -> ResolvedConfig {
         ResolvedConfig {
+            app_id: None,
             game_id: GameId("g".to_string()),
             target: TargetKind::NativeLinux,
             root: PathBuf::from("/g"),

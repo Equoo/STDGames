@@ -15,6 +15,6 @@
 # session depends on the target kind, so every launch gets one unless a
 # game explicitly overrides the Supervision slot itself.
 baseline_layers = [
-	{ id = "conty", params = { conty_path = "/home/equo/Documents/STDGames/conty.sh" } },
+	{ id = "conty", params = { conty_path = "${launcher.cwd}/examples/conty.sh", userns = "true" } },
 	{ id = "cgroup" },
 ]

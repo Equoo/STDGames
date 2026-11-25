@@ -64,6 +64,8 @@ pub struct CommandSpec {
     pub env: BTreeMap<String, EnvValue>,
     /// Working directory; inherited when `None`.
     pub cwd: Option<PathValue>,
+    /// Host file holding the real exit code, for wrappers that lose it.
+    pub status_file: Option<std::path::PathBuf>,
 }
 
 impl CommandSpec {
@@ -75,6 +77,7 @@ impl CommandSpec {
             args: Vec::new(),
             env: BTreeMap::new(),
             cwd: None,
+            status_file: None,
         }
     }
 
@@ -117,6 +120,7 @@ impl CommandSpec {
             args,
             env: self.env,
             cwd: self.cwd,
+            status_file: self.status_file,
         }
     }
 }

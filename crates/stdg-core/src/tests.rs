@@ -111,6 +111,7 @@ fn application_order_is_the_reverse_of_wrapping_order() {
 #[test]
 fn plan_lists_only_filled_slots_innermost_first() {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("g".into()),
         target: TargetKind::Windows,
         root: PathBuf::from("/g"),

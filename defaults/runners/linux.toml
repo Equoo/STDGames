@@ -1,0 +1,18 @@
+# Runner defaults for target = { kind = "windows" }.
+# Tiers, lowest first: global, runner, runner mode, game, game mode.
+# Same layer id in a higher tier merges params; another id replaces the slot.
+
+# Native Steam API.
+[modes.steam]
+
+# Replaces steam_api64.dll / steam_api.dll; add `overlay_dir` to also overlay files.
+[modes.steamemu]
+layers = [
+	{ id = "steamapi-emu", params = { lib_x64 = "${launcher.cwd}/examples/steamemu/libsteam_api64.so", lib_x86 = "${launcher.cwd}/examples/steamemu/libsteam_api.so" } },
+]
+
+# Overlays `overlay_dir` on the game dir; add `lib_x64` to also replace the library.
+[modes.onlinefix]
+layers = [
+	{ id = "steamapi-onlinefix", params = { overlay_dir = "${launcher.cwd}/examples/spacewar/onlinefix/" } },
+]

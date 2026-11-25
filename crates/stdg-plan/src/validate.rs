@@ -43,7 +43,8 @@ pub fn assign_slots(
         let mut occupants_this_tier: BTreeMap<Slot, LayerId> = BTreeMap::new();
 
         for layer_ref in tier {
-            let layer = catalog.resolve_layer(layer_ref, config)?;
+            let merged = merge_with_lower_tier(&slots, layer_ref);
+            let layer = catalog.resolve_layer(&merged, config)?;
             let slot = layer.slot();
 
             if let Some(existing) = occupants_this_tier.get(&slot) {
@@ -54,11 +55,23 @@ pub fn assign_slots(
                 });
             }
             occupants_this_tier.insert(slot, layer.id());
-            slots.insert(slot, layer_ref.clone());
+            slots.insert(slot, merged);
         }
     }
 
     Ok(slots)
+}
+
+/// Same layer id already placed by a lower tier: its params, overridden by `layer_ref`'s.
+fn merge_with_lower_tier(slots: &SlotMap, layer_ref: &LayerRef) -> LayerRef {
+    match slots.values().find(|r| r.id == layer_ref.id) {
+        Some(lower) => {
+            let mut merged = lower.clone();
+            merged.params.extend(layer_ref.params.clone());
+            merged
+        }
+        None => layer_ref.clone(),
+    }
 }
 
 /// Checks every `requires()` is covered by some `provides()`.

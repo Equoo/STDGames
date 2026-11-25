@@ -32,6 +32,9 @@ pub struct RunnerDefaults {
     /// Environment for every game of this runner.
     #[serde(default)]
     pub env: Option<BTreeMap<String, String>>,
+    /// Layers for every mode of this runner.
+    #[serde(default)]
+    pub layers: Vec<LayerRef>,
     /// Default layers per mode.
     #[serde(default)]
     pub modes: BTreeMap<ModeId, ModeLayerDefaults>,
@@ -99,6 +102,7 @@ pub fn resolve_config(
 
     Ok(ResolvedConfig {
         game_id: game_id.clone(),
+        app_id: game.app_id.clone(),
         target,
         root,
         executable,

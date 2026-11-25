@@ -23,6 +23,7 @@ fn runner() -> EmulatorRunner {
 
 fn ctx(target: TargetKind) -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("g".to_string()),
         target,
         root: PathBuf::from("/roms"),

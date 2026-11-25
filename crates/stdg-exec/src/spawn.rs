@@ -1,5 +1,7 @@
 //! Turns a resolved `CommandSpec` into an actual running process.
 
+use std::os::unix::process::ExitStatusExt as _;
+use std::path::Path;
 use std::process::{Command, ExitStatus};
 
 use stdg_core::{ArgValue, CommandSpec, SessionGuard};
@@ -39,7 +41,22 @@ pub fn spawn_and_wait(
         guard.adopt_pid(child.id());
     }
 
-    child.wait().map_err(ExecError::Wait)
+    let status = child.wait().map_err(ExecError::Wait)?;
+    Ok(match &spec.status_file {
+        Some(file) => read_status_file(file),
+        None => status,
+    })
+}
+
+/// The exit code written by the wrapped command; `127` if it never ran.
+fn read_status_file(file: &Path) -> ExitStatus {
+    let code = std::fs::read_to_string(file)
+        .ok()
+        .and_then(|s| s.trim().parse::<i32>().ok());
+    if code.is_none() {
+        tracing::warn!("{} was not written: the command never ran", file.display());
+    }
+    ExitStatus::from_raw(code.unwrap_or(127) << 8)
 }
 
 /// One-line rendering of a command.

@@ -150,3 +150,88 @@ fn duplicate_slot_within_runner_defaults_tier_is_rejected() {
         }
     ));
 }
+
+fn build(game: &stdg_core::PartialGameConfig, runner_defaults: &RunnerDefaults) -> stdg_core::Plan {
+    build_plan(
+        &game_id(),
+        &mode_id("desktop"),
+        &default_globals(),
+        runner_defaults,
+        game,
+        &FakeCatalog,
+        &FakeRunnerCatalog::new(),
+    )
+    .expect("plan should build")
+}
+
+#[test]
+fn runner_wide_layer_applies_to_every_mode() {
+    let game = with_mode(
+        base_game(TargetKind::Windows),
+        "desktop",
+        mode_with_layers(&[]),
+    );
+    let runner_defaults = RunnerDefaults {
+        layers: vec![LayerRef::new("proton").with_param("version", "9.0-4")],
+        ..RunnerDefaults::default()
+    };
+
+    let plan = build(&game, &runner_defaults);
+    let compat = plan.slots.get(&Slot::Compat).expect("compat slot set");
+    assert_eq!(compat.param("version"), Some("9.0-4"));
+}
+
+#[test]
+fn game_wide_layer_overrides_runner_mode_layer() {
+    let mut game = with_mode(
+        base_game(TargetKind::Windows),
+        "desktop",
+        mode_with_layers(&[]),
+    );
+    game.layers = Some(vec![LayerRef::new("wine")]);
+    let runner_defaults = runner_defaults_for("desktop", &[LayerRef::new("proton")]);
+
+    let plan = build(&game, &runner_defaults);
+    let compat = plan.slots.get(&Slot::Compat).expect("compat slot set");
+    assert_eq!(compat.id.0, "wine");
+}
+
+#[test]
+fn same_layer_id_merges_params_across_tiers() {
+    let game = with_mode(
+        base_game(TargetKind::Windows),
+        "desktop",
+        mode_with_layers(&[LayerRef::new("proton").with_param("version", "staging-8.0")]),
+    );
+    let runner_defaults = RunnerDefaults {
+        layers: vec![
+            LayerRef::new("proton")
+                .with_param("version", "9.0-4")
+                .with_param("prefix_path", "/prefix"),
+        ],
+        ..RunnerDefaults::default()
+    };
+
+    let plan = build(&game, &runner_defaults);
+    let compat = plan.slots.get(&Slot::Compat).expect("compat slot set");
+    assert_eq!(compat.param("version"), Some("staging-8.0"));
+    assert_eq!(compat.param("prefix_path"), Some("/prefix"));
+}
+
+#[test]
+fn different_layer_id_drops_lower_tier_params() {
+    let game = with_mode(
+        base_game(TargetKind::Windows),
+        "desktop",
+        mode_with_layers(&[LayerRef::new("wine")]),
+    );
+    let runner_defaults = RunnerDefaults {
+        layers: vec![LayerRef::new("proton").with_param("version", "9.0-4")],
+        ..RunnerDefaults::default()
+    };
+
+    let plan = build(&game, &runner_defaults);
+    let compat = plan.slots.get(&Slot::Compat).expect("compat slot set");
+    assert_eq!(compat.id.0, "wine");
+    assert_eq!(compat.param("version"), None);
+}

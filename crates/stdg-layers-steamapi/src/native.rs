@@ -47,8 +47,7 @@ impl Layer for SteamApiNativeLayer {
     }
 
     fn patch(&self, spec: &mut CommandSpec, _ctx: &LaunchCtx) -> Result<(), CoreError> {
-        spec.set_env_literal("SteamAppId", self.app_id.clone());
-        spec.set_env_literal("SteamGameId", self.app_id.clone());
+        crate::set_app_id_env(spec, &self.app_id);
         Ok(())
     }
 }

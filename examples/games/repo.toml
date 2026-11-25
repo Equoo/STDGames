@@ -4,16 +4,14 @@
 # Ships its own steam_api.dll and steam_appid.txt (780210) — real Steam API,
 # no injection needed, matching [games.metadata] api.client = "steam" in
 # the previous launcher's games.toml for this same game.
+app_id = "780210"
 target = { kind = "windows" }
-root = "/home/equo/.local/share/Steam/steamapps/common/REPO/"
+root = "${launcher.cwd}/examples/spacewar/root"
 executable = "REPO.exe"
-# executable = "/usr/bin/bash"
 args = []
 
 [modes.steam]
 enabled = true
-layers = [{ id = "steamapi-native", params = { app_id = "780210" } }]
-# { id = "soldier", params = { depot_path = "/home/equo/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/" } },
 
 [modes.steamemu]
 enabled = true

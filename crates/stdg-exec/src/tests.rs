@@ -75,6 +75,7 @@ fn registry(preflight: Option<Diagnostic>) -> Registry {
 
 fn ctx() -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("g".to_string()),
         target: TargetKind::NativeLinux,
         root: PathBuf::from("/games/g"),
@@ -207,4 +208,51 @@ fn cgroup_session_is_none_outside_a_delegated_cgroup() {
 fn child_subreaper_flag_can_be_set_and_read_back() {
     crate::subreaper::set_child_subreaper().expect("prctl set");
     assert!(crate::subreaper::is_child_subreaper().expect("prctl get"));
+}
+
+#[test]
+fn status_file_overrides_the_wrapper_exit_code() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let file = dir.path().join("status");
+    let mut spec = CommandSpec::new(PathValue::Host(PathBuf::from("/bin/sh")));
+    spec.push_arg_literal("-c");
+    spec.push_arg_literal(format!("echo 7 > {}", file.display()));
+    spec.status_file = Some(file);
+    let status = crate::spawn_and_wait(&spec, &[]).expect("runs");
+    assert_eq!(status.code(), Some(7));
+}
+
+#[test]
+fn missing_status_file_means_the_command_never_ran() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let mut spec = CommandSpec::new(PathValue::Host(PathBuf::from("/bin/true")));
+    spec.status_file = Some(dir.path().join("status"));
+    let status = crate::spawn_and_wait(&spec, &[]).expect("runs");
+    assert_eq!(status.code(), Some(127));
+}
+
+#[test]
+fn killed_cgroup_processes_are_waited_for() {
+    let parent = PathBuf::from("/sys/fs/cgroup").join(
+        std::fs::read_to_string("/proc/self/cgroup")
+            .unwrap_or_default()
+            .trim()
+            .trim_start_matches("0::/"),
+    );
+    let Ok(Some(cgroup)) = CgroupSession::create(&parent, &format!("test-{}", std::process::id()))
+    else {
+        return;
+    };
+    let mut child = std::process::Command::new("sleep")
+        .arg("30")
+        .spawn()
+        .expect("sleep spawns");
+    let added = cgroup.add_pid(child.id()).is_ok();
+    if added {
+        cgroup.kill_all().expect("kill");
+    } else {
+        let _ = child.kill();
+    }
+    let _ = child.wait();
+    assert!(cgroup.wait_empty(std::time::Duration::from_secs(5)));
 }

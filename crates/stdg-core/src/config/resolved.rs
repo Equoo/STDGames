@@ -7,6 +7,8 @@ use crate::{ids::GameId, target::TargetKind};
 pub struct ResolvedConfig {
     /// The game this configuration belongs to.
     pub game_id: GameId,
+    /// Steam app id.
+    pub app_id: Option<String>,
     /// What kind of game this is.
     pub target: TargetKind,
     /// Install directory.

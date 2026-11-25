@@ -10,6 +10,7 @@ use crate::NativeLinuxRunner;
 
 fn ctx(command_prefix: Vec<String>) -> LaunchCtx {
     let config = ResolvedConfig {
+        app_id: None,
         game_id: GameId("g".to_string()),
         target: TargetKind::NativeLinux,
         root: PathBuf::from("/games/g"),
