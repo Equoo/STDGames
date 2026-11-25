@@ -181,6 +181,15 @@ pub enum ConfigError {
         /// Why it is invalid.
         reason: String,
     },
+
+    /// A `${...}` reference that cannot be expanded.
+    #[error("{location}: {reason}")]
+    Expansion {
+        /// Where the value came from (e.g. `layer proton, param prefix_path`).
+        location: String,
+        /// What went wrong.
+        reason: String,
+    },
 }
 
 /// `Result` defaulting to [`CoreError`].

@@ -1,6 +1,7 @@
 //! The planner: turns `(game config, mode)` into a `Plan`.
 
 mod cascade;
+mod expand;
 mod validate;
 
 use std::collections::BTreeMap;
@@ -30,25 +31,32 @@ pub fn build_plan(
         _ => return Err(CoreError::ModeDisabled(mode_id.clone())),
     };
 
-    let config = resolve_config(game_id, global, runner_defaults, game, &mode)?;
+    let mut config = resolve_config(game_id, global, runner_defaults, game, &mode)?;
 
     let runner = runners
         .find_for_target(&config.target)
         .ok_or_else(|| CoreError::NoRunnerForTarget(config.target.clone()))?;
+    let runner_id = runner.id();
+
+    let env = |name: &str| std::env::var(name).ok();
+    let vars = expand::expand_config(&mut config, mode_id, &runner_id, &env)?;
 
     // Later tiers override earlier ones per slot.
-    let tiers: [Vec<LayerRef>; 3] = [
+    let mut tiers: [Vec<LayerRef>; 3] = [
         global.baseline_layers.clone(),
         runner_defaults.layers_for(mode_id),
         mode.layers.unwrap_or_default(),
     ];
+    for layer_ref in tiers.iter_mut().flatten() {
+        expand::expand_layer_ref(layer_ref, &vars)?;
+    }
     let slots = validate_plan(&config, &tiers, catalog)?;
 
     Ok(Plan {
         game_id: game_id.clone(),
         mode_id: mode_id.clone(),
         target: config.target.clone(),
-        runner: runner.id(),
+        runner: runner_id,
         slots,
         config,
     })

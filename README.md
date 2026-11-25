@@ -49,6 +49,24 @@ cargo run -p stdg-cli -- run --game repo --mode steam --shell
 
 Game configs are looked up in `games/` then `examples/games/`.
 
+### Variables in config strings
+
+Every string (`root`, `executable`, `args`, `env`, `command_prefix`, layer
+params) is expanded after the cascade:
+
+| Syntax | Value |
+| --- | --- |
+| `${env:NAME}`, leading `~` | environment variable / `$HOME` |
+| `${game.id}`, `${game.root}`, `${game.executable}` | resolved game config |
+| `${mode.id}`, `${runner.id}` | the plan |
+| `$$` | a literal `$` |
+
+```toml
+prefix_path = "~/.local/share/stdgames/prefixes/${game.id}"
+```
+
+An unknown or unset variable is a configuration error.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). CI runs exactly:

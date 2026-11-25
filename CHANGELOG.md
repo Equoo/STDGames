@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `${env:NAME}`, `~`, `${game.root}`, `${game.id}`, `${game.executable}`,
+  `${mode.id}` and `${runner.id}` expansion in every config string.
 - `steamapi-onlinefix` layer (preflight only; file overlay still to do).
 - `stdgames run --shell` opens a shell inside the wrapped environment.
 - `SandboxLevel` type for Conty's `sandbox_level`, parsed at config load.
