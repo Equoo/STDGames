@@ -4,7 +4,8 @@ use std::path::{Path, PathBuf};
 
 use stdg_core::capability::capabilities;
 use stdg_core::{
-    CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx, Layer, LayerId, Slot,
+    BindMode, BindPurpose, Binding, CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx,
+    Layer, LayerId, PathValue, Slot,
 };
 
 /// Lets the game talk to the real Steam client.
@@ -12,6 +13,28 @@ use stdg_core::{
 pub struct SteamApiNativeLayer {
     /// The game's Steam app id, exported as `SteamAppId`/`SteamGameId`.
     pub app_id: String,
+    /// Running Steam's `.steam` dir, mounted over `~/.steam` when they differ.
+    pub steam_config: Option<SteamConfigBind>,
+}
+
+/// Mounts the running Steam's config dir (`sdk64`, `steam.pipe`...) where the game looks.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SteamConfigBind {
+    /// The running Steam's `.steam` dir.
+    pub host: PathBuf,
+    /// `~/.steam` of the launching user.
+    pub guest: PathBuf,
+}
+
+impl SteamConfigBind {
+    /// For the running Steam client, if its `.steam` is not already `~/.steam`.
+    #[must_use]
+    pub fn detect() -> Option<Self> {
+        let guest = PathBuf::from(std::env::var_os("HOME")?).join(".steam");
+        let host = running_steam_config_dir()?;
+        let same = std::fs::canonicalize(&host).ok() == std::fs::canonicalize(&guest).ok();
+        (!same).then_some(Self { host, guest })
+    }
 }
 
 impl Layer for SteamApiNativeLayer {
@@ -46,6 +69,20 @@ impl Layer for SteamApiNativeLayer {
         Ok(())
     }
 
+    fn container_needs(&self) -> Vec<Binding> {
+        self.steam_config
+            .iter()
+            .map(|bind| Binding {
+                source: PathValue::Translated {
+                    host: bind.host.clone(),
+                    guest: bind.guest.clone(),
+                },
+                mode: BindMode::ReadWrite,
+                purpose: BindPurpose("steam-config".to_string()),
+            })
+            .collect()
+    }
+
     fn patch(&self, spec: &mut CommandSpec, _ctx: &LaunchCtx) -> Result<(), CoreError> {
         crate::set_app_id_env(spec, &self.app_id);
         Ok(())
@@ -61,6 +98,49 @@ fn likely_steamclient_locations() -> Vec<PathBuf> {
     }
     paths.push(PathBuf::from("/usr/lib/steam/steamclient.so"));
     paths
+}
+
+/// `STEAMCONFIG`, else `$HOME/.steam`, of the running Steam client.
+fn running_steam_config_dir() -> Option<PathBuf> {
+    let environ = steam_client_pids()
+        .into_iter()
+        .find_map(|pid| std::fs::read(format!("/proc/{pid}/environ")).ok())?;
+    let var = |name: &str| {
+        environ.split(|&b| b == 0).find_map(|entry| {
+            let entry = std::str::from_utf8(entry).ok()?;
+            entry
+                .strip_prefix(name)?
+                .strip_prefix('=')
+                .map(PathBuf::from)
+        })
+    };
+    var("STEAMCONFIG")
+        .or_else(|| var("HOME").map(|h| h.join(".steam")))
+        .filter(|dir| dir.is_dir())
+}
+
+/// Pids whose exe is `<install>/{steamrt64,ubuntu12_32}/steam`.
+fn steam_client_pids() -> Vec<String> {
+    let Ok(entries) = std::fs::read_dir("/proc") else {
+        return Vec::new();
+    };
+    entries
+        .flatten()
+        .filter_map(|e| e.file_name().into_string().ok())
+        .filter(|pid| pid.bytes().all(|b| b.is_ascii_digit()))
+        .filter(|pid| {
+            std::fs::read_link(format!("/proc/{pid}/exe"))
+                .is_ok_and(|exe| is_steam_client_exe(&exe))
+        })
+        .collect()
+}
+
+pub(crate) fn is_steam_client_exe(exe: &Path) -> bool {
+    exe.file_name().is_some_and(|n| n == "steam")
+        && exe
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|d| d == "steamrt64" || d == "ubuntu12_32")
 }
 
 /// Whether a process named `steam` is running.

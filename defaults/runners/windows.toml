@@ -4,11 +4,12 @@
 
 # Every mode.
 layers = [
-	{ id = "proton", params = { version = "10.0", proton_path = "${launcher.cwd}/examples/protons/10.0", prefix_path = "/tmp/feur/prefix" } },
+	{ id = "proton", params = { version = "11.0", proton_path = "${launcher.cwd}/examples/protons/11.0", prefix_path = "/tmp/feur/prefix" } },
 ]
 
 # Native Steam API.
 [modes.steam]
+layers = [{ id = "steamapi-native" }]
 
 # Replaces steam_api64.dll / steam_api.dll; add `overlay_dir` to also overlay files.
 [modes.steamemu]

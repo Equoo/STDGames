@@ -9,6 +9,7 @@ target = { kind = "windows" }
 root = "${launcher.cwd}/examples/spacewar/root"
 executable = "REPO.exe"
 args = []
+env = { "DRI_PRIME" = "1" }
 
 [modes.steam]
 enabled = true

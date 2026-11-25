@@ -4,6 +4,7 @@
 
 # Native Steam API.
 [modes.steam]
+layers = [{ id = "steamapi-native" }]
 
 # Replaces steam_api64.dll / steam_api.dll; add `overlay_dir` to also overlay files.
 [modes.steamemu]

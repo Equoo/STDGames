@@ -7,7 +7,7 @@ use std::path::Path;
 
 use stdg_core::{CommandSpec, Diagnostic};
 
-pub use native::SteamApiNativeLayer;
+pub use native::{SteamApiNativeLayer, SteamConfigBind};
 pub use replace::{
     Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiReplaceLayer, find_steam_api_libs,
 };

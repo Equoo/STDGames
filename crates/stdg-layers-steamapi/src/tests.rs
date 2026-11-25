@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use stdg_core::capability::capabilities;
 use stdg_core::{
@@ -47,6 +47,7 @@ fn native_preflight_is_a_noop_during_a_dry_run() {
     let ctx = test_ctx();
     let layer = SteamApiNativeLayer {
         app_id: "480".to_string(),
+        steam_config: None,
     };
     // A dry run never fails preflight.
     assert!(layer.preflight(&ctx).is_ok());
@@ -57,6 +58,7 @@ fn native_patch_sets_the_app_id_env_vars() {
     let ctx = test_ctx();
     let layer = SteamApiNativeLayer {
         app_id: "480".to_string(),
+        steam_config: None,
     };
     let mut spec = stdg_core::CommandSpec::new(PathValue::Host(PathBuf::from(
         "/games/test-game/test-game.exe",
@@ -266,4 +268,33 @@ fn prepare_creates_overlay_state_only_when_live() {
     l.prepare(&mut ctx).expect("live");
     assert!(state.path().join("s/upper").is_dir());
     assert!(state.path().join("s/work").is_dir());
+}
+
+#[test]
+fn native_binds_the_running_steam_config_over_home() {
+    let layer = SteamApiNativeLayer {
+        app_id: "480".to_string(),
+        steam_config: Some(crate::SteamConfigBind {
+            host: PathBuf::from("/tmp/steam-home/.steam"),
+            guest: PathBuf::from("/home/u/.steam"),
+        }),
+    };
+    let needs = layer.container_needs();
+    assert_eq!(needs.len(), 1);
+    assert_eq!(needs[0].source.host(), Path::new("/tmp/steam-home/.steam"));
+    assert_eq!(needs[0].source.effective(), Path::new("/home/u/.steam"));
+    assert!(matches!(needs[0].mode, BindMode::ReadWrite));
+}
+
+#[test]
+fn steam_client_exe_is_recognised() {
+    assert!(crate::native::is_steam_client_exe(Path::new(
+        "/s/steamrt64/steam"
+    )));
+    assert!(crate::native::is_steam_client_exe(Path::new(
+        "/s/ubuntu12_32/steam"
+    )));
+    assert!(!crate::native::is_steam_client_exe(Path::new(
+        "/usr/bin/steam"
+    )));
 }

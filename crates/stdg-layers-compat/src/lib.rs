@@ -40,25 +40,80 @@ fn wrap_via_proton_script(
         PathValue::Host(prefix_path.to_path_buf()),
     );
     spec.set_env_path("WINEPREFIX", PathValue::Host(prefix_path.to_path_buf()));
-    if let Some(steam_client_path) = steam_client_path
-        .map(Path::to_path_buf)
-        .or_else(find_steam_client_install)
-    {
+    if let Some(steam_client_path) = steam_client_path {
         spec.set_env_path(
             "STEAM_COMPAT_CLIENT_INSTALL_PATH",
-            PathValue::Host(steam_client_path),
+            PathValue::Host(steam_client_path.to_path_buf()),
         );
     }
 
     spec
 }
 
-/// Generic, portable fallback locations for an installed Steam client.
+/// Where `STEAM_COMPAT_CLIENT_INSTALL_PATH` points.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum SteamClient {
+    /// A configured or installed Steam client.
+    Real(PathBuf),
+    /// An empty dir: Proton only needs the variable set.
+    Stub(PathBuf),
+}
+
+impl SteamClient {
+    fn resolve(configured: Option<&Path>, stub: Option<&Path>) -> Option<Self> {
+        configured
+            .map(Path::to_path_buf)
+            .or_else(find_steam_client_install)
+            .map(Self::Real)
+            .or_else(|| stub.map(|p| Self::Stub(p.to_path_buf())))
+    }
+
+    fn path(&self) -> &Path {
+        match self {
+            Self::Real(p) | Self::Stub(p) => p,
+        }
+    }
+}
+
+/// The running Steam client's install, else Steam in the home dir.
 fn find_steam_client_install() -> Option<PathBuf> {
-    let home = std::env::var_os("HOME").map(PathBuf::from)?;
-    [home.join(".steam/steam"), home.join(".local/share/Steam")]
-        .into_iter()
-        .find(|p| p.join("linux64/steamclient.so").is_file())
+    running_steam_install().or_else(|| {
+        let home = PathBuf::from(std::env::var_os("HOME")?);
+        [home.join(".steam/steam"), home.join(".local/share/Steam")]
+            .into_iter()
+            .find(|p| is_steam_install(p))
+    })
+}
+
+fn is_steam_install(dir: &Path) -> bool {
+    dir.join("linux64/steamclient.so").is_file()
+}
+
+/// Install dir of a running `steam` process.
+fn running_steam_install() -> Option<PathBuf> {
+    std::fs::read_dir("/proc")
+        .ok()?
+        .flatten()
+        .filter(|e| {
+            e.file_name()
+                .to_str()
+                .is_some_and(|n| n.bytes().all(|b| b.is_ascii_digit()))
+        })
+        .find_map(|e| steam_install_of(&std::fs::read_link(e.path().join("exe")).ok()?))
+}
+
+/// Dirs the Steam client runs from: 64-bit client, then the old 32-bit one.
+const STEAM_BIN_DIRS: [&str; 2] = ["steamrt64", "ubuntu12_32"];
+
+/// `<install>` for an exe at `<install>/{steamrt64,ubuntu12_32}/steam`.
+fn steam_install_of(exe: &Path) -> Option<PathBuf> {
+    let bin_dir = exe.parent()?;
+    let bin_name = bin_dir.file_name()?;
+    if exe.file_name()? != "steam" || !STEAM_BIN_DIRS.iter().any(|d| bin_name == *d) {
+        return None;
+    }
+    let install = bin_dir.parent()?;
+    is_steam_install(install).then(|| install.to_path_buf())
 }
 
 /// Binds the install, prefix and Steam client.
@@ -80,12 +135,9 @@ fn container_needs_for(
             purpose: BindPurpose(format!("{purpose_prefix}-prefix")),
         },
     ];
-    if let Some(steam_client_path) = steam_client_path
-        .map(Path::to_path_buf)
-        .or_else(find_steam_client_install)
-    {
+    if let Some(steam_client_path) = steam_client_path {
         needs.push(Binding {
-            source: PathValue::Host(steam_client_path),
+            source: PathValue::Host(steam_client_path.to_path_buf()),
             mode: BindMode::ReadOnly,
             purpose: BindPurpose("steam-client".to_string()),
         });
@@ -102,18 +154,24 @@ fn preflight_entry_point(entry_point: &Path, kind: &str) -> Result<(), Diagnosti
     Ok(())
 }
 
+/// Creates the prefix, and the Steam stub dir when it is used.
 fn prepare_prefix(
     layer_id: &str,
     prefix_path: &Path,
+    steam_client: Option<&SteamClient>,
     ctx: &LaunchCtx,
 ) -> Result<Box<dyn SessionGuard>, CoreError> {
-    if !ctx.is_dry_run() {
-        std::fs::create_dir_all(prefix_path).map_err(|e| CoreError::LayerFailure {
+    if ctx.is_dry_run() {
+        return Ok(Box::new(NoCleanupGuard));
+    }
+    let mut dirs = vec![prefix_path];
+    if let Some(SteamClient::Stub(stub)) = steam_client {
+        dirs.push(stub);
+    }
+    for dir in dirs {
+        std::fs::create_dir_all(dir).map_err(|e| CoreError::LayerFailure {
             layer: LayerId(layer_id.to_string()),
-            reason: format!(
-                "could not create compat prefix at {}: {e}",
-                prefix_path.display()
-            ),
+            reason: format!("could not create {}: {e}", dir.display()),
         })?;
     }
     Ok(Box::new(NoCleanupGuard))
@@ -130,6 +188,17 @@ pub struct ProtonLayer {
     pub prefix_path: PathBuf,
     /// Overrides the generic `find_steam_client_install` fallback.
     pub steam_client_path: Option<PathBuf>,
+    /// Empty dir used when no Steam client is found.
+    pub steam_stub_dir: Option<PathBuf>,
+}
+
+impl ProtonLayer {
+    fn steam_client(&self) -> Option<SteamClient> {
+        SteamClient::resolve(
+            self.steam_client_path.as_deref(),
+            self.steam_stub_dir.as_deref(),
+        )
+    }
 }
 
 impl Layer for ProtonLayer {
@@ -153,20 +222,25 @@ impl Layer for ProtonLayer {
         container_needs_for(
             &self.proton_path,
             &self.prefix_path,
-            self.steam_client_path.as_deref(),
+            self.steam_client().as_ref().map(SteamClient::path),
             "proton",
         )
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
-        prepare_prefix("proton", &self.prefix_path, ctx)
+        prepare_prefix(
+            "proton",
+            &self.prefix_path,
+            self.steam_client().as_ref(),
+            ctx,
+        )
     }
 
     fn wrap(&self, inner: CommandSpec, _ctx: &LaunchCtx) -> Result<Outcome, CoreError> {
         Ok(Outcome::Direct(wrap_via_proton_script(
             &self.proton_path,
             &self.prefix_path,
-            self.steam_client_path.as_deref(),
+            self.steam_client().as_ref().map(SteamClient::path),
             inner,
         )))
     }
@@ -183,6 +257,17 @@ pub struct WineLayer {
     pub prefix_path: PathBuf,
     /// Overrides the generic `find_steam_client_install` fallback.
     pub steam_client_path: Option<PathBuf>,
+    /// Empty dir used when no Steam client is found.
+    pub steam_stub_dir: Option<PathBuf>,
+}
+
+impl WineLayer {
+    fn steam_client(&self) -> Option<SteamClient> {
+        SteamClient::resolve(
+            self.steam_client_path.as_deref(),
+            self.steam_stub_dir.as_deref(),
+        )
+    }
 }
 
 impl Layer for WineLayer {
@@ -206,20 +291,20 @@ impl Layer for WineLayer {
         container_needs_for(
             &self.wine_path,
             &self.prefix_path,
-            self.steam_client_path.as_deref(),
+            self.steam_client().as_ref().map(SteamClient::path),
             "wine",
         )
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
-        prepare_prefix("wine", &self.prefix_path, ctx)
+        prepare_prefix("wine", &self.prefix_path, self.steam_client().as_ref(), ctx)
     }
 
     fn wrap(&self, inner: CommandSpec, _ctx: &LaunchCtx) -> Result<Outcome, CoreError> {
         Ok(Outcome::Direct(wrap_via_proton_script(
             &self.wine_path,
             &self.prefix_path,
-            self.steam_client_path.as_deref(),
+            self.steam_client().as_ref().map(SteamClient::path),
             inner,
         )))
     }

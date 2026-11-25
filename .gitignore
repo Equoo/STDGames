@@ -40,4 +40,4 @@ examples/spacewar/onlinefix/*
 !examples/spacewar/onlinefix/.gitkeep
 examples/spacewar/steamemu/*
 !examples/spacewar/steamemu/.gitkeep
-
+examples/conty.sh

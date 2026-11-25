@@ -8,7 +8,7 @@ use stdg_layers_runtime::{PressureVesselLayer, PressureVesselVariant};
 use stdg_layers_sandbox::{ContyLayer, SandboxLevel, UserNs};
 use stdg_layers_steamapi::{
     Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
-    find_steam_api_libs,
+    SteamConfigBind, find_steam_api_libs,
 };
 use stdg_layers_supervision::SupervisionLayer;
 use stdg_registry::Registry;
@@ -68,6 +68,7 @@ pub(crate) fn build_registry() -> Registry {
             proton_path: required_path(r, "proton_path")?,
             prefix_path: required_path(r, "prefix_path")?,
             steam_client_path: r.param("steam_client_path").map(PathBuf::from),
+            steam_stub_dir: steam_stub_dir(r),
         }))
     });
     register(&mut registry, "wine", |r, _| {
@@ -76,6 +77,7 @@ pub(crate) fn build_registry() -> Registry {
             wine_path: required_path(r, "wine_path")?,
             prefix_path: required_path(r, "prefix_path")?,
             steam_client_path: r.param("steam_client_path").map(PathBuf::from),
+            steam_stub_dir: steam_stub_dir(r),
         }))
     });
 
@@ -84,7 +86,10 @@ pub(crate) fn build_registry() -> Registry {
             layer: r.id.clone(),
             param: "app_id",
         })?;
-        Ok(Box::new(SteamApiNativeLayer { app_id }))
+        Ok(Box::new(SteamApiNativeLayer {
+            app_id,
+            steam_config: SteamConfigBind::detect(),
+        }))
     });
     register(&mut registry, "steamapi-emu", |r, c| {
         steamapi_replace(r, c, ReplaceKind::Emu)
@@ -198,15 +203,26 @@ fn app_id(r: &LayerRef, c: &ResolvedConfig) -> Option<String> {
         .or_else(|| c.app_id.clone())
 }
 
-/// `$XDG_DATA_HOME/stdgames/overlays/<game>/<layer>` (or `~/.local/share/...`).
-fn default_overlay_state_dir(r: &LayerRef, c: &ResolvedConfig) -> Result<PathBuf, CoreError> {
-    let data_home = std::env::var_os("XDG_DATA_HOME")
+/// `$XDG_DATA_HOME` or `~/.local/share`.
+fn data_home() -> Option<PathBuf> {
+    std::env::var_os("XDG_DATA_HOME")
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
-        .ok_or_else(|| ConfigError::MissingLayerParam {
-            layer: r.id.clone(),
-            param: "overlay_state_dir",
-        })?;
+}
+
+/// `steam_stub_dir` param, else `<data home>/stdgames/steam-stub`.
+fn steam_stub_dir(r: &LayerRef) -> Option<PathBuf> {
+    r.param("steam_stub_dir")
+        .map(PathBuf::from)
+        .or_else(|| data_home().map(|d| d.join("stdgames/steam-stub")))
+}
+
+/// `<data home>/stdgames/overlays/<game>/<layer>`.
+fn default_overlay_state_dir(r: &LayerRef, c: &ResolvedConfig) -> Result<PathBuf, CoreError> {
+    let data_home = data_home().ok_or_else(|| ConfigError::MissingLayerParam {
+        layer: r.id.clone(),
+        param: "overlay_state_dir",
+    })?;
     Ok(data_home
         .join("stdgames/overlays")
         .join(&c.game_id.0)

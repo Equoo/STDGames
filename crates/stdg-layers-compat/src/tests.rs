@@ -1,14 +1,14 @@
 //! Structural tests against the `proton run` contract.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use stdg_core::{
     ArgValue, CommandSpec, GameId, LaunchCtx, Layer, ModeId, PathValue, Plan, ResolvedConfig,
     RunKind, RunnerId, SessionId, SessionInfo, TargetKind,
 };
 
-use crate::{ProtonLayer, WineLayer};
+use crate::{ProtonLayer, SteamClient, WineLayer, find_steam_client_install};
 
 fn test_ctx() -> LaunchCtx {
     let config = ResolvedConfig {
@@ -52,6 +52,7 @@ fn proton_wrap_invokes_the_entry_point_script_with_run() {
         proton_path: PathBuf::from("/opt/protons/ge10.25"),
         prefix_path: PathBuf::from("/opt/prefixes/ge10.25"),
         steam_client_path: Some(PathBuf::from("/opt/steam/Steam")),
+        steam_stub_dir: None,
     };
 
     let inner = CommandSpec::new(PathValue::Host(PathBuf::from(
@@ -94,6 +95,7 @@ fn proton_preserves_inner_args_and_env() {
         proton_path: PathBuf::from("/opt/protons/ge10.25"),
         prefix_path: PathBuf::from("/opt/prefixes/ge10.25"),
         steam_client_path: None,
+        steam_stub_dir: None,
     };
 
     let mut inner = CommandSpec::new(PathValue::Host(PathBuf::from(
@@ -123,6 +125,7 @@ fn wine_uses_the_same_proton_script_contract() {
         wine_path: PathBuf::from("/opt/protons/wine"),
         prefix_path: PathBuf::from("/opt/prefixes/wine"),
         steam_client_path: None,
+        steam_stub_dir: None,
     };
 
     let inner = CommandSpec::new(PathValue::Host(PathBuf::from(
@@ -148,6 +151,7 @@ fn container_needs_covers_install_prefix_and_steam_client() {
         proton_path: PathBuf::from("/opt/protons/ge10.25"),
         prefix_path: PathBuf::from("/opt/prefixes/ge10.25"),
         steam_client_path: Some(PathBuf::from("/opt/steam/Steam")),
+        steam_stub_dir: None,
     };
 
     let needs = layer.container_needs();
@@ -178,6 +182,7 @@ fn preflight_rejects_a_missing_proton_build() {
         proton_path: PathBuf::from("/definitely/not/installed"),
         prefix_path: PathBuf::from("/opt/prefixes/ge10.25"),
         steam_client_path: None,
+        steam_stub_dir: None,
     };
     let err = layer
         .preflight(&ctx)
@@ -197,6 +202,7 @@ fn prepare_creates_the_prefix_directory() {
         proton_path: PathBuf::from("/opt/protons/ge10.25"),
         prefix_path: prefix.clone(),
         steam_client_path: None,
+        steam_stub_dir: None,
     };
 
     let _guard = layer
@@ -217,6 +223,7 @@ fn prepare_does_not_touch_disk_during_a_dry_run() {
         proton_path: PathBuf::from("/opt/protons/ge10.25"),
         prefix_path: prefix.clone(),
         steam_client_path: None,
+        steam_stub_dir: None,
     };
 
     let _guard = layer
@@ -226,4 +233,83 @@ fn prepare_does_not_touch_disk_during_a_dry_run() {
         !prefix.exists(),
         "a dry run must not create the prefix directory"
     );
+}
+
+#[test]
+fn steam_stub_is_used_when_no_client_is_found() {
+    let stub = PathBuf::from("/stub/steam");
+    let resolved = SteamClient::resolve(None, Some(&stub));
+    match find_steam_client_install() {
+        Some(installed) => assert_eq!(resolved, Some(SteamClient::Real(installed))),
+        None => assert_eq!(resolved, Some(SteamClient::Stub(stub))),
+    }
+}
+
+#[test]
+fn configured_client_wins_over_the_stub() {
+    let resolved = SteamClient::resolve(Some(Path::new("/opt/steam")), Some(Path::new("/stub")));
+    assert_eq!(
+        resolved,
+        Some(SteamClient::Real(PathBuf::from("/opt/steam")))
+    );
+}
+
+#[test]
+fn prepare_creates_the_steam_stub_when_used() {
+    if find_steam_client_install().is_some() {
+        return;
+    }
+    let mut ctx = test_ctx();
+    ctx.run_kind = RunKind::Live;
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let stub = tmp.path().join("steam-stub");
+    let layer = ProtonLayer {
+        version: None,
+        proton_path: PathBuf::from("/opt/protons/ge10.25"),
+        prefix_path: tmp.path().join("prefix"),
+        steam_client_path: None,
+        steam_stub_dir: Some(stub.clone()),
+    };
+
+    let _guard = layer.prepare(&mut ctx).expect("prepare ok");
+    assert!(stub.is_dir());
+    let spec = layer
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/g/game.exe"))),
+            &ctx,
+        )
+        .expect("wrap ok")
+        .into_command();
+    assert_eq!(
+        spec.env
+            .get("STEAM_COMPAT_CLIENT_INSTALL_PATH")
+            .map(stdg_core::EnvValue::render),
+        Some(stub.display().to_string())
+    );
+    assert!(
+        layer
+            .container_needs()
+            .iter()
+            .any(|b| b.source.host() == stub)
+    );
+}
+
+#[test]
+fn steam_install_comes_from_the_running_exe_path() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let install = tmp.path().join("Steam");
+    std::fs::create_dir_all(install.join("linux64")).expect("mkdir");
+    std::fs::write(install.join("linux64/steamclient.so"), b"").expect("write");
+
+    for bin in ["steamrt64/steam", "ubuntu12_32/steam"] {
+        assert_eq!(
+            crate::steam_install_of(&install.join(bin)),
+            Some(install.clone())
+        );
+    }
+    assert_eq!(
+        crate::steam_install_of(&install.join("ubuntu12_32/other")),
+        None
+    );
+    assert_eq!(crate::steam_install_of(&tmp.path().join("bin/steam")), None);
 }
