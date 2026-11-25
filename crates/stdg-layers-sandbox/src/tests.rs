@@ -268,3 +268,62 @@ fn preflight_accepts_an_existing_conty_path() {
     let layer = ContyLayer::at(fake.path().to_path_buf());
     assert!(layer.preflight(&ctx).is_ok());
 }
+
+#[test]
+fn root_overlay_replaces_the_plain_root_bind() {
+    let mut ctx = test_ctx(PathBuf::from("/games/g"));
+    ctx.bindings.push(Binding {
+        source: PathValue::Translated {
+            host: PathBuf::from("/fix"),
+            guest: PathBuf::from("/games/g"),
+        },
+        mode: BindMode::Overlay {
+            upper: PathBuf::from("/state/upper"),
+            work: PathBuf::from("/state/work"),
+        },
+        purpose: BindPurpose("overlay".to_string()),
+    });
+    ctx.bindings.push(Binding {
+        source: PathValue::Translated {
+            host: PathBuf::from("/emu/steam_api64.dll"),
+            guest: PathBuf::from("/games/g/steam_api64.dll"),
+        },
+        mode: BindMode::ReadOnly,
+        purpose: BindPurpose("dll".to_string()),
+    });
+
+    let args: Vec<String> = ContyLayer::new()
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/games/g/x"))),
+            &ctx,
+        )
+        .expect("wrap ok")
+        .into_command()
+        .args
+        .iter()
+        .map(ArgValue::render)
+        .collect();
+
+    assert!(
+        !args
+            .windows(3)
+            .any(|w| w == ["--bind", "/games/g", "/games/g"])
+    );
+    let overlay = args
+        .windows(9)
+        .position(|w| {
+            w == [
+                "--overlay-src",
+                "/games/g",
+                "--overlay-src",
+                "/fix",
+                "--overlay",
+                "/state/upper",
+                "/state/work",
+                "/games/g",
+                "--ro-bind",
+            ]
+        })
+        .expect("overlay (game first, fix on top), then the lib bind");
+    assert!(overlay < args.iter().position(|a| a == "--").expect("separator"));
+}

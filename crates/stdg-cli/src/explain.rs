@@ -2,8 +2,7 @@
 
 use anyhow::Context as _;
 use stdg_core::{
-    ArgValue, Binding, CommandSpec, LaunchCtx, LayerCatalog, RunKind, RunnerCatalog, SessionId,
-    SessionInfo,
+    ArgValue, CommandSpec, LaunchCtx, LayerCatalog, RunKind, RunnerCatalog, SessionId, SessionInfo,
 };
 
 use crate::loading::load_plan;
@@ -37,7 +36,7 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
         .resolve_runner(&plan.runner)
         .with_context(|| format!("runner `{}` not found in the registry", plan.runner))?;
 
-    let ctx = LaunchCtx {
+    let mut ctx = LaunchCtx {
         plan: plan.clone(),
         session: SessionInfo {
             id: SessionId("explain".to_string()),
@@ -48,7 +47,6 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
     };
 
     let mut spec: CommandSpec = runner.build(&ctx)?;
-    let mut bindings: Vec<Binding> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
     for (slot, layer_ref) in plan.layers_inside_out() {
@@ -70,7 +68,7 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
             ));
         }
 
-        bindings.extend(layer.container_needs());
+        ctx.bindings.extend(layer.container_needs());
 
         let mut patched = spec.clone();
         match layer.patch(&mut patched, &ctx) {
@@ -88,9 +86,9 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
     print_command(&spec);
     println!();
 
-    if !bindings.is_empty() {
+    if !ctx.bindings.is_empty() {
         println!("container bindings:");
-        for b in &bindings {
+        for b in &ctx.bindings {
             println!(
                 "  {:?} {} <- {}",
                 b.mode,

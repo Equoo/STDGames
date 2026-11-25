@@ -22,21 +22,18 @@ layers = [
 	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
 ]
 
-# Emulates the Steam API instead of talking to a real Steam client: the
-# SteamApi slot's PlainReplace variant bind-mounts `replacement_lib_path`
-# (an already-built emulator, e.g. Goldberg SteamEmu — this layer never
-# builds or downloads one) directly over the game's own steam_api64.dll, at
-# the same on-disk path Wine loads it from. Set `target_lib_relpath` too if
-# a game's own copy isn't named "steam_api64.dll" (the PlainReplace
-# default; see stdg-cli/src/registry.rs).
+# Replaces every steam_api64.dll / steam_api.dll found in the game with the
+# matching-arch library below. Add `overlay_dir` to also overlay files.
 [modes.steamemu]
 layers = [
-	{ id = "steamapi-emu", params = { replacement_lib_path = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
+	{ id = "steamapi-emu", params = { lib_x64 = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
 	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
 ]
 
+# Overlays `overlay_dir` on the game dir; writes go to
+# ~/.local/share/stdgames/overlays/<game>/. Add `lib_x64` to also replace the library.
 [modes.onlinefix]
 layers = [
-	{ id = "steamapi-onlinefix", params = { replacement_lib_path = "/home/equo/Documents/STDGames/steamemu/x64/steam_api64.dll" } },
+	{ id = "steamapi-onlinefix", params = { overlay_dir = "~/Documents/STDGames/onlinefix/${game.id}" } },
 	{ id = "proton", params = { version = "GE-Proton11-6", proton_path = "/home/equo/.local/share/Steam/compatibilitytools.d/GE-Proton11-6-x86_64/", prefix_path = "/tmp/feur", steam_client_path = "/home/equo/.local/share/Steam" } },
 ]

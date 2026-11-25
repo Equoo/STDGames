@@ -49,6 +49,20 @@ cargo run -p stdg-cli -- run --game repo --mode steam --shell
 
 Game configs are looked up in `games/` then `examples/games/`.
 
+### Steam API modes
+
+| Layer | Library replaced | Directory overlay |
+| --- | --- | --- |
+| `steamapi-native` | no | no |
+| `steamapi-emu` | yes (`replace_lib`, default `true`) | optional (`overlay_dir`) |
+| `steamapi-onlinefix` | optional (`replace_lib`, default `false`) | yes (`overlay_dir`, required) |
+
+Every `steam_api64.dll`/`steam_api.dll` (Windows) or `libsteam_api.so` (Linux)
+in the game is replaced by `lib_x64` or `lib_x86`, picked from its ELF/PE header;
+`target_lib_relpath` pins a single file. The overlay is mounted on the game dir
+(needs bwrap ≥ 0.9 in Conty); the game dir is never written, writes go to
+`overlay_state_dir` (default `~/.local/share/stdgames/overlays/<game>/<layer>`).
+
 ### Variables in config strings
 
 Every string (`root`, `executable`, `args`, `env`, `command_prefix`, layer

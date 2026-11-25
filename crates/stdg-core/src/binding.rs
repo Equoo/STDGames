@@ -35,12 +35,19 @@ impl PathValue {
 }
 
 /// How a path is mounted into the container.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BindMode {
     /// Mounted read-only.
     ReadOnly,
     /// Mounted read-write.
     ReadWrite,
+    /// Overlaid on top of the guest dir; writes go to `upper`.
+    Overlay {
+        /// Persistent upper dir receiving writes.
+        upper: PathBuf,
+        /// Empty overlayfs work dir, same filesystem as `upper`.
+        work: PathBuf,
+    },
 }
 
 /// Label shown in `explain` and logs.

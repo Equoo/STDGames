@@ -7,7 +7,8 @@ use stdg_layers_compat::{ProtonLayer, WineLayer};
 use stdg_layers_runtime::{PressureVesselLayer, PressureVesselVariant};
 use stdg_layers_sandbox::{ContyLayer, SandboxLevel};
 use stdg_layers_steamapi::{
-    EmuVariant, SteamApiEmuLayer, SteamApiNativeLayer, SteamApiOnlineFixLayer,
+    Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
+    find_steam_api_libs,
 };
 use stdg_layers_supervision::SupervisionLayer;
 use stdg_registry::Registry;
@@ -77,17 +78,10 @@ pub(crate) fn build_registry() -> Registry {
         }))
     });
     register(&mut registry, "steamapi-emu", |r, c| {
-        Ok(Box::new(SteamApiEmuLayer {
-            variant: EmuVariant::PlainReplace,
-            replacement_lib_path: required_path(r, "replacement_lib_path")?,
-            target_lib_path: emu_target_lib_path(r, c, "steam_api64.dll"),
-        }))
+        steamapi_replace(r, c, ReplaceKind::Emu)
     });
     register(&mut registry, "steamapi-onlinefix", |r, c| {
-        Ok(Box::new(SteamApiOnlineFixLayer {
-            replacement_lib_path: required_path(r, "replacement_lib_path")?,
-            target_lib_path: emu_target_lib_path(r, c, "steam_api64.dll"),
-        }))
+        steamapi_replace(r, c, ReplaceKind::OnlineFix)
     });
 
     register(&mut registry, "cgroup", |_, _| {
@@ -134,37 +128,86 @@ fn invalid_param(
     .into()
 }
 
-/// Depth-first search for a file called `name` under `dir`.
-fn find_file(dir: &Path, name: &str) -> Option<PathBuf> {
-    let entries = match std::fs::read_dir(dir) {
-        Ok(entries) => entries,
-        Err(e) => {
-            tracing::debug!("skipping {}: {e}", dir.display());
-            return None;
-        }
+/// Builds `steamapi-emu` (library on by default) or `steamapi-onlinefix` (overlay on by default).
+fn steamapi_replace(r: &LayerRef, c: &ResolvedConfig, kind: ReplaceKind) -> LayerResult {
+    let replace_lib = bool_param(r, "replace_lib", kind == ReplaceKind::Emu)?;
+    let overlay_source = match kind {
+        ReplaceKind::OnlineFix => Some(required_path(r, "overlay_dir")?),
+        ReplaceKind::Emu => r.param("overlay_dir").map(PathBuf::from),
     };
 
-    let mut subdirs = Vec::new();
-    for entry in entries.flatten() {
-        let Ok(file_type) = entry.file_type() else {
-            continue;
+    let libs = if replace_lib {
+        let platform = Platform::of(&c.target).ok_or_else(|| CoreError::IncompatibleTarget {
+            layer: r.id.clone(),
+            target: c.target.clone(),
+            reason: "only Windows and native Linux games have a Steam API library".to_string(),
+        })?;
+        let targets = match r.param("target_lib_relpath") {
+            Some(rel) => vec![c.root.join(rel)],
+            None => find_steam_api_libs(&c.root, platform),
         };
-        if file_type.is_dir() {
-            subdirs.push(entry.path());
-        } else if entry.file_name() == name {
-            return Some(entry.path());
-        }
-    }
+        targets
+            .into_iter()
+            .map(|target| {
+                let arch = Arch::detect(&target);
+                LibReplace {
+                    replacement: arch.and_then(|a| r.param(a.param())).map(PathBuf::from),
+                    arch,
+                    target,
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
 
-    subdirs.iter().find_map(|d| find_file(d, name))
+    let overlay = match overlay_source {
+        Some(source) => Some(Overlay {
+            source,
+            state_dir: match r.param("overlay_state_dir") {
+                Some(dir) => PathBuf::from(dir),
+                None => default_overlay_state_dir(r, c)?,
+            },
+        }),
+        None => None,
+    };
+
+    Ok(Box::new(SteamApiReplaceLayer {
+        kind,
+        game_root: c.root.clone(),
+        replace_lib,
+        libs,
+        overlay,
+    }))
 }
 
-/// Path the replacement library is mounted over.
-fn emu_target_lib_path(r: &LayerRef, c: &ResolvedConfig, default_name: &str) -> PathBuf {
-    if let Some(relpath) = r.param("target_lib_relpath") {
-        return c.root.join(relpath);
+/// `$XDG_DATA_HOME/stdgames/overlays/<game>/<layer>` (or `~/.local/share/...`).
+fn default_overlay_state_dir(r: &LayerRef, c: &ResolvedConfig) -> Result<PathBuf, CoreError> {
+    let data_home = std::env::var_os("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
+        .ok_or_else(|| ConfigError::MissingLayerParam {
+            layer: r.id.clone(),
+            param: "overlay_state_dir",
+        })?;
+    Ok(data_home
+        .join("stdgames/overlays")
+        .join(&c.game_id.0)
+        .join(&r.id.0))
+}
+
+fn bool_param(r: &LayerRef, param: &'static str, default: bool) -> Result<bool, CoreError> {
+    match r.param(param) {
+        None => Ok(default),
+        Some("true") => Ok(true),
+        Some("false") => Ok(false),
+        Some(other) => Err(invalid_param(
+            r,
+            param,
+            other,
+            &"expected `true` or `false`",
+        )),
     }
-    find_file(&c.root, default_name).unwrap_or_else(|| c.root.join(default_name))
 }
 
 /// Loads every `*.toml` emulator manifest in `dir`.
@@ -260,8 +303,8 @@ mod tests {
                 .with_param("wine_path", "/w")
                 .with_param("prefix_path", "/x"),
             LayerRef::new("steamapi-native").with_param("app_id", "480"),
-            LayerRef::new("steamapi-emu").with_param("replacement_lib_path", "/r"),
-            LayerRef::new("steamapi-onlinefix").with_param("replacement_lib_path", "/r"),
+            LayerRef::new("steamapi-emu").with_param("lib_x64", "/r"),
+            LayerRef::new("steamapi-onlinefix").with_param("overlay_dir", "/fix"),
             LayerRef::new("cgroup"),
         ];
         for r in refs {
@@ -272,32 +315,84 @@ mod tests {
         }
     }
 
+    fn resolve(r: &LayerRef, root: &Path) -> Vec<stdg_core::Binding> {
+        build_registry()
+            .resolve_layer(r, &config(root))
+            .expect("resolves")
+            .container_needs()
+    }
+
     #[test]
-    fn find_file_searches_subdirectories() {
+    fn emu_replaces_every_found_library_by_default() {
         let root = tempfile::tempdir().expect("tempdir");
-        let nested = root.path().join("a/b");
-        std::fs::create_dir_all(&nested).expect("mkdir");
-        std::fs::write(nested.join("steam_api64.dll"), b"").expect("write");
+        std::fs::create_dir_all(root.path().join("bin")).expect("mkdir");
+        std::fs::write(root.path().join("steam_api64.dll"), b"").expect("write");
+        std::fs::write(root.path().join("bin/steam_api.dll"), b"").expect("write");
+        let r = LayerRef::new("steamapi-emu")
+            .with_param("lib_x64", "/emu/x64.dll")
+            .with_param("lib_x86", "/emu/x86.dll");
+        let hosts: Vec<_> = resolve(&r, root.path())
+            .iter()
+            .map(|b| b.source.host().to_path_buf())
+            .collect();
         assert_eq!(
-            find_file(root.path(), "steam_api64.dll"),
-            Some(nested.join("steam_api64.dll"))
+            hosts,
+            vec![PathBuf::from("/emu/x86.dll"), PathBuf::from("/emu/x64.dll")]
         );
-        assert_eq!(find_file(root.path(), "absent.dll"), None);
+    }
+
+    #[test]
+    fn onlinefix_overlays_by_default_and_requires_its_dir() {
+        let root = tempfile::tempdir().expect("tempdir");
+        std::fs::write(root.path().join("steam_api64.dll"), b"").expect("write");
+        let r = LayerRef::new("steamapi-onlinefix")
+            .with_param("overlay_dir", "/fix")
+            .with_param("overlay_state_dir", "/state");
+        let needs = resolve(&r, root.path());
+        assert_eq!(needs.len(), 1, "no library replacement by default");
+        assert!(matches!(needs[0].mode, stdg_core::BindMode::Overlay { .. }));
+
+        let err = build_registry()
+            .resolve_layer(&LayerRef::new("steamapi-onlinefix"), &config(root.path()))
+            .map(|_| ())
+            .expect_err("overlay_dir is required");
+        assert!(matches!(
+            err,
+            CoreError::Config(ConfigError::MissingLayerParam {
+                param: "overlay_dir",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn options_can_be_flipped() {
+        let root = tempfile::tempdir().expect("tempdir");
+        std::fs::write(root.path().join("steam_api64.dll"), b"").expect("write");
+        let emu = LayerRef::new("steamapi-emu")
+            .with_param("replace_lib", "false")
+            .with_param("overlay_dir", "/fix")
+            .with_param("overlay_state_dir", "/state");
+        assert_eq!(resolve(&emu, root.path()).len(), 1);
+        let bad = LayerRef::new("steamapi-emu").with_param("replace_lib", "yes");
+        assert!(
+            build_registry()
+                .resolve_layer(&bad, &config(root.path()))
+                .is_err()
+        );
     }
 
     #[test]
     fn explicit_target_relpath_wins_over_search() {
         let root = tempfile::tempdir().expect("tempdir");
         std::fs::write(root.path().join("steam_api64.dll"), b"").expect("write");
-        let r = LayerRef::new("steamapi-emu").with_param("target_lib_relpath", "bin/custom.dll");
+        let r = LayerRef::new("steamapi-emu")
+            .with_param("target_lib_relpath", "bin/steam_api64.dll")
+            .with_param("lib_x64", "/emu/x64.dll");
+        let needs = resolve(&r, root.path());
         assert_eq!(
-            emu_target_lib_path(&r, &config(root.path()), "steam_api64.dll"),
-            root.path().join("bin/custom.dll")
-        );
-        let r = LayerRef::new("steamapi-emu");
-        assert_eq!(
-            emu_target_lib_path(&r, &config(root.path()), "steam_api64.dll"),
-            root.path().join("steam_api64.dll")
+            needs[0].source.effective(),
+            root.path().join("bin/steam_api64.dll")
         );
     }
 

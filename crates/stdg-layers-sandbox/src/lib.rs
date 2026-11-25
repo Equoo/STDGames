@@ -6,8 +6,8 @@ use std::str::FromStr;
 
 use stdg_core::capability::capabilities;
 use stdg_core::{
-    BindMode, CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx, Layer, LayerId,
-    Outcome, PathValue, Slot,
+    BindMode, Binding, CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx, Layer,
+    LayerId, Outcome, PathValue, Slot,
 };
 
 /// Host linker vars dropped before the inner env is applied.
@@ -163,15 +163,28 @@ impl Layer for ContyLayer {
             spec.set_env_path("BASE_DIR", PathValue::Host(base_dir.clone()));
         }
 
-        // Remaining args go straight to bwrap. Game root is read-write for saves.
-        spec.push_arg_literal("--bind");
-        spec.push_arg_path(PathValue::Host(ctx.plan.config.root.clone()));
-        spec.push_arg_path(PathValue::Host(ctx.plan.config.root.clone()));
+        // Remaining args go straight to bwrap.
+        let root = &ctx.plan.config.root;
+        let overlays: Vec<&Binding> = ctx
+            .bindings
+            .iter()
+            .filter(|b| matches!(b.mode, BindMode::Overlay { .. }))
+            .collect();
+        if !overlays.iter().any(|b| b.source.effective() == root) {
+            spec.push_arg_literal("--bind");
+            spec.push_arg_path(PathValue::Host(root.clone()));
+            spec.push_arg_path(PathValue::Host(root.clone()));
+        }
+        for binding in overlays {
+            push_overlay(&mut spec, binding);
+        }
 
+        // Plain binds after overlays, so they land on top.
         for binding in &ctx.bindings {
             let flag = match binding.mode {
                 BindMode::ReadOnly => "--ro-bind",
                 BindMode::ReadWrite => "--bind",
+                BindMode::Overlay { .. } => continue,
             };
             spec.push_arg_literal(flag);
             spec.push_arg_path(PathValue::Host(binding.source.host().to_path_buf()));
@@ -202,6 +215,22 @@ fn find_on_path(name: &str) -> Option<PathBuf> {
     std::env::split_paths(&path_var)
         .map(|dir| dir.join(name))
         .find(|p| p.is_file())
+}
+
+/// Mounts `binding.source.host()` over its guest dir; the last `--overlay-src` wins.
+fn push_overlay(spec: &mut CommandSpec, binding: &Binding) {
+    let BindMode::Overlay { upper, work } = &binding.mode else {
+        return;
+    };
+    let dest = binding.source.effective().to_path_buf();
+    spec.push_arg_literal("--overlay-src");
+    spec.push_arg_path(PathValue::Host(dest.clone()));
+    spec.push_arg_literal("--overlay-src");
+    spec.push_arg_path(PathValue::Host(binding.source.host().to_path_buf()));
+    spec.push_arg_literal("--overlay");
+    spec.push_arg_path(PathValue::Host(upper.clone()));
+    spec.push_arg_path(PathValue::Host(work.clone()));
+    spec.push_arg_path(PathValue::Host(dest));
 }
 
 /// Strips host linker vars, then applies `inner.env` so it wins.

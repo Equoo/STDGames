@@ -9,9 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `steamapi-emu` replaces every Steam API library found in the game with the
+  matching-arch replacement (`lib_x64`, `lib_x86`), for Windows and Linux
+  games; `overlay_dir` optionally overlays extra files.
+- `steamapi-onlinefix` overlays `overlay_dir` on the game dir (writes are kept
+  in `overlay_state_dir`, default `~/.local/share/stdgames/overlays/<game>/<layer>`);
+  `lib_x64`/`lib_x86` with `replace_lib = "true"` optionally replace the library.
+- `BindMode::Overlay`, mounted by Conty with bwrap `--overlay`.
 - `${env:NAME}`, `~`, `${game.root}`, `${game.id}`, `${game.executable}`,
   `${mode.id}` and `${runner.id}` expansion in every config string.
-- `steamapi-onlinefix` layer (preflight only; file overlay still to do).
 - `stdgames run --shell` opens a shell inside the wrapped environment.
 - `SandboxLevel` type for Conty's `sandbox_level`, parsed at config load.
 - Pinned toolchain, workspace lints, rustfmt/clippy/cargo-deny configs, CI.
@@ -38,4 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `SteamApiEmuLayer`, `EmuVariant`, `SteamApiOnlineFixLayer` and the
+  `replacement_lib_path` param (now `lib_x64`/`lib_x86`).
 - The stale Tauri/npm `build.yml` workflow.
