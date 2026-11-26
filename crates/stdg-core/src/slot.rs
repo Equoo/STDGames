@@ -5,6 +5,8 @@
 pub enum Slot {
     /// Container isolation (Conty).
     Sandbox,
+    /// Save profiles and the read-only game dir; always filled by `saves`.
+    Saves,
     /// Steam Linux Runtime (pressure-vessel).
     Runtime,
     /// Windows compatibility (Proton, Wine).
@@ -19,8 +21,9 @@ pub enum Slot {
 
 impl Slot {
     /// Wrapping order, outermost to innermost.
-    pub const ORDER: [Slot; 6] = [
+    pub const ORDER: [Slot; 7] = [
         Slot::Sandbox,
+        Slot::Saves,
         Slot::Runtime,
         Slot::Compat,
         Slot::SteamApi,

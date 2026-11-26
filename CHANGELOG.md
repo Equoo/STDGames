@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Save profiles (`stdg-saves`): save locations from the Ludusavi manifest and
+  `[saves] paths`, bind-mounted from `~/.local/share/stdgames/saves/<game>/<profile>`.
+  `stdgames saves update-manifest|list|new|use|export|import`, and `--profile`
+  on `run` and `explain`. A profile is locked while a game uses it.
+- MSRV is now 1.89 (`File::try_lock`).
+- `Layer::wine_prefix`, so outer layers know where the Wine user dirs are.
 - `steamapi-emu` replaces every Steam API library found in the game with the
   matching-arch replacement (`lib_x64`, `lib_x86`), for Windows and Linux
   games; `overlay_dir` optionally overlays extra files.
@@ -24,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The game dir is always read-only: the new `saves` layer (a mandatory
+  `Saves` slot, filled in every plan) overlays it and sends every write to the
+  current save profile.
+- `steamapi-onlinefix` / `steamapi-emu` `overlay_dir` is now a read-only
+  layer under the profile's writes; `overlay_state_dir` is removed.
+- `Layer::container_needs` takes the `LaunchCtx`.
 - Conty's user-namespace mode is no longer a `userns` layer param: it is on
   when fusermount is not setuid root, and `STDG_CONTY_USERNS=1`/`0` forces it.
 - Missing required layer parameters (`proton_path`, `prefix_path`,

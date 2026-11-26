@@ -58,10 +58,15 @@ pub fn run_pipeline(registry: &Registry, mut ctx: LaunchCtx) -> Result<PipelineO
             }
         }
 
+        if let Some(prefix) = layer.wine_prefix() {
+            ctx.wine_prefix = Some(prefix);
+        }
+
         let guard = layer.prepare(&mut ctx)?;
         guards.push(guard);
 
-        ctx.bindings.extend(layer.container_needs());
+        let needs = layer.container_needs(&ctx);
+        ctx.bindings.extend(needs);
 
         layer.patch(&mut spec, &ctx)?;
         let outcome = layer.wrap(spec, &ctx)?;

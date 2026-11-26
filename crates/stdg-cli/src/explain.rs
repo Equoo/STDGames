@@ -8,8 +8,12 @@ use stdg_core::{
 use crate::loading::load_plan;
 
 #[expect(clippy::print_stdout, reason = "user-facing CLI output")]
-pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
-    let (registry, plan) = load_plan(game_id_str, mode_id_str)?;
+pub(crate) fn run(
+    game_id_str: &str,
+    mode_id_str: &str,
+    profile: Option<String>,
+) -> anyhow::Result<()> {
+    let (registry, plan) = load_plan(game_id_str, mode_id_str, profile)?;
 
     println!("game:   {}", plan.game_id);
     println!("mode:   {}", plan.mode_id);
@@ -44,6 +48,7 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
         },
         bindings: Vec::new(),
         run_kind: RunKind::DryRun,
+        wine_prefix: None,
     };
 
     let mut spec: CommandSpec = runner.build(&ctx)?;
@@ -68,7 +73,11 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<()> {
             ));
         }
 
-        ctx.bindings.extend(layer.container_needs());
+        if let Some(prefix) = layer.wine_prefix() {
+            ctx.wine_prefix = Some(prefix);
+        }
+        let needs = layer.container_needs(&ctx);
+        ctx.bindings.extend(needs);
 
         let mut patched = spec.clone();
         match layer.patch(&mut patched, &ctx) {

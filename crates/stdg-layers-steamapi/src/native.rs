@@ -69,7 +69,7 @@ impl Layer for SteamApiNativeLayer {
         Ok(())
     }
 
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         self.steam_config
             .iter()
             .map(|bind| Binding {

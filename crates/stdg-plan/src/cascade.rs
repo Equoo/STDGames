@@ -109,5 +109,6 @@ pub fn resolve_config(
         args,
         command_prefix,
         env,
+        saves: game.saves.clone().unwrap_or_default(),
     })
 }

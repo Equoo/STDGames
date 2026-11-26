@@ -19,6 +19,7 @@ fn ctx(run_kind: RunKind) -> LaunchCtx {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     LaunchCtx {
         plan: Plan {
@@ -35,6 +36,7 @@ fn ctx(run_kind: RunKind) -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind,
+        wine_prefix: None,
     }
 }
 

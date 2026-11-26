@@ -1,15 +1,16 @@
 //! Wires every runner/layer implementation crate into one `Registry`.
 
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
-use stdg_core::{ConfigError, CoreError, Layer, LayerId, LayerRef, ResolvedConfig};
+use stdg_core::{ConfigError, CoreError, Layer, LayerId, LayerRef, ResolvedConfig, SAVES_LAYER_ID};
 use stdg_layers_compat::{ProtonLayer, WineLayer};
 use stdg_layers_runtime::{PressureVesselLayer, PressureVesselVariant};
 use stdg_layers_sandbox::{
     ContyLayer, SandboxLevel, USERNS_ENV, UserNs, fusermount_is_setuid_root, parse_userns_flag,
 };
 use stdg_layers_steamapi::{
-    Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
+    Arch, LibReplace, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
     SteamConfigBind, find_steam_api_libs,
 };
 use stdg_layers_supervision::SupervisionLayer;
@@ -17,6 +18,7 @@ use stdg_registry::Registry;
 use stdg_runners_emulator::{EmulatorManifest, EmulatorRunner};
 use stdg_runners_native::NativeLinuxRunner;
 use stdg_runners_windows::WindowsRunner;
+use stdg_saves::{GameSaves, ManifestIndex, Os, SavesLayer};
 
 type LayerResult = Result<Box<dyn Layer>, CoreError>;
 
@@ -53,6 +55,8 @@ pub(crate) fn build_registry() -> Registry {
             userns,
         }))
     });
+
+    register(&mut registry, SAVES_LAYER_ID, |_, c| saves_layer(c));
 
     register(&mut registry, "soldier", |r, _| {
         Ok(Box::new(PressureVesselLayer {
@@ -150,7 +154,7 @@ fn invalid_param(
 /// Builds `steamapi-emu` (library on by default) or `steamapi-onlinefix` (overlay on by default).
 fn steamapi_replace(r: &LayerRef, c: &ResolvedConfig, kind: ReplaceKind) -> LayerResult {
     let replace_lib = bool_param(r, "replace_lib", kind == ReplaceKind::Emu)?;
-    let overlay_source = match kind {
+    let overlay_dir = match kind {
         ReplaceKind::OnlineFix => Some(required_path(r, "overlay_dir")?),
         ReplaceKind::Emu => r.param("overlay_dir").map(PathBuf::from),
     };
@@ -180,23 +184,12 @@ fn steamapi_replace(r: &LayerRef, c: &ResolvedConfig, kind: ReplaceKind) -> Laye
         Vec::new()
     };
 
-    let overlay = match overlay_source {
-        Some(source) => Some(Overlay {
-            source,
-            state_dir: match r.param("overlay_state_dir") {
-                Some(dir) => PathBuf::from(dir),
-                None => default_overlay_state_dir(r, c)?,
-            },
-        }),
-        None => None,
-    };
-
     Ok(Box::new(SteamApiReplaceLayer {
         kind,
         game_root: c.root.clone(),
         replace_lib,
         libs,
-        overlay,
+        overlay_dir,
         app_id: app_id(r, c),
     }))
 }
@@ -222,16 +215,82 @@ fn steam_stub_dir(r: &LayerRef) -> Option<PathBuf> {
         .or_else(|| data_home().map(|d| d.join("stdgames/steam-stub")))
 }
 
-/// `<data home>/stdgames/overlays/<game>/<layer>`.
-fn default_overlay_state_dir(r: &LayerRef, c: &ResolvedConfig) -> Result<PathBuf, CoreError> {
-    let data_home = data_home().ok_or_else(|| ConfigError::MissingLayerParam {
-        layer: r.id.clone(),
-        param: "overlay_state_dir",
-    })?;
-    Ok(data_home
-        .join("stdgames/overlays")
-        .join(&c.game_id.0)
-        .join(&r.id.0))
+/// `<data home>/stdgames/saves`.
+pub(crate) fn saves_store() -> anyhow::Result<PathBuf> {
+    data_home()
+        .map(|d| d.join("stdgames/saves"))
+        .ok_or_else(|| anyhow::anyhow!("neither XDG_DATA_HOME nor HOME is set"))
+}
+
+/// `<data home>/stdgames/ludusavi/index.json`.
+pub(crate) fn manifest_index_path() -> anyhow::Result<PathBuf> {
+    data_home()
+        .map(|d| d.join("stdgames/ludusavi/index.json"))
+        .ok_or_else(|| anyhow::anyhow!("neither XDG_DATA_HOME nor HOME is set"))
+}
+
+/// The manifest index, read once per process; `Err` holds why it is unusable.
+fn manifest_index() -> &'static Result<ManifestIndex, String> {
+    static INDEX: OnceLock<Result<ManifestIndex, String>> = OnceLock::new();
+    INDEX.get_or_init(|| {
+        let path = manifest_index_path().map_err(|e| e.to_string())?;
+        match ManifestIndex::load(&path) {
+            Ok(Some(index)) => Ok(index),
+            Ok(None) => Err(
+                "no Ludusavi manifest index yet: run `stdgames saves update-manifest`".to_string(),
+            ),
+            Err(e) => Err(format!("{e:#}")),
+        }
+    })
+}
+
+/// The always-present `saves` layer, from the game's `[saves]` section.
+fn saves_layer(c: &ResolvedConfig) -> LayerResult {
+    let failure = |reason: String| CoreError::LayerFailure {
+        layer: LayerId(SAVES_LAYER_ID.to_string()),
+        reason,
+    };
+    let store = saves_store().map_err(|e| failure(e.to_string()))?;
+    let saves = GameSaves::new(&store, &c.game_id.0).map_err(|e| failure(e.to_string()))?;
+    let profile = match &c.saves.profile {
+        Some(name) => name.parse(),
+        None => saves.current(),
+    }
+    .map_err(|e| failure(e.to_string()))?;
+
+    let os = Os::of(&c.target);
+    let steam_id = c.app_id.as_deref().and_then(|id| id.parse().ok());
+    let (mut rules, notice) = match manifest_index() {
+        Ok(index) => match index.rules_for(c.saves.manifest_name.as_deref(), steam_id) {
+            Some((_, rules)) => (
+                rules
+                    .iter()
+                    .filter(|r| r.applies_to(os))
+                    .map(|r| r.path.clone())
+                    .collect(),
+                None,
+            ),
+            None => (
+                Vec::new(),
+                c.saves
+                    .manifest_name
+                    .as_ref()
+                    .map(|name| format!("`{name}` is not in the Ludusavi manifest")),
+            ),
+        },
+        Err(reason) => (Vec::new(), Some(reason.clone())),
+    };
+    rules.extend(c.saves.paths.iter().cloned());
+
+    Ok(Box::new(SavesLayer {
+        game_root: c.root.clone(),
+        os,
+        saves,
+        profile,
+        rules,
+        notice,
+        cloud: None,
+    }))
 }
 
 /// `STDG_CONTY_USERNS` when set, else on unless fusermount is setuid root.
@@ -293,7 +352,10 @@ fn load_emulator_manifests(dir: &Path) -> Vec<EmulatorManifest> {
 mod tests {
     use std::collections::BTreeMap;
 
-    use stdg_core::{GameId, LayerCatalog, TargetKind};
+    use stdg_core::{
+        GameId, LaunchCtx, LayerCatalog, ModeId, Plan, RunKind, RunnerId, SessionId, SessionInfo,
+        TargetKind,
+    };
 
     use super::*;
 
@@ -307,6 +369,7 @@ mod tests {
             args: vec![],
             command_prefix: vec![],
             env: BTreeMap::new(),
+            saves: stdg_core::SavesConfig::default(),
         }
     }
 
@@ -378,10 +441,28 @@ mod tests {
     }
 
     fn resolve(r: &LayerRef, root: &Path) -> Vec<stdg_core::Binding> {
+        let config = config(root);
+        let ctx = LaunchCtx {
+            plan: Plan {
+                game_id: config.game_id.clone(),
+                mode_id: ModeId("m".to_string()),
+                target: config.target.clone(),
+                runner: RunnerId("windows".to_string()),
+                slots: BTreeMap::new(),
+                config: config.clone(),
+            },
+            session: SessionInfo {
+                id: SessionId("s".to_string()),
+                tmp_dir: PathBuf::from("/nonexistent"),
+            },
+            bindings: Vec::new(),
+            run_kind: RunKind::DryRun,
+            wine_prefix: None,
+        };
         build_registry()
-            .resolve_layer(r, &config(root))
+            .resolve_layer(r, &config)
             .expect("resolves")
-            .container_needs()
+            .container_needs(&ctx)
     }
 
     #[test]
@@ -407,12 +488,10 @@ mod tests {
     fn onlinefix_overlays_by_default_and_requires_its_dir() {
         let root = tempfile::tempdir().expect("tempdir");
         std::fs::write(root.path().join("steam_api64.dll"), b"").expect("write");
-        let r = LayerRef::new("steamapi-onlinefix")
-            .with_param("overlay_dir", "/fix")
-            .with_param("overlay_state_dir", "/state");
+        let r = LayerRef::new("steamapi-onlinefix").with_param("overlay_dir", "/fix");
         let needs = resolve(&r, root.path());
         assert_eq!(needs.len(), 1, "no library replacement by default");
-        assert!(matches!(needs[0].mode, stdg_core::BindMode::Overlay { .. }));
+        assert_eq!(needs[0].mode, stdg_core::BindMode::OverlayLower);
 
         let err = build_registry()
             .resolve_layer(&LayerRef::new("steamapi-onlinefix"), &config(root.path()))
@@ -433,8 +512,7 @@ mod tests {
         std::fs::write(root.path().join("steam_api64.dll"), b"").expect("write");
         let emu = LayerRef::new("steamapi-emu")
             .with_param("replace_lib", "false")
-            .with_param("overlay_dir", "/fix")
-            .with_param("overlay_state_dir", "/state");
+            .with_param("overlay_dir", "/fix");
         assert_eq!(resolve(&emu, root.path()).len(), 1);
         let bad = LayerRef::new("steamapi-emu").with_param("replace_lib", "yes");
         assert!(

@@ -41,7 +41,9 @@ pub enum BindMode {
     ReadOnly,
     /// Mounted read-write.
     ReadWrite,
-    /// Overlaid on top of the guest dir; writes go to `upper`.
+    /// `source.host()` laid read-only over the guest dir, below any [`BindMode::Overlay`].
+    OverlayLower,
+    /// Writable top of the guest dir's overlay; writes go to `upper`, never to the guest dir.
     Overlay {
         /// Persistent upper dir receiving writes.
         upper: PathBuf,

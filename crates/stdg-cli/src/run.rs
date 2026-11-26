@@ -19,8 +19,13 @@ pub(crate) enum Program {
 }
 
 #[expect(clippy::print_stdout, reason = "user-facing CLI output")]
-pub(crate) fn run(game_id_str: &str, mode_id_str: &str, program: Program) -> anyhow::Result<u8> {
-    let (registry, mut plan) = load_plan(game_id_str, mode_id_str)?;
+pub(crate) fn run(
+    game_id_str: &str,
+    mode_id_str: &str,
+    profile: Option<String>,
+    program: Program,
+) -> anyhow::Result<u8> {
+    let (registry, mut plan) = load_plan(game_id_str, mode_id_str, profile)?;
 
     if program == Program::Shell {
         plan.config.executable = PathBuf::from("/bin/bash");
@@ -37,6 +42,7 @@ pub(crate) fn run(game_id_str: &str, mode_id_str: &str, program: Program) -> any
         session,
         bindings: Vec::new(),
         run_kind: RunKind::Live,
+        wine_prefix: None,
     };
 
     let output = run_pipeline(&registry, ctx)?;

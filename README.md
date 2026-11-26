@@ -67,9 +67,41 @@ proprietary driver, user-namespace mode needs a Conty built with
 
 Every `steam_api64.dll`/`steam_api.dll` (Windows) or `libsteam_api.so` (Linux)
 in the game is replaced by `lib_x64` or `lib_x86`, picked from its ELF/PE header;
-`target_lib_relpath` pins a single file. The overlay is mounted on the game dir
-(needs bwrap ≥ 0.9 in Conty); the game dir is never written, writes go to
-`overlay_state_dir` (default `~/.local/share/stdgames/overlays/<game>/<layer>`).
+`target_lib_relpath` pins a single file. `overlay_dir` is laid read-only over
+the game dir (needs bwrap ≥ 0.9 in Conty); writes go to the save profile.
+
+### Save profiles
+
+The game dir is never written: it is mounted as an overlay and every write
+(Source `.cfg` files, logs...) lands in the current profile. Save locations
+come from the [Ludusavi manifest](https://github.com/mtkennerly/ludusavi-manifest)
+(matched by `app_id`), then from the game's `[saves]` section, and are
+bind-mounted from the profile.
+
+```toml
+[saves]
+manifest_name = "R.E.P.O."                   # default: looked up by app_id
+paths = ["<winAppData>/Studio/Game"]          # Ludusavi syntax, added to the manifest's
+profile = "main"                              # default: the current profile
+```
+
+Profiles live in `~/.local/share/stdgames/saves/<game>/<profile>/`: `root/`
+holds the game dir writes, `paths/` the save dirs. The `default` profile adopts
+saves already on disk the first time it runs; other profiles start empty.
+A profile is locked while a game uses it: a second launch, `new --from` or
+`export` on it fails until the game exits.
+
+```sh
+cargo run -p stdg-cli -- saves update-manifest      # download the manifest (needs curl)
+cargo run -p stdg-cli -- saves list --game repo
+cargo run -p stdg-cli -- saves new --game repo --name speedrun --from default
+cargo run -p stdg-cli -- saves use --game repo --name speedrun
+cargo run -p stdg-cli -- saves export --game repo --name speedrun --out sr.tar.gz
+cargo run -p stdg-cli -- saves import --game repo --name shared --file sr.tar.gz
+cargo run -p stdg-cli -- run --game repo --mode steam --profile shared
+```
+
+Steam Cloud files (`<root>/userdata/...` in the manifest) are not synced yet.
 
 ### Variables in config strings
 

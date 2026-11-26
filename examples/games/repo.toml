@@ -4,12 +4,11 @@
 # Ships its own steam_api.dll and steam_appid.txt (780210) — real Steam API,
 # no injection needed, matching [games.metadata] api.client = "steam" in
 # the previous launcher's games.toml for this same game.
-app_id = "780210"
+app_id = "3241660"
 target = { kind = "windows" }
 root = "${launcher.cwd}/examples/spacewar/root"
 executable = "REPO.exe"
 args = []
-env = { "DRI_PRIME" = "1" }
 
 [modes.steam]
 enabled = true

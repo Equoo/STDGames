@@ -45,7 +45,7 @@ impl Layer for WrapLayer {
     fn preflight(&self, _ctx: &LaunchCtx) -> Result<(), Diagnostic> {
         self.preflight.clone().map_or(Ok(()), Err)
     }
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         vec![Binding {
             source: PathValue::Host(PathBuf::from("/opt/wrapper")),
             mode: BindMode::ReadOnly,
@@ -83,6 +83,7 @@ fn ctx() -> LaunchCtx {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     let mut slots = BTreeMap::new();
     slots.insert(Slot::Compat, LayerRef::new("wrap"));
@@ -101,6 +102,7 @@ fn ctx() -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::DryRun,
+        wine_prefix: None,
     }
 }
 

@@ -5,8 +5,19 @@ use std::path::{Path, PathBuf};
 use stdg_core::capability::capabilities;
 use stdg_core::{
     BindMode, BindPurpose, Binding, CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx,
-    Layer, LayerId, Outcome, PathValue, SessionGuard, Slot,
+    Layer, LayerId, Outcome, PathValue, SessionGuard, Slot, WinePrefix,
 };
+
+/// The Windows user the `proton` script creates.
+const PROTON_USER: &str = "steamuser";
+
+/// The `proton` script keeps the Wine prefix in `<STEAM_COMPAT_DATA_PATH>/pfx`.
+fn proton_wine_prefix(prefix_path: &Path) -> WinePrefix {
+    WinePrefix {
+        drive_c: prefix_path.join("pfx/drive_c"),
+        user: PROTON_USER.to_string(),
+    }
+}
 
 /// Prefixes persist across launches: nothing to clean up.
 #[derive(Debug)]
@@ -218,13 +229,17 @@ impl Layer for ProtonLayer {
         preflight_entry_point(&self.proton_path, "Proton")
     }
 
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         container_needs_for(
             &self.proton_path,
             &self.prefix_path,
             self.steam_client().as_ref().map(SteamClient::path),
             "proton",
         )
+    }
+
+    fn wine_prefix(&self) -> Option<WinePrefix> {
+        Some(proton_wine_prefix(&self.prefix_path))
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
@@ -287,13 +302,17 @@ impl Layer for WineLayer {
         preflight_entry_point(&self.wine_path, "Wine")
     }
 
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         container_needs_for(
             &self.wine_path,
             &self.prefix_path,
             self.steam_client().as_ref().map(SteamClient::path),
             "wine",
         )
+    }
+
+    fn wine_prefix(&self) -> Option<WinePrefix> {
+        Some(proton_wine_prefix(&self.prefix_path))
     }
 
     fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {

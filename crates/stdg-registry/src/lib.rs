@@ -129,6 +129,7 @@ mod tests {
             args: vec![],
             command_prefix: vec![],
             env: BTreeMap::new(),
+            saves: stdg_core::SavesConfig::default(),
         }
     }
 

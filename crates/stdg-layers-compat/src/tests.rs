@@ -20,6 +20,7 @@ fn test_ctx() -> LaunchCtx {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     let plan = Plan {
         game_id: config.game_id.clone(),
@@ -37,6 +38,7 @@ fn test_ctx() -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::DryRun,
+        wine_prefix: None,
     }
 }
 
@@ -154,7 +156,7 @@ fn container_needs_covers_install_prefix_and_steam_client() {
         steam_stub_dir: None,
     };
 
-    let needs = layer.container_needs();
+    let needs = layer.container_needs(&test_ctx());
     let sources: Vec<PathBuf> = needs
         .iter()
         .map(|b| b.source.host().to_path_buf())
@@ -288,7 +290,7 @@ fn prepare_creates_the_steam_stub_when_used() {
     );
     assert!(
         layer
-            .container_needs()
+            .container_needs(&test_ctx())
             .iter()
             .any(|b| b.source.host() == stub)
     );

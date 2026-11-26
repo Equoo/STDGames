@@ -9,7 +9,7 @@ use stdg_core::{CommandSpec, Diagnostic};
 
 pub use native::{SteamApiNativeLayer, SteamConfigBind};
 pub use replace::{
-    Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiReplaceLayer, find_steam_api_libs,
+    Arch, LibReplace, Platform, ReplaceKind, SteamApiReplaceLayer, find_steam_api_libs,
 };
 
 /// Exports `SteamAppId`/`SteamGameId`, read by Steam, emulators and Proton.

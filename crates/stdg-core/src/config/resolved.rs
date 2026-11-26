@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, path::PathBuf};
 
-use crate::{ids::GameId, target::TargetKind};
+use crate::{config::SavesConfig, ids::GameId, target::TargetKind};
 
 /// Config after cascade resolution.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,4 +21,6 @@ pub struct ResolvedConfig {
     pub command_prefix: Vec<String>,
     /// Environment variables set for the game.
     pub env: BTreeMap<String, String>,
+    /// Save locations and profile.
+    pub saves: SavesConfig,
 }

@@ -7,7 +7,8 @@ mod validate;
 use std::collections::BTreeMap;
 
 use stdg_core::{
-    CoreError, GameId, LayerRef, ModeId, PartialGameConfig, Plan, RunnerCatalog, Slot,
+    CoreError, GameId, LayerRef, ModeId, PartialGameConfig, Plan, RunnerCatalog, SAVES_LAYER_ID,
+    Slot,
 };
 
 pub use cascade::{GlobalDefaults, ModeLayerDefaults, RunnerDefaults, resolve_config};
@@ -41,8 +42,9 @@ pub fn build_plan(
     let env = |name: &str| std::env::var(name).ok();
     let vars = expand::expand_config(&mut config, mode_id, &runner_id, &env)?;
 
-    // Later tiers override earlier ones per slot.
-    let mut tiers: [Vec<LayerRef>; 5] = [
+    // Later tiers override earlier ones per slot; `saves` is always there.
+    let mut tiers: [Vec<LayerRef>; 6] = [
+        vec![LayerRef::new(SAVES_LAYER_ID)],
         global.baseline_layers.clone(),
         runner_defaults.layers.clone(),
         runner_defaults.layers_for(mode_id),

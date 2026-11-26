@@ -119,6 +119,7 @@ fn plan_lists_only_filled_slots_innermost_first() {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: crate::SavesConfig::default(),
     };
     let mut slots = BTreeMap::new();
     slots.insert(Slot::Sandbox, LayerRef::new("conty"));

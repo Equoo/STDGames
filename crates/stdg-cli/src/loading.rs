@@ -18,7 +18,12 @@ fn find_game_config(game_id: &GameId) -> Option<PathBuf> {
     candidates.into_iter().find(|p| p.is_file())
 }
 
-pub(crate) fn load_plan(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<(Registry, Plan)> {
+/// `profile` overrides the game's `[saves] profile` and current profile.
+pub(crate) fn load_plan(
+    game_id_str: &str,
+    mode_id_str: &str,
+    profile: Option<String>,
+) -> anyhow::Result<(Registry, Plan)> {
     let game_id = GameId(game_id_str.to_string());
     let mode_id = ModeId(mode_id_str.to_string());
 
@@ -29,8 +34,11 @@ pub(crate) fn load_plan(game_id_str: &str, mode_id_str: &str) -> anyhow::Result<
     })?;
     let raw = std::fs::read_to_string(&config_path)
         .with_context(|| format!("reading {}", config_path.display()))?;
-    let game: PartialGameConfig =
+    let mut game: PartialGameConfig =
         toml::from_str(&raw).with_context(|| format!("parsing {}", config_path.display()))?;
+    if profile.is_some() {
+        game.saves.get_or_insert_with(Default::default).profile = profile;
+    }
 
     let registry = build_registry();
 

@@ -22,6 +22,7 @@ stdg-layers-runtime = { workspace = true }
 stdg-layers-compat = { workspace = true }
 stdg-layers-steamapi = { workspace = true }
 stdg-layers-supervision = { workspace = true }
+stdg-saves = { workspace = true }
 toml = { workspace = true }
 serde = { workspace = true }
 clap = { workspace = true }

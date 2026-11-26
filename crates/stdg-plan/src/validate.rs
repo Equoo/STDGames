@@ -7,7 +7,7 @@ use stdg_core::{CapabilitySet, CoreError, LayerCatalog, LayerId, LayerRef, Resol
 use crate::SlotMap;
 
 /// Slots every plan must fill.
-const MANDATORY_SLOTS: &[Slot] = &[Slot::Sandbox];
+const MANDATORY_SLOTS: &[Slot] = &[Slot::Sandbox, Slot::Saves];
 
 /// Assigns slots, then checks mandatory slots and capabilities.
 pub fn validate_plan(

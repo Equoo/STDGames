@@ -18,6 +18,7 @@ fn ctx() -> LaunchCtx {
         args: vec!["-dx11".to_string()],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     LaunchCtx {
         plan: Plan {
@@ -34,6 +35,7 @@ fn ctx() -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::DryRun,
+        wine_prefix: None,
     }
 }
 

@@ -18,6 +18,7 @@ fn ctx(command_prefix: Vec<String>) -> LaunchCtx {
         args: vec!["--fullscreen".to_string()],
         command_prefix,
         env: BTreeMap::from([("K".to_string(), "V".to_string())]),
+        saves: stdg_core::SavesConfig::default(),
     };
     LaunchCtx {
         plan: Plan {
@@ -34,6 +35,7 @@ fn ctx(command_prefix: Vec<String>) -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::DryRun,
+        wine_prefix: None,
     }
 }
 

@@ -159,6 +159,9 @@ pub(crate) fn expand_config<'a>(
     for (key, value) in &mut config.env {
         *value = expand_at(value, &vars, format!("env {key}"))?;
     }
+    for path in &mut config.saves.paths {
+        *path = expand_at(path, &vars, "saves.paths")?;
+    }
     Ok(vars)
 }
 
@@ -269,6 +272,10 @@ mod tests {
             args: vec!["--data=${game.root}/data".to_string()],
             command_prefix: vec!["~/bin/wrap".to_string()],
             env: BTreeMap::from([("SAVE".to_string(), "${game.root}/save".to_string())]),
+            saves: stdg_core::SavesConfig {
+                paths: vec!["<winAppData>/${game.id}".to_string()],
+                ..Default::default()
+            },
         };
         let vars = expand_config(
             &mut config,
@@ -281,6 +288,7 @@ mod tests {
         assert_eq!(config.args, vec!["--data=/srv/games/repo/data"]);
         assert_eq!(config.command_prefix, vec!["/home/u/bin/wrap"]);
         assert_eq!(config.env["SAVE"], "/srv/games/repo/save");
+        assert_eq!(config.saves.paths, vec!["<winAppData>/repo"]);
 
         let mut r = LayerRef::new("proton").with_param("prefix_path", "${game.root}/pfx");
         expand_layer_ref(&mut r, &vars).expect("expands");

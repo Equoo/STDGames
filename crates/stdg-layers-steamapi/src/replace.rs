@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use stdg_core::capability::capabilities;
 use stdg_core::{
     BindMode, BindPurpose, Binding, CapabilitySet, CommandSpec, CoreError, Diagnostic, LaunchCtx,
-    Layer, LayerId, PathValue, SessionGuard, Slot, TargetKind,
+    Layer, LayerId, PathValue, Slot, TargetKind,
 };
 
 /// Which preset this layer is.
@@ -144,15 +144,6 @@ pub struct LibReplace {
     pub replacement: Option<PathBuf>,
 }
 
-/// A directory overlaid on the game root.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Overlay {
-    /// Files laid over the game, at their relative paths.
-    pub source: PathBuf,
-    /// Persistent dir holding the overlay's `upper` and `work` dirs.
-    pub state_dir: PathBuf,
-}
-
 /// Replaces the Steam API library and/or overlays a directory on the game.
 #[derive(Debug)]
 pub struct SteamApiReplaceLayer {
@@ -164,19 +155,10 @@ pub struct SteamApiReplaceLayer {
     pub replace_lib: bool,
     /// Libraries found in the game.
     pub libs: Vec<LibReplace>,
-    /// Optional overlay.
-    pub overlay: Option<Overlay>,
+    /// Files laid read-only over the game, at their relative paths.
+    pub overlay_dir: Option<PathBuf>,
     /// Exported to the game when set.
     pub app_id: Option<String>,
-}
-
-#[derive(Debug)]
-struct PersistentState;
-
-impl SessionGuard for PersistentState {
-    fn label(&self) -> &'static str {
-        "steamapi-overlay-state"
-    }
 }
 
 impl Layer for SteamApiReplaceLayer {
@@ -199,14 +181,14 @@ impl Layer for SteamApiReplaceLayer {
     }
 
     fn preflight(&self, _ctx: &LaunchCtx) -> Result<(), Diagnostic> {
-        if let Some(overlay) = &self.overlay {
-            if !overlay.source.is_dir() {
-                return Err(Diagnostic::error(format!(
-                    "overlay directory {} does not exist",
-                    overlay.source.display()
-                ))
-                .with_hint("set `overlay_dir`"));
-            }
+        if let Some(overlay_dir) = &self.overlay_dir
+            && !overlay_dir.is_dir()
+        {
+            return Err(Diagnostic::error(format!(
+                "overlay directory {} does not exist",
+                overlay_dir.display()
+            ))
+            .with_hint("set `overlay_dir`"));
         }
         if self.replace_lib && self.libs.is_empty() {
             return Err(Diagnostic::error(format!(
@@ -231,18 +213,15 @@ impl Layer for SteamApiReplaceLayer {
         Ok(())
     }
 
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         let mut needs = Vec::new();
-        if let Some(overlay) = &self.overlay {
+        if let Some(overlay_dir) = &self.overlay_dir {
             needs.push(Binding {
                 source: PathValue::Translated {
-                    host: overlay.source.clone(),
+                    host: overlay_dir.clone(),
                     guest: self.game_root.clone(),
                 },
-                mode: BindMode::Overlay {
-                    upper: overlay.state_dir.join("upper"),
-                    work: overlay.state_dir.join("work"),
-                },
+                mode: BindMode::OverlayLower,
                 purpose: BindPurpose(format!("{}-overlay", self.id())),
             });
         }
@@ -266,18 +245,5 @@ impl Layer for SteamApiReplaceLayer {
             crate::set_app_id_env(spec, app_id);
         }
         Ok(())
-    }
-
-    fn prepare(&self, ctx: &mut LaunchCtx) -> Result<Box<dyn SessionGuard>, CoreError> {
-        if let (Some(overlay), false) = (&self.overlay, ctx.is_dry_run()) {
-            for dir in ["upper", "work"] {
-                let path = overlay.state_dir.join(dir);
-                std::fs::create_dir_all(&path).map_err(|e| CoreError::LayerFailure {
-                    layer: self.id(),
-                    reason: format!("could not create {}: {e}", path.display()),
-                })?;
-            }
-        }
-        Ok(Box::new(PersistentState))
     }
 }

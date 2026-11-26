@@ -8,7 +8,7 @@ use crate::{
     binding::Binding,
     capability::CapabilitySet,
     command::CommandSpec,
-    ctx::LaunchCtx,
+    ctx::{LaunchCtx, WinePrefix},
     error::{CoreError, Diagnostic},
     guard::{NullGuard, SessionGuard},
     ids::LayerId,
@@ -48,6 +48,9 @@ impl LayerRef {
     }
 }
 
+/// Id of the built-in layer filling [`Slot::Saves`] in every plan.
+pub const SAVES_LAYER_ID: &str = "saves";
+
 /// Something that wraps or modifies the runner.
 pub trait Layer: Send + Sync + std::fmt::Debug {
     /// The id this layer is registered under.
@@ -71,8 +74,13 @@ pub trait Layer: Send + Sync + std::fmt::Debug {
     }
 
     /// What this layer needs to cross the container boundary.
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         Vec::new()
+    }
+
+    /// The Wine prefix this layer runs the game in, for outer layers.
+    fn wine_prefix(&self) -> Option<WinePrefix> {
+        None
     }
 
     /// Filesystem/process side effects (RAII).

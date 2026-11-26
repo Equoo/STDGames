@@ -8,7 +8,7 @@ use stdg_core::{
 };
 
 use crate::{
-    Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
+    Arch, LibReplace, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
     find_steam_api_libs,
 };
 
@@ -22,6 +22,7 @@ fn test_ctx() -> LaunchCtx {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     let plan = Plan {
         game_id: config.game_id.clone(),
@@ -39,6 +40,7 @@ fn test_ctx() -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::DryRun,
+        wine_prefix: None,
     }
 }
 
@@ -78,14 +80,14 @@ fn native_patch_sets_the_app_id_env_vars() {
 fn layer(
     kind: ReplaceKind,
     libs: Vec<LibReplace>,
-    overlay: Option<Overlay>,
+    overlay_dir: Option<PathBuf>,
 ) -> SteamApiReplaceLayer {
     SteamApiReplaceLayer {
         kind,
         game_root: PathBuf::from("/games/test-game"),
         replace_lib: !libs.is_empty(),
         libs,
-        overlay,
+        overlay_dir,
         app_id: None,
     }
 }
@@ -173,7 +175,7 @@ fn emu_binds_the_replacement_over_the_game_library() {
         vec![lib(Some(PathBuf::from("/opt/emu/steam_api64.dll")))],
         None,
     );
-    let needs = l.container_needs();
+    let needs = l.container_needs(&test_ctx());
     assert_eq!(needs.len(), 1);
     assert_eq!(
         needs[0].source,
@@ -189,23 +191,15 @@ fn emu_binds_the_replacement_over_the_game_library() {
 }
 
 #[test]
-fn overlay_comes_before_library_binds() {
+fn overlay_dir_is_a_read_only_lower_of_the_game_dir() {
     let l = layer(
         ReplaceKind::OnlineFix,
         vec![lib(Some(PathBuf::from("/opt/emu/steam_api64.dll")))],
-        Some(Overlay {
-            source: PathBuf::from("/fix"),
-            state_dir: PathBuf::from("/state"),
-        }),
+        Some(PathBuf::from("/fix")),
     );
-    let needs = l.container_needs();
-    assert_eq!(
-        needs[0].mode,
-        BindMode::Overlay {
-            upper: PathBuf::from("/state/upper"),
-            work: PathBuf::from("/state/work"),
-        }
-    );
+    let needs = l.container_needs(&test_ctx());
+    assert_eq!(needs[0].mode, BindMode::OverlayLower);
+    assert_eq!(needs[0].source.host(), Path::new("/fix"));
     assert_eq!(
         needs[0].source.effective(),
         PathBuf::from("/games/test-game")
@@ -240,34 +234,9 @@ fn preflight_rejects_a_missing_overlay_dir() {
     let l = layer(
         ReplaceKind::OnlineFix,
         vec![],
-        Some(Overlay {
-            source: PathBuf::from("/definitely/not/here"),
-            state_dir: PathBuf::from("/state"),
-        }),
+        Some(PathBuf::from("/definitely/not/here")),
     );
     assert!(l.preflight(&test_ctx()).is_err());
-}
-
-#[test]
-fn prepare_creates_overlay_state_only_when_live() {
-    let state = tempfile::tempdir().expect("tempdir");
-    let fix = tempfile::tempdir().expect("tempdir");
-    let l = layer(
-        ReplaceKind::OnlineFix,
-        vec![],
-        Some(Overlay {
-            source: fix.path().to_path_buf(),
-            state_dir: state.path().join("s"),
-        }),
-    );
-    let mut ctx = test_ctx();
-    l.prepare(&mut ctx).expect("dry run");
-    assert!(!state.path().join("s").exists());
-
-    ctx.run_kind = RunKind::Live;
-    l.prepare(&mut ctx).expect("live");
-    assert!(state.path().join("s/upper").is_dir());
-    assert!(state.path().join("s/work").is_dir());
 }
 
 #[test]
@@ -279,7 +248,7 @@ fn native_binds_the_running_steam_config_over_home() {
             guest: PathBuf::from("/home/u/.steam"),
         }),
     };
-    let needs = layer.container_needs();
+    let needs = layer.container_needs(&test_ctx());
     assert_eq!(needs.len(), 1);
     assert_eq!(needs[0].source.host(), Path::new("/tmp/steam-home/.steam"));
     assert_eq!(needs[0].source.effective(), Path::new("/home/u/.steam"));

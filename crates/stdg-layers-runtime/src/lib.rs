@@ -70,7 +70,7 @@ impl Layer for PressureVesselLayer {
         Ok(())
     }
 
-    fn container_needs(&self) -> Vec<Binding> {
+    fn container_needs(&self, _ctx: &LaunchCtx) -> Vec<Binding> {
         // Conty doesn't bind the depot itself.
         vec![Binding {
             source: PathValue::Host(self.depot_path.clone()),

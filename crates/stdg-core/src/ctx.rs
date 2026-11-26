@@ -4,6 +4,22 @@ use std::path::PathBuf;
 
 use crate::{binding::Binding, ids::SessionId, plan::Plan};
 
+/// A Wine prefix's user dirs, as the Compat layer set it up.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WinePrefix {
+    /// The prefix's `drive_c`.
+    pub drive_c: PathBuf,
+    /// The Windows user name (`steamuser` under Proton).
+    pub user: String,
+}
+
+impl WinePrefix {
+    /// `drive_c/users/<user>`.
+    pub fn user_dir(&self) -> PathBuf {
+        self.drive_c.join("users").join(&self.user)
+    }
+}
+
 /// Identity and scratch space of one launch session.
 #[derive(Debug, Clone)]
 pub struct SessionInfo {
@@ -33,6 +49,8 @@ pub struct LaunchCtx {
     pub bindings: Vec<Binding>,
     /// Dry run or live launch.
     pub run_kind: RunKind,
+    /// Set from the Compat layer's [`crate::Layer::wine_prefix`].
+    pub wine_prefix: Option<WinePrefix>,
 }
 
 impl LaunchCtx {
@@ -59,6 +77,7 @@ mod tests {
             args: vec![],
             command_prefix: vec![],
             env: BTreeMap::new(),
+            saves: crate::SavesConfig::default(),
         };
         LaunchCtx {
             plan: Plan {
@@ -75,6 +94,7 @@ mod tests {
             },
             bindings: Vec::new(),
             run_kind,
+            wine_prefix: None,
         }
     }
 

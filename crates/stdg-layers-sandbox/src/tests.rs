@@ -25,6 +25,7 @@ fn test_ctx(root: PathBuf) -> LaunchCtx {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     let plan = Plan {
         game_id: config.game_id.clone(),
@@ -42,6 +43,7 @@ fn test_ctx(root: PathBuf) -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::Live,
+        wine_prefix: None,
     }
 }
 
@@ -352,12 +354,10 @@ fn root_overlay_replaces_the_plain_root_bind() {
             host: PathBuf::from("/fix"),
             guest: PathBuf::from("/games/g"),
         },
-        mode: BindMode::Overlay {
-            upper: PathBuf::from("/state/upper"),
-            work: PathBuf::from("/state/work"),
-        },
-        purpose: BindPurpose("overlay".to_string()),
+        mode: BindMode::OverlayLower,
+        purpose: BindPurpose("fix".to_string()),
     });
+    ctx.bindings.push(root_upper("/state/upper"));
     ctx.bindings.push(Binding {
         source: PathValue::Translated {
             host: PathBuf::from("/emu/steam_api64.dll"),
@@ -428,4 +428,59 @@ fn plain_or_missing_file_is_not_setuid_root() {
     std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o4755)).expect("chmod");
     assert!(!is_setuid_root(&file));
     assert!(!is_setuid_root(&dir.path().join("missing")));
+}
+
+fn root_upper(upper: &str) -> Binding {
+    Binding {
+        source: PathValue::Host(PathBuf::from("/games/g")),
+        mode: BindMode::Overlay {
+            upper: PathBuf::from(upper),
+            work: PathBuf::from("/state/work"),
+        },
+        purpose: BindPurpose("saves-root".to_string()),
+    }
+}
+
+fn wrap_args(ctx: &LaunchCtx) -> Result<Vec<String>, stdg_core::CoreError> {
+    Ok(ContyLayer::new()
+        .wrap(
+            CommandSpec::new(PathValue::Host(PathBuf::from("/games/g/x"))),
+            ctx,
+        )?
+        .into_command()
+        .args
+        .iter()
+        .map(ArgValue::render)
+        .collect())
+}
+
+#[test]
+fn lowers_without_an_upper_mount_read_only() {
+    let mut ctx = test_ctx(PathBuf::from("/games/g"));
+    ctx.bindings.push(Binding {
+        source: PathValue::Translated {
+            host: PathBuf::from("/fix"),
+            guest: PathBuf::from("/games/g"),
+        },
+        mode: BindMode::OverlayLower,
+        purpose: BindPurpose("fix".to_string()),
+    });
+    let args = wrap_args(&ctx).expect("wrap ok");
+    assert!(args.windows(6).any(|w| w
+        == [
+            "--overlay-src",
+            "/games/g",
+            "--overlay-src",
+            "/fix",
+            "--ro-overlay",
+            "/games/g"
+        ]));
+}
+
+#[test]
+fn two_writable_overlays_on_one_dir_are_an_error() {
+    let mut ctx = test_ctx(PathBuf::from("/games/g"));
+    ctx.bindings.push(root_upper("/a"));
+    ctx.bindings.push(root_upper("/b"));
+    assert!(wrap_args(&ctx).is_err());
 }

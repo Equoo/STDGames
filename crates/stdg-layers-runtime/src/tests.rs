@@ -20,6 +20,7 @@ fn test_ctx() -> LaunchCtx {
         args: vec![],
         command_prefix: vec![],
         env: BTreeMap::new(),
+        saves: stdg_core::SavesConfig::default(),
     };
     let plan = Plan {
         game_id: config.game_id.clone(),
@@ -37,6 +38,7 @@ fn test_ctx() -> LaunchCtx {
         },
         bindings: Vec::new(),
         run_kind: RunKind::Live,
+        wine_prefix: None,
     }
 }
 
@@ -118,7 +120,7 @@ fn container_needs_binds_the_depot() {
         variant: PressureVesselVariant::Soldier,
         depot_path: PathBuf::from("/opt/steam-runtime/SteamLinuxRuntime_soldier"),
     };
-    let needs = layer.container_needs();
+    let needs = layer.container_needs(&test_ctx());
     assert_eq!(needs.len(), 1);
     assert_eq!(
         needs[0].source.host(),

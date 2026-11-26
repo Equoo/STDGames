@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, path::PathBuf};
 
 use serde::Deserialize;
 
-use crate::{ids::ModeId, layer::LayerRef, target::TargetKind};
+use crate::{config::SavesConfig, ids::ModeId, layer::LayerRef, target::TargetKind};
 
 /// One tier of the config cascade.
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -23,6 +23,8 @@ pub struct PartialGameConfig {
     pub env: Option<BTreeMap<String, String>>,
     /// Layers for every mode of this game.
     pub layers: Option<Vec<LayerRef>>,
+    /// Save locations and profile.
+    pub saves: Option<SavesConfig>,
     /// Per-mode overrides.
     pub modes: Option<BTreeMap<ModeId, PartialModeConfig>>,
 }

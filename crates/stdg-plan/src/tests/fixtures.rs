@@ -67,6 +67,12 @@ impl LayerCatalog for FakeCatalog {
         _config: &ResolvedConfig,
     ) -> Result<Box<dyn Layer>, CoreError> {
         let layer: Box<dyn Layer> = match r.id.0.as_str() {
+            "saves" => Box::new(ToyLayer {
+                id: "saves",
+                slot: Slot::Saves,
+                provides: CapabilitySet::new(),
+                requires: CapabilitySet::new(),
+            }),
             "conty" => Box::new(ToyLayer {
                 id: "conty",
                 slot: Slot::Sandbox,
@@ -186,6 +192,7 @@ pub fn base_game(target: TargetKind) -> PartialGameConfig {
         command_prefix: None,
         env: None,
         layers: None,
+        saves: None,
         modes: None,
     }
 }

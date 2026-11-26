@@ -272,18 +272,17 @@ impl Layer for ContyLayer {
             spec.push_arg_literal(userns.gid.to_string());
         }
         let root = &ctx.plan.config.root;
-        let overlays: Vec<&Binding> = ctx
-            .bindings
-            .iter()
-            .filter(|b| matches!(b.mode, BindMode::Overlay { .. }))
-            .collect();
-        if !overlays.iter().any(|b| b.source.effective() == root) {
+        let overlays = overlay_mounts(&ctx.bindings).map_err(|reason| CoreError::LayerFailure {
+            layer: self.id(),
+            reason,
+        })?;
+        if !overlays.iter().any(|o| o.dest == *root) {
             spec.push_arg_literal("--bind");
             spec.push_arg_path(PathValue::Host(root.clone()));
             spec.push_arg_path(PathValue::Host(root.clone()));
         }
-        for binding in overlays {
-            push_overlay(&mut spec, binding);
+        for overlay in &overlays {
+            push_overlay(&mut spec, overlay);
         }
 
         // Plain binds after overlays, so they land on top.
@@ -291,7 +290,7 @@ impl Layer for ContyLayer {
             let flag = match binding.mode {
                 BindMode::ReadOnly => "--ro-bind",
                 BindMode::ReadWrite => "--bind",
-                BindMode::Overlay { .. } => continue,
+                BindMode::Overlay { .. } | BindMode::OverlayLower => continue,
             };
             spec.push_arg_literal(flag);
             spec.push_arg_path(PathValue::Host(binding.source.host().to_path_buf()));
@@ -355,20 +354,71 @@ fn find_on_path(name: &str) -> Option<PathBuf> {
         .find(|p| p.is_file())
 }
 
-/// Mounts `binding.source.host()` over its guest dir; the last `--overlay-src` wins.
-fn push_overlay(spec: &mut CommandSpec, binding: &Binding) {
-    let BindMode::Overlay { upper, work } = &binding.mode else {
-        return;
-    };
-    let dest = binding.source.effective().to_path_buf();
-    spec.push_arg_literal("--overlay-src");
-    spec.push_arg_path(PathValue::Host(dest.clone()));
-    spec.push_arg_literal("--overlay-src");
-    spec.push_arg_path(PathValue::Host(binding.source.host().to_path_buf()));
-    spec.push_arg_literal("--overlay");
-    spec.push_arg_path(PathValue::Host(upper.clone()));
-    spec.push_arg_path(PathValue::Host(work.clone()));
-    spec.push_arg_path(PathValue::Host(dest));
+/// One overlay mount: the dest dir, the dirs laid over it, and its writable top.
+#[derive(Debug, PartialEq, Eq)]
+struct OverlayMount {
+    dest: PathBuf,
+    /// Laid over `dest` in order; the last one wins.
+    lowers: Vec<PathBuf>,
+    /// `(upper, work)`; `None` mounts the overlay read-only.
+    upper: Option<(PathBuf, PathBuf)>,
+}
+
+/// Groups overlay bindings by dest, in first-seen order.
+fn overlay_mounts(bindings: &[Binding]) -> Result<Vec<OverlayMount>, String> {
+    let mut mounts: Vec<OverlayMount> = Vec::new();
+    for binding in bindings {
+        if !matches!(
+            binding.mode,
+            BindMode::Overlay { .. } | BindMode::OverlayLower
+        ) {
+            continue;
+        }
+        let dest = binding.source.effective();
+        let index = if let Some(index) = mounts.iter().position(|m| m.dest == dest) {
+            index
+        } else {
+            mounts.push(OverlayMount {
+                dest: dest.to_path_buf(),
+                lowers: Vec::new(),
+                upper: None,
+            });
+            mounts.len() - 1
+        };
+        let mount = &mut mounts[index];
+        match &binding.mode {
+            BindMode::OverlayLower => mount.lowers.push(binding.source.host().to_path_buf()),
+            BindMode::Overlay { upper, work } => {
+                if mount.upper.is_some() {
+                    return Err(format!(
+                        "two writable overlays on {} ({})",
+                        dest.display(),
+                        binding.purpose.0
+                    ));
+                }
+                mount.upper = Some((upper.clone(), work.clone()));
+            }
+            BindMode::ReadOnly | BindMode::ReadWrite => {}
+        }
+    }
+    Ok(mounts)
+}
+
+/// Mounts the overlay: `dest` itself at the bottom, then its lowers, writes to `upper`.
+fn push_overlay(spec: &mut CommandSpec, overlay: &OverlayMount) {
+    for lower in std::iter::once(&overlay.dest).chain(&overlay.lowers) {
+        spec.push_arg_literal("--overlay-src");
+        spec.push_arg_path(PathValue::Host(lower.clone()));
+    }
+    match &overlay.upper {
+        Some((upper, work)) => {
+            spec.push_arg_literal("--overlay");
+            spec.push_arg_path(PathValue::Host(upper.clone()));
+            spec.push_arg_path(PathValue::Host(work.clone()));
+        }
+        None => spec.push_arg_literal("--ro-overlay"),
+    }
+    spec.push_arg_path(PathValue::Host(overlay.dest.clone()));
 }
 
 /// Strips host linker vars, then applies `inner.env` so it wins.
