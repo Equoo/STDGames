@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 use stdg_core::{ConfigError, CoreError, Layer, LayerId, LayerRef, ResolvedConfig};
 use stdg_layers_compat::{ProtonLayer, WineLayer};
 use stdg_layers_runtime::{PressureVesselLayer, PressureVesselVariant};
-use stdg_layers_sandbox::{ContyLayer, SandboxLevel, UserNs};
+use stdg_layers_sandbox::{
+    ContyLayer, SandboxLevel, USERNS_ENV, UserNs, fusermount_is_setuid_root, parse_userns_flag,
+};
 use stdg_layers_steamapi::{
     Arch, LibReplace, Overlay, Platform, ReplaceKind, SteamApiNativeLayer, SteamApiReplaceLayer,
     SteamConfigBind, find_steam_api_libs,
@@ -35,8 +37,11 @@ pub(crate) fn build_registry() -> Registry {
                     .map_err(|e| invalid_param(r, "sandbox_level", s, &e))
             })
             .transpose()?;
-        let userns = if bool_param(r, "userns", false)? {
-            let current = UserNs::current().map_err(|e| invalid_param(r, "userns", "true", &e))?;
+        let userns = if userns_enabled()? {
+            let current = UserNs::current().map_err(|e| ConfigError::InvalidValue {
+                field: USERNS_ENV,
+                reason: format!("cannot read the current uid and gid: {e}"),
+            })?;
             Some(current)
         } else {
             None
@@ -229,6 +234,19 @@ fn default_overlay_state_dir(r: &LayerRef, c: &ResolvedConfig) -> Result<PathBuf
         .join(&r.id.0))
 }
 
+/// `STDG_CONTY_USERNS` when set, else on unless fusermount is setuid root.
+fn userns_enabled() -> Result<bool, CoreError> {
+    let invalid = |reason: String| ConfigError::InvalidValue {
+        field: USERNS_ENV,
+        reason,
+    };
+    match std::env::var(USERNS_ENV) {
+        Ok(value) => parse_userns_flag(&value).map_err(|e| invalid(e.to_string()).into()),
+        Err(std::env::VarError::NotPresent) => Ok(!fusermount_is_setuid_root()),
+        Err(e @ std::env::VarError::NotUnicode(_)) => Err(invalid(e.to_string()).into()),
+    }
+}
+
 fn bool_param(r: &LayerRef, param: &'static str, default: bool) -> Result<bool, CoreError> {
     match r.param(param) {
         None => Ok(default),
@@ -328,7 +346,6 @@ mod tests {
         let registry = build_registry();
         let refs = [
             LayerRef::new("conty").with_param("sandbox_level", "2"),
-            LayerRef::new("conty").with_param("userns", "true"),
             LayerRef::new("soldier").with_param("depot_path", "/d"),
             LayerRef::new("sniper").with_param("depot_path", "/d"),
             LayerRef::new("proton")

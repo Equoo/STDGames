@@ -49,6 +49,14 @@ cargo run -p stdg-cli -- run --game repo --mode steam --shell
 
 Game configs are looked up in `games/` then `examples/games/`.
 
+### Conty and user namespaces
+
+Conty mounts its image with FUSE. When `fusermount3` (or `fusermount`) is not
+setuid root, the launcher runs Conty through `unshare` so it can mount without
+it. Set `STDG_CONTY_USERNS=1` or `0` to force this on or off. On the Nvidia
+proprietary driver, user-namespace mode needs a Conty built with
+`../container`'s `patch-conty.sh`.
+
 ### Steam API modes
 
 | Layer | Library replaced | Directory overlay |

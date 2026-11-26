@@ -10,7 +10,10 @@ use stdg_core::{
     PathValue, Plan, ResolvedConfig, RunKind, RunnerId, SessionId, SessionInfo, TargetKind,
 };
 
-use crate::{CONTY_BINARY_NAMES, ContyLayer, SandboxLevel, UserNs};
+use crate::{
+    CONTY_BINARY_NAMES, ContyLayer, InvalidUserNsFlag, SandboxLevel, UserNs, is_setuid_root,
+    parse_userns_flag,
+};
 
 fn test_ctx(root: PathBuf) -> LaunchCtx {
     let config = ResolvedConfig {
@@ -398,4 +401,31 @@ fn root_overlay_replaces_the_plain_root_bind() {
         })
         .expect("overlay (game first, fix on top), then the lib bind");
     assert!(overlay < args.iter().position(|a| a == "--").expect("separator"));
+}
+
+#[test]
+fn userns_flag_accepts_numbers_and_words() {
+    assert_eq!(parse_userns_flag("1"), Ok(true));
+    assert_eq!(parse_userns_flag("true"), Ok(true));
+    assert_eq!(parse_userns_flag(" 0 "), Ok(false));
+    assert_eq!(parse_userns_flag("false"), Ok(false));
+}
+
+#[test]
+fn userns_flag_rejects_other_values() {
+    assert_eq!(
+        parse_userns_flag("yes"),
+        Err(InvalidUserNsFlag("yes".to_string()))
+    );
+}
+
+#[test]
+fn plain_or_missing_file_is_not_setuid_root() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let file = dir.path().join("fusermount3");
+    std::fs::write(&file, "").expect("write");
+    // Setuid bit set, but owned by this user rather than root.
+    std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o4755)).expect("chmod");
+    assert!(!is_setuid_root(&file));
+    assert!(!is_setuid_root(&dir.path().join("missing")));
 }

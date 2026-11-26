@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Conty's user-namespace mode is no longer a `userns` layer param: it is on
+  when fusermount is not setuid root, and `STDG_CONTY_USERNS=1`/`0` forces it.
 - Missing required layer parameters (`proton_path`, `prefix_path`,
   `depot_path`, `app_id`, `replacement_lib_path`...) are now configuration
   errors instead of silently defaulting to empty values.

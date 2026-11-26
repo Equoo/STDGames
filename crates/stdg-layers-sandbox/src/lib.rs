@@ -1,7 +1,7 @@
 //! Sandbox slot: wraps the command in [Conty](https://github.com/Kron4ek/Conty).
 
 use std::fmt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use stdg_core::capability::capabilities;
@@ -15,6 +15,55 @@ const STRIP_ENV_VARS: [&str; 2] = ["LD_LIBRARY_PATH", "LD_PRELOAD"];
 
 /// Conty names looked up on `PATH` when `conty_path` is unset.
 const CONTY_BINARY_NAMES: [&str; 2] = ["conty", "conty.sh"];
+
+/// Forces `userns` on (`1`/`true`) or off (`0`/`false`); unset, it follows [`fusermount_is_setuid_root`].
+pub const USERNS_ENV: &str = "STDG_CONTY_USERNS";
+
+/// fusermount names in Conty's order: it uses `fusermount3` when present.
+const FUSERMOUNT_NAMES: [&str; 2] = ["fusermount3", "fusermount"];
+
+/// A [`USERNS_ENV`] value that is not a boolean.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InvalidUserNsFlag(pub String);
+
+impl fmt::Display for InvalidUserNsFlag {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{USERNS_ENV} must be 1, 0, true or false (got {:?})",
+            self.0
+        )
+    }
+}
+
+impl std::error::Error for InvalidUserNsFlag {}
+
+/// Parses a [`USERNS_ENV`] value.
+///
+/// # Errors
+///
+/// Returns [`InvalidUserNsFlag`] for anything but `1`, `0`, `true` or `false`.
+pub fn parse_userns_flag(value: &str) -> Result<bool, InvalidUserNsFlag> {
+    match value.trim() {
+        "1" | "true" => Ok(true),
+        "0" | "false" => Ok(false),
+        other => Err(InvalidUserNsFlag(other.to_string())),
+    }
+}
+
+/// Whether the fusermount Conty will use is setuid root, so Conty can mount without `userns`.
+#[must_use]
+pub fn fusermount_is_setuid_root() -> bool {
+    FUSERMOUNT_NAMES
+        .iter()
+        .find_map(|name| find_on_path(name))
+        .is_some_and(|path| is_setuid_root(&path))
+}
+
+fn is_setuid_root(path: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    std::fs::metadata(path).is_ok_and(|meta| meta.uid() == 0 && meta.mode() & 0o4000 != 0)
+}
 
 /// Runs Conty as root in a new user namespace, then maps the game back to this user.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
